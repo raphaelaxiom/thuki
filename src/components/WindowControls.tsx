@@ -189,6 +189,14 @@ interface WindowControlsProps {
    */
   isExportOpen?: boolean;
   /**
+   * Called when the user clicks the Features button to open the Phase 2
+   * features drawer (conversations / models & I/O / productivity).
+   * Omit to hide the Features button entirely.
+   */
+  onFeaturesToggle?: () => void;
+  /** Drives `aria-expanded` on the Features button. */
+  isFeaturesOpen?: boolean;
+  /**
    * Optional ref attached to the bookmark (save) button so hosts can
    * position floating UI (e.g. the auto-save notice tip) under it.
    */
@@ -217,6 +225,8 @@ export const WindowControls = memo(function WindowControls({
   onMinimize,
   onExportToggle,
   isExportOpen = false,
+  onFeaturesToggle,
+  isFeaturesOpen = false,
   bookmarkButtonRef,
   saveButtonTestId,
 }: WindowControlsProps) {
@@ -413,6 +423,26 @@ export const WindowControls = memo(function WindowControls({
                 }`}
               >
                 {EXPORT_ICON}
+              </button>
+            </Tooltip>
+          )}
+
+          {onFeaturesToggle !== undefined && (
+            <Tooltip label="Features">
+              <button
+                type="button"
+                onClick={onFeaturesToggle}
+                aria-label="Open features"
+                aria-expanded={isFeaturesOpen}
+                aria-haspopup="dialog"
+                data-features-toggle
+                className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors duration-150 cursor-pointer ${
+                  isFeaturesOpen
+                    ? 'text-primary bg-primary/10'
+                    : 'text-text-secondary hover:text-primary hover:bg-primary/8'
+                }`}
+              >
+                ✦
               </button>
             </Tooltip>
           )}

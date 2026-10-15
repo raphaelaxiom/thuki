@@ -20,6 +20,7 @@ use std::time::Duration;
 use tokio::sync::{mpsc, oneshot, watch};
 
 use super::process::{poll_until_healthy, EngineChild, EngineProcess, SpawnArgs};
+use super::recovery::{CrashRecoveryTracker, RecoveryDecision};
 use super::state::{step, Effect, EngineState, Event, Target};
 use crate::config::defaults::{
     ENGINE_COMMAND_QUEUE_CAPACITY, ENGINE_CRASH_FALLBACK_MESSAGE, ENGINE_HEALTH_DEADLINE_SECS,
@@ -56,6 +57,13 @@ enum Command {
     },
     Unload {
         reply: oneshot::Sender<()>,
+    },
+    /// Delayed restart after a crash while loaded (Phase 2D crash
+    /// recovery). Only honoured while the state machine is `Failed`; a
+    /// manual Unload / Shutdown or a newer Ensure in the meantime cancels
+    /// the pending restart.
+    CrashRetry {
+        target: Target,
     },
     Touch,
     SetIdleMinutes(u32),
@@ -105,6 +113,8 @@ impl EngineHandle {
             pending_port: 0,
             waiters: Vec::new(),
             status_tx,
+            recovery: CrashRecoveryTracker::new(),
+            retry_tx: cmd_tx.clone(),
         };
         let in_flight = Arc::new(AtomicUsize::new(0));
         tokio::spawn(run_actor(
@@ -245,6 +255,10 @@ struct Core {
     pending_port: u16,
     waiters: Vec<Waiter>,
     status_tx: watch::Sender<EngineStatus>,
+    /// Consecutive-crash budget / backoff policy (Phase 2D).
+    recovery: CrashRecoveryTracker,
+    /// Clone of the actor channel, for the delayed `CrashRetry` send.
+    retry_tx: mpsc::Sender<Command>,
 }
 
 impl Core {
@@ -407,6 +421,14 @@ async fn run_actor(
                 core.dispatch(Event::Unload).await;
                 let _ = reply.send(());
             }
+            Wake::Cmd(Some(Command::CrashRetry { target })) => {
+                // Only a Failed engine takes the retry: a manual Unload /
+                // Shutdown or a newer Ensure in the meantime cancels the
+                // pending restart (see the Command docs).
+                if matches!(core.state, EngineState::Failed(_)) {
+                    core.dispatch(Event::Ensure(target)).await;
+                }
+            }
             Wake::Cmd(Some(Command::Touch)) => {
                 last_activity = tokio::time::Instant::now();
             }
@@ -433,6 +455,9 @@ async fn run_actor(
             }
             Wake::Health(Ok(())) => {
                 core.health = None;
+                // A healthy load resets the consecutive-crash budget, so
+                // three crashes spread across a week never exhaust it.
+                core.recovery.record_healthy();
                 let port = core.pending_port;
                 // Reset the idle clock so a slow model load cannot be
                 // idle-killed immediately: the idle window starts from the
@@ -459,9 +484,50 @@ async fn run_actor(
                         .map(|child| child.stderr_tail())
                         .unwrap_or_default(),
                 );
+                // Only a crash while Loaded restarts: a crash during
+                // Starting is a start failure and still goes straight to
+                // Failed (unchanged). In any other state the plain
+                // dispatch below applies.
+                let crash_target = match &core.state {
+                    EngineState::Loaded { target, .. } => Some(target.clone()),
+                    _ => None,
+                };
                 core.child = None;
                 core.health = None;
-                core.dispatch(Event::ChildCrashed(reason)).await;
+                match crash_target {
+                    Some(target) => {
+                        let (decision, message) = core.recovery.record_crash(&reason);
+                        match decision {
+                            RecoveryDecision::Restart { delay, .. } => {
+                                // State machine: Loaded + ChildCrashed ->
+                                // Failed. Override the Failed status with
+                                // the user-visible "restarting" status
+                                // until the delayed retry fires.
+                                core.dispatch(Event::ChildCrashed(reason)).await;
+                                core.status_tx.send_replace(EngineStatus {
+                                    state: "restarting".to_string(),
+                                    model_path: target.model_path.display().to_string(),
+                                    port: None,
+                                    error: Some(message),
+                                });
+                                let retry_tx = core.retry_tx.clone();
+                                tokio::spawn(async move {
+                                    tokio::time::sleep(delay).await;
+                                    let _ = retry_tx.send(Command::CrashRetry { target }).await;
+                                });
+                            }
+                            RecoveryDecision::GiveUp { .. } => {
+                                // Budget exhausted: Failed with the
+                                // "stopped after 3 restart attempts"
+                                // message, no further restart.
+                                core.dispatch(Event::ChildCrashed(message)).await;
+                            }
+                        }
+                    }
+                    None => {
+                        core.dispatch(Event::ChildCrashed(reason)).await;
+                    }
+                }
             }
             Wake::Tick => {
                 if in_flight.load(Ordering::SeqCst) > 0 {
@@ -1033,22 +1099,53 @@ mod tests {
         assert_eq!(process.snapshot(|i| i.kills), 1);
     }
 
+    /// A crash while loaded restarts (up to 3 attempts with backoff), then
+    /// gives up with a Failed status carrying the "stopped after 3 restart
+    /// attempts" message (Phase 2D crash recovery).
     #[tokio::test(start_paused = true)]
     async fn crash_emits_failed_status() {
         let process = FakeProcess::new();
         let handle = spawn_handle(&process, 0);
 
         load(&handle, &process, "a").await;
-        process.crash_current();
 
+        // Three consecutive crashes: each restarts after its backoff
+        // (500 ms, 1 s, 2 s) and reloads.
+        for (attempt, backoff_ms) in [(1, 600), (2, 1100), (3, 2100)] {
+            process.crash_current();
+
+            let mut rx = handle.status();
+            wait_for_state(&mut rx, "restarting").await;
+            assert_eq!(
+                rx.borrow().error.as_deref(),
+                Some(
+                    format!(
+                        "Engine crashed (engine process exited unexpectedly) — restarting (attempt {attempt} of 3)…"
+                    )
+                    .as_str()
+                )
+            );
+            tokio::time::advance(Duration::from_millis(backoff_ms)).await;
+            drain_actor().await;
+            process.push_health(Ok(200));
+            let mut rx = handle.status();
+            wait_for_state(&mut rx, "loaded").await;
+        }
+        assert_eq!(process.snapshot(|i| i.spawns.len()), 4);
+
+        // Fourth consecutive crash: budget exhausted, Failed, no respawn.
+        process.crash_current();
         let mut rx = handle.status();
         wait_for_state(&mut rx, "failed").await;
         assert_eq!(
-            rx.borrow().error,
-            Some("engine process exited unexpectedly".to_string())
+            rx.borrow().error.as_deref(),
+            Some(
+                "Engine stopped after 3 restart attempts (engine process exited unexpectedly). Start it again from Settings or send a new message to retry."
+            )
         );
         assert_eq!(process.snapshot(|i| i.live), 0);
         assert_eq!(process.snapshot(|i| i.kills), 0);
+        assert_eq!(process.snapshot(|i| i.spawns.len()), 4);
     }
 
     #[test]
@@ -1073,13 +1170,59 @@ mod tests {
             "error loading model: unknown model architecture: 'deepseek4_mtp_support'",
         );
         load(&handle, &process, "a").await;
-        process.crash_current();
 
+        // First crash: the restarting status carries the engine's own
+        // stderr reason, not the generic fallback.
+        process.crash_current();
+        let mut rx = handle.status();
+        wait_for_state(&mut rx, "restarting").await;
+        assert_eq!(
+            rx.borrow().error.as_deref(),
+            Some(
+                "Engine crashed (error loading model: unknown model architecture: 'deepseek4_mtp_support') — restarting (attempt 1 of 3)…"
+            )
+        );
+
+        // Restart attempts 2 and 3: the respawned child has no stderr tail,
+        // so the restarting status carries the fallback reason.
+        for (attempt, backoff_ms) in [(2, 1100), (3, 2100)] {
+            tokio::time::advance(Duration::from_millis(backoff_ms)).await;
+            drain_actor().await;
+            process.push_health(Ok(200));
+            let mut rx = handle.status();
+            wait_for_state(&mut rx, "loaded").await;
+            process.crash_current();
+            let mut rx = handle.status();
+            wait_for_state(&mut rx, "restarting").await;
+            assert!(rx
+                .borrow()
+                .error
+                .as_deref()
+                .unwrap()
+                .contains(&format!("restarting (attempt {attempt} of 3)")));
+            assert!(rx
+                .borrow()
+                .error
+                .as_deref()
+                .unwrap()
+                .contains("engine process exited unexpectedly"));
+        }
+
+        // Fourth consecutive crash: budget exhausted, Failed with the
+        // give-up message carrying the fallback reason.
+        tokio::time::advance(Duration::from_millis(2100)).await;
+        drain_actor().await;
+        process.push_health(Ok(200));
+        let mut rx = handle.status();
+        wait_for_state(&mut rx, "loaded").await;
+        process.crash_current();
         let mut rx = handle.status();
         wait_for_state(&mut rx, "failed").await;
         assert_eq!(
             rx.borrow().error.as_deref(),
-            Some("error loading model: unknown model architecture: 'deepseek4_mtp_support'")
+            Some(
+                "Engine stopped after 3 restart attempts (engine process exited unexpectedly). Start it again from Settings or send a new message to retry."
+            )
         );
     }
 

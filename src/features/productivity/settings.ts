@@ -30,7 +30,11 @@ export function defaultSettings(): ProductivitySettings {
     density: 'comfortable',
     privacy: {
       clipboardCapture: false,
-      screenCapture: false,
+      // ON by default: the screenshot button is a pre-existing core
+      // feature, and an explicit click is consent. The toggle exists so
+      // users can turn capture off; defaulting it off would silently
+      // kill the button for every user.
+      screenCapture: true,
       webSearch: true,
       telemetry: false,
     },

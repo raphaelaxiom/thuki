@@ -576,6 +576,11 @@ pub(crate) async fn stream_builtin_chat(
     target: crate::engine::state::Target,
     model_id: String,
     think: bool,
+    // Per-model sampling overrides for this reply. `None` sends no
+    // explicit keys (engine defaults). Internal sub-streams (cache-reuse
+    // synthesis, citation repair) pass `None` and keep engine defaults.
+    temperature: Option<f64>,
+    top_p: Option<f64>,
     mut messages: Vec<ChatMessage>,
     client: &reqwest::Client,
     cancel_token: CancellationToken,
@@ -633,6 +638,8 @@ pub(crate) async fn stream_builtin_chat(
                     api_key: None,
                     flavor: crate::openai::V1Flavor::Builtin,
                     enable_thinking: think,
+                    temperature,
+                    top_p,
                 },
                 client,
                 cancel_token,
@@ -1014,6 +1021,8 @@ impl crate::websearch::orchestrator::Synthesizer for BuiltinSynthesizer<'_> {
             self.target.clone(),
             self.model_id.clone(),
             self.think,
+            None,
+            None,
             messages.to_vec(),
             self.client,
             cancel.clone(),
@@ -1391,6 +1400,8 @@ async fn refine_grounded_answer(
             target.clone(),
             model_id.clone(),
             think,
+            None,
+            None,
             repair_messages,
             client,
             cancel_token.clone(),
@@ -1988,6 +1999,12 @@ pub struct OllamaChatParams {
     /// Context window size in tokens. Must match the warmup request so Ollama
     /// reuses the same runner instance and its cached KV prefix.
     pub num_ctx: u32,
+    /// Sampling temperature (per-model override; 1.0 when unset, matching
+    /// the previous hardcoded value).
+    pub temperature: f64,
+    /// Nucleus sampling threshold (per-model override; 0.95 when unset,
+    /// matching the previous hardcoded value).
+    pub top_p: f64,
 }
 
 /// Nested message object in Ollama `/api/chat` response chunks.
@@ -2002,6 +2019,12 @@ struct OllamaChatResponseMessage {
 struct OllamaChatResponse {
     message: Option<OllamaChatResponseMessage>,
     done: Option<bool>,
+    /// Real engine-reported token counts, present on the final
+    /// `done: true` message. Used for token stats; never guessed.
+    #[serde(default)]
+    prompt_eval_count: Option<u64>,
+    #[serde(default)]
+    eval_count: Option<u64>,
 }
 
 /// Holds the active cancellation token for the current generation request.
@@ -2085,15 +2108,18 @@ pub async fn stream_ollama_chat(
         think,
         keep_alive,
         num_ctx,
+        temperature,
+        top_p,
     } = params;
+    let stream_started = std::time::Instant::now();
     let request_payload = OllamaChatRequest {
         model,
         messages,
         stream: true,
         think,
         options: OllamaOptions {
-            temperature: 1.0,
-            top_p: 0.95,
+            temperature,
+            top_p,
             top_k: 64,
             num_ctx,
         },
@@ -2139,6 +2165,16 @@ pub async fn stream_ollama_chat(
                         on_chunk(StreamChunk::Cancelled);
                         return accumulated;
                     }
+                    _ = tokio::time::sleep(std::time::Duration::from_millis(50)) => {
+                        // Phase 2C stop generation: the models_io stop flag
+                        // is polled alongside the existing cancel token so
+                        // the Output section's Stop button aborts the stream.
+                        if crate::models_io::take_generation_cancel_requested() {
+                            drop(stream);
+                            on_chunk(StreamChunk::Cancelled);
+                            return accumulated;
+                        }
+                    }
                     chunk_opt = stream.next() => {
                         match chunk_opt {
                             Some(Ok(bytes)) => {
@@ -2173,6 +2209,22 @@ pub async fn stream_ollama_chat(
                                                 }
                                             }
                                             if let Some(true) = json.done {
+                                                // Real engine-reported usage:
+                                                // record token stats only
+                                                // when the engine sent counts.
+                                                if let (
+                                                    Some(prompt_tokens),
+                                                    Some(completion_tokens),
+                                                ) = (
+                                                    json.prompt_eval_count,
+                                                    json.eval_count,
+                                                ) {
+                                                    crate::models_io::record_engine_usage(
+                                                        prompt_tokens,
+                                                        completion_tokens,
+                                                        stream_started.elapsed().as_millis() as u64,
+                                                    );
+                                                }
                                                 on_chunk(StreamChunk::Done);
                                                 done_emitted = true;
                                             }
@@ -2323,6 +2375,14 @@ pub async fn ask_model(
     // When true, force built-in engines-only web search (`/search` alias).
     // Non-builtin providers receive a capability error below.
     force_search: bool,
+    // Per-model inference overrides (Phase 2C). The frontend resolves them
+    // via `getInferenceParamsForModel(activeModelId)` and sends `null` for
+    // any field the user has not customized, so unset fields fall back to
+    // the global config / previous behaviour exactly.
+    temperature: Option<f64>,
+    top_p: Option<f64>,
+    context_length: Option<u32>,
+    system_prompt_override: Option<String>,
     on_event: Channel<StreamChunk>,
     client: State<'_, reqwest::Client>,
     generation: State<'_, GenerationState>,
@@ -2341,6 +2401,27 @@ pub async fn ask_model(
     // Snapshot the config once so all downstream reads (endpoint, prompt, model)
     // see a consistent view even if the user edits Settings mid-stream.
     let config = config.read().clone();
+
+    // Per-model inference overrides (Phase 2C): clamped with the same rules
+    // as the models_io module. `None` keeps the previous behaviour: global
+    // `num_ctx`, the global system prompt, Ollama's 1.0 / 0.95 sampling,
+    // and no explicit sampling keys on the built-in `/v1` request.
+    let effective_temperature = temperature.map(crate::models_io::clamp_temperature);
+    let effective_top_p = top_p.map(crate::models_io::clamp_top_p);
+    let effective_num_ctx = context_length
+        .map(crate::models_io::clamp_context_length)
+        .unwrap_or(config.inference.num_ctx);
+    let effective_system_prompt = match system_prompt_override
+        .as_deref()
+        .map(str::trim)
+        .filter(|v| !v.is_empty())
+    {
+        Some(override_) => override_.to_string(),
+        None => config.prompt.resolved_system.clone(),
+    };
+    // Drain a stale stop-generation flag from an earlier turn (e.g. Stop
+    // pressed with nothing in flight) so it cannot cancel this turn.
+    let _ = crate::models_io::take_generation_cancel_requested();
 
     // Route by the active provider's kind: native Ollama, the built-in
     // engine, or a generic OpenAI-compatible server. The decision is made
@@ -2404,7 +2485,7 @@ pub async fn ask_model(
         &bound_recorder,
         is_first_turn,
         model_name.clone(),
-        config.prompt.resolved_system.clone(),
+        effective_system_prompt.clone(),
     );
     // Tell the frontend the trace was opened for this conversation_id.
     // Sent unconditionally (regardless of `is_first_turn`) so the hook
@@ -2492,7 +2573,7 @@ pub async fn ask_model(
         let mut msgs = vec![ChatMessage {
             role: "system".to_string(),
             content: system_prompt_with_datetime(
-                &config.prompt.resolved_system,
+                &effective_system_prompt,
                 &local_datetime_context(),
                 place_time_line.as_deref(),
             ),
@@ -2566,7 +2647,9 @@ pub async fn ask_model(
                     messages,
                     think,
                     keep_alive,
-                    num_ctx: config.inference.num_ctx,
+                    num_ctx: effective_num_ctx,
+                    temperature: effective_temperature.unwrap_or(1.0),
+                    top_p: effective_top_p.unwrap_or(0.95),
                 },
                 &client,
                 cancel_token.clone(),
@@ -2582,20 +2665,18 @@ pub async fn ask_model(
             // `allow_oversized == Some(true)` is the user's "load anyway".
             let resolved = {
                 let conn = db.0.lock().map_err(|e| e.to_string())?;
-                builtin_target(&conn, &model_store, &model_id, config.inference.num_ctx).map(
-                    |target| {
-                        let gate = preflight_memory_gate(
-                            &conn,
-                            &model_store,
-                            &engine,
-                            &model_id,
-                            &target.model_path,
-                            allow_oversized == Some(true),
-                            &config.behavior.dismissed_memory_fit_models,
-                        );
-                        (target, gate)
-                    },
-                )
+                builtin_target(&conn, &model_store, &model_id, effective_num_ctx).map(|target| {
+                    let gate = preflight_memory_gate(
+                        &conn,
+                        &model_store,
+                        &engine,
+                        &model_id,
+                        &target.model_path,
+                        allow_oversized == Some(true),
+                        &config.behavior.dismissed_memory_fit_models,
+                    );
+                    (target, gate)
+                })
             };
             match resolved {
                 Ok((
@@ -2672,7 +2753,7 @@ pub async fn ask_model(
                                 &target,
                                 &model_id,
                                 &client,
-                                config.inference.num_ctx,
+                                effective_num_ctx,
                                 &messages[0].content,
                                 history,
                                 &user_msg.content,
@@ -2771,6 +2852,8 @@ pub async fn ask_model(
                                     target.clone(),
                                     model_id.clone(),
                                     think,
+                                    effective_temperature,
+                                    effective_top_p,
                                     stream_messages,
                                     &client,
                                     cancel_token.clone(),
@@ -2851,6 +2934,8 @@ pub async fn ask_model(
                     // `/think` reasoning control is built-in only; a remote
                     // OpenAI-compatible server uses its own server-side defaults.
                     enable_thinking: false,
+                    temperature: effective_temperature,
+                    top_p: effective_top_p,
                 },
                 &client,
                 cancel_token.clone(),
@@ -3512,6 +3597,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -3571,6 +3658,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -3613,6 +3702,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -3647,6 +3738,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -3688,6 +3781,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -3721,6 +3816,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -3768,6 +3865,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -3811,6 +3910,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -3858,6 +3959,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -3903,6 +4006,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -3940,6 +4045,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -3973,6 +4080,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4048,6 +4157,8 @@ mod tests {
                     think: false,
                     keep_alive: None,
                     num_ctx: DEFAULT_NUM_CTX,
+                    temperature: 1.0,
+                    top_p: 0.95,
                 },
                 &client,
                 token,
@@ -4095,6 +4206,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4142,6 +4255,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4173,6 +4288,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4263,6 +4380,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4298,6 +4417,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4514,6 +4635,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4550,6 +4673,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4672,6 +4797,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4712,6 +4839,8 @@ mod tests {
                 think: false,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4766,6 +4895,8 @@ mod tests {
                 think: true,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4814,6 +4945,8 @@ mod tests {
                 think: true,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -4850,6 +4983,8 @@ mod tests {
                 think: true,
                 keep_alive: None,
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             token,
@@ -5705,6 +5840,8 @@ mod tests {
                 think: false,
                 keep_alive: Some("10m".to_string()),
                 num_ctx: DEFAULT_NUM_CTX,
+                temperature: 1.0,
+                top_p: 0.95,
             },
             &client,
             CancellationToken::new(),
@@ -5825,6 +5962,8 @@ mod tests {
             engine_target(),
             "org/repo:m.gguf".to_string(),
             false,
+            None,
+            None,
             vec![],
             &client,
             CancellationToken::new(),
@@ -5880,6 +6019,8 @@ mod tests {
             engine_target(),
             "org/repo:m.gguf".to_string(),
             false,
+            None,
+            None,
             vec![],
             &client,
             CancellationToken::new(),
@@ -5936,6 +6077,8 @@ mod tests {
             engine_target(),
             "org/repo:m.gguf".to_string(),
             false,
+            None,
+            None,
             vec![],
             &client,
             CancellationToken::new(),
@@ -5974,6 +6117,8 @@ mod tests {
                     engine_target(),
                     "org/repo:m.gguf".to_string(),
                     false,
+                    None,
+                    None,
                     vec![],
                     &client,
                     CancellationToken::new(),
@@ -6030,6 +6175,8 @@ mod tests {
                     engine_target(),
                     "org/repo:m.gguf".to_string(),
                     false,
+                    None,
+                    None,
                     vec![],
                     &client,
                     cancel_token,
@@ -6077,6 +6224,8 @@ mod tests {
             engine_target(),
             "org/repo:m.gguf".to_string(),
             false,
+            None,
+            None,
             vec![],
             &client,
             CancellationToken::new(),
@@ -6220,6 +6369,8 @@ mod tests {
             engine_target(),
             "org/repo:m.gguf".to_string(),
             false,
+            None,
+            None,
             image_message(),
             &client,
             CancellationToken::new(),

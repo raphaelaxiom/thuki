@@ -514,6 +514,10 @@ pub(crate) async fn generate_title_text(
                     think: false,
                     keep_alive: None,
                     num_ctx,
+                    // Title generation uses the old Ollama defaults,
+                    // never per-model sampling overrides.
+                    temperature: 1.0,
+                    top_p: 0.95,
                 },
                 client,
                 cancel_token,
@@ -537,6 +541,10 @@ pub(crate) async fn generate_title_text(
                     // must not run a thinking pass (it would burn the token
                     // budget before producing the title).
                     enable_thinking: false,
+                    // Title generation uses server defaults, never per-model
+                    // sampling overrides.
+                    temperature: None,
+                    top_p: None,
                 },
                 client,
                 cancel_token,

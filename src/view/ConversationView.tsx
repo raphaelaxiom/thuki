@@ -129,6 +129,13 @@ interface ConversationViewProps {
   /** Drives `aria-expanded` on the export button. */
   isExportOpen?: boolean;
   /**
+   * Called when the user clicks the Features button to open the Phase 2
+   * features drawer. Omit to hide the Features button entirely.
+   */
+  onFeaturesToggle?: () => void;
+  /** Drives `aria-expanded` on the Features button. */
+  isFeaturesOpen?: boolean;
+  /**
    * Active provider's `kind` (`builtin` | `ollama` | `openai`). Drives
    * whether a cold-start loading label can appear at all: only the two
    * local providers have a real spin-up wait to narrate.
@@ -189,6 +196,8 @@ export function ConversationView({
   onMinimize,
   onExportToggle,
   isExportOpen,
+  onFeaturesToggle,
+  isFeaturesOpen,
   showAutoSaveNotice = false,
   onAutoSaveNoticeAcknowledge,
   onAutoSaveNoticeSettings,
@@ -379,6 +388,8 @@ export function ConversationView({
         onMinimize={onMinimize}
         onExportToggle={onExportToggle}
         isExportOpen={isExportOpen}
+        onFeaturesToggle={onFeaturesToggle}
+        isFeaturesOpen={isFeaturesOpen}
         bookmarkButtonRef={bookmarkButtonRef}
         saveButtonTestId="auto-save-bookmark"
       />

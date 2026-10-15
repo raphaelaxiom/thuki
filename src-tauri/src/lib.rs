@@ -17,19 +17,23 @@
 
 pub mod commands;
 pub mod config;
+pub mod conversations_ext;
 pub mod database;
 pub mod engine;
 pub mod export;
 pub mod history;
 pub mod images;
 pub mod models;
+pub mod models_io;
 pub mod net;
 pub mod ocr;
 pub mod onboarding;
 pub mod openai;
+pub mod productivity;
 pub mod screenshot;
 pub mod settings_commands;
 pub mod startup_guard;
+pub mod system_actions;
 pub mod trace;
 pub mod updater;
 pub mod warmup;
@@ -481,6 +485,15 @@ fn request_quit(app: &tauri::AppHandle) {
         app.state::<crate::commands::GenerationState>().cancel();
         app.exit(0);
     }
+}
+
+/// Tauri-command wrapper around [`request_quit`] so the frontend can quit
+/// through the same download-aware path (the `veilura:quit-requested` event
+/// from the MenubarExtras panel). No new behaviour: identical to the tray /
+/// app-menu Quit items.
+#[tauri::command]
+fn request_app_quit(app: tauri::AppHandle) {
+    request_quit(&app);
 }
 
 /// Shows the native "quit while a model is downloading" warning. "Quit Anyway"
@@ -2378,6 +2391,20 @@ fn build_tray_menu<R: tauri::Runtime>(
 
     let show = MenuItem::with_id(app, "show", "Open Veilura", true, None::<&str>)?;
     let settings = MenuItem::with_id(app, "settings", "Settings…", true, Some("Cmd+,"))?;
+    // Phase 2D menubar parity: New Chat starts a fresh conversation
+    // (same as the in-app + button), Engine Status opens the overlay where
+    // the live engine state is shown in the chat header. Recent
+    // conversations stay in the in-app MenubarExtras panel: the native tray
+    // menu is rebuilt only on refresh, so a static snapshot there would go
+    // stale; the panel reads `list_conversations` live on every open.
+    let new_chat = MenuItem::with_id(app, "new-chat", "New Chat", true, None::<&str>)?;
+    let engine_status = MenuItem::with_id(
+        app,
+        "engine-status",
+        "Engine Status\u{2026}",
+        true,
+        None::<&str>,
+    )?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "Quit Veilura", true, Some("Cmd+Q"))?;
 
@@ -2385,9 +2412,24 @@ fn build_tray_menu<R: tauri::Runtime>(
         let label = format!("What's New in v{version}");
         let update = MenuItem::with_id(app, "update", &label, true, None::<&str>)?;
         let sep2 = PredefinedMenuItem::separator(app)?;
-        Menu::with_items(app, &[&show, &settings, &sep1, &update, &sep2, &quit])
+        Menu::with_items(
+            app,
+            &[
+                &show,
+                &new_chat,
+                &engine_status,
+                &settings,
+                &sep1,
+                &update,
+                &sep2,
+                &quit,
+            ],
+        )
     } else {
-        Menu::with_items(app, &[&show, &settings, &sep1, &quit])
+        Menu::with_items(
+            app,
+            &[&show, &new_chat, &engine_status, &settings, &sep1, &quit],
+        )
     }
 }
 
@@ -2552,6 +2594,18 @@ pub fn run() {
                     }
                     "settings" => {
                         show_settings_window(app);
+                    }
+                    "new-chat" => {
+                        // Tray New Chat: show the overlay and tell the
+                        // frontend to reset the session (same as the
+                        // in-app + button / MenubarExtras panel).
+                        show_overlay(app, crate::context::ActivationContext::empty());
+                        let _ = app.emit("veilura:new-chat", ());
+                    }
+                    "engine-status" => {
+                        // The live engine state renders in the chat header;
+                        // opening the overlay surfaces it.
+                        show_overlay(app, crate::context::ActivationContext::empty());
                     }
                     "update" => {
                         // Open the "What's New" window so the user previews
@@ -3237,7 +3291,84 @@ pub fn run() {
             #[cfg(not(coverage))]
             keychain::clear_provider_api_key,
             #[cfg(not(coverage))]
-            keychain::has_provider_api_key
+            keychain::has_provider_api_key,
+            // ── Phase 2B: conversations / prompts / system actions ──
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_search,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_set_pinned,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_set_archived,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_rename,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_duplicate,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_bulk_archive,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_bulk_delete,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_export,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_import,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_list_folders,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_create_folder,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_rename_folder,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_delete_folder,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_move,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_add_tag,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_remove_tag,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_list_prompts,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_upsert_prompt,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_delete_prompt,
+            #[cfg(not(coverage))]
+            conversations_ext::conv_ext_set_prompt_favourite,
+            #[cfg(not(coverage))]
+            system_actions::system_execute_action,
+            #[cfg(not(coverage))]
+            system_actions::system_parse_action,
+            // ── Phase 2C: models / input / output ──
+            models_io::models_io_resolve_settings,
+            models_io::models_io_set_model_settings,
+            models_io::models_io_get_model_settings,
+            models_io::models_io_disk_usage,
+            models_io::models_io_delete_model,
+            models_io::models_io_enqueue_download,
+            models_io::models_io_pause_download,
+            models_io::models_io_resume_download,
+            models_io::models_io_cancel_download,
+            models_io::models_io_list_downloads,
+            models_io::models_io_read_clipboard,
+            models_io::models_io_capture_screenshot,
+            models_io::models_io_dictate,
+            models_io::models_io_speak,
+            models_io::models_io_stop_speaking,
+            models_io::models_io_stop_generation,
+            models_io::models_io_last_token_stats,
+            models_io::models_io_sanitize_tts,
+            models_io::models_io_extract_code_blocks,
+            models_io::models_io_parse_citations,
+            // ── Phase 2D: productivity / settings / safety ──
+            #[cfg(not(coverage))]
+            productivity::productivity_redact_prompt,
+            #[cfg(not(coverage))]
+            productivity::productivity_validate_backup,
+            #[cfg(not(coverage))]
+            productivity::productivity_check_shortcut_conflicts,
+            // Frontend quit path for `veilura:quit-requested` (MenubarExtras):
+            // routes through the same download-aware `request_quit` as the
+            // tray / app-menu Quit items.
+            request_app_quit
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

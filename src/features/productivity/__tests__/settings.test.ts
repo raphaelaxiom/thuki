@@ -19,6 +19,9 @@ describe('settings', () => {
   it('defaults to telemetry off and filter on', () => {
     const defaults = defaultSettings();
     expect(defaults.privacy.telemetry).toBe(false);
+    // Screen capture defaults ON: the screenshot button is a core
+    // feature and an explicit click is consent (see settings.ts).
+    expect(defaults.privacy.screenCapture).toBe(true);
     expect(defaults.contentFilterEnabled).toBe(true);
     expect(defaults.theme).toBe('system');
   });

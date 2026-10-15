@@ -6063,6 +6063,35 @@ describe('App', () => {
       expect(saveCalls).toHaveLength(0);
     });
 
+    it('does not invoke capture_screenshot_command when screen capture is off in Productivity → Privacy', async () => {
+      window.localStorage.setItem(
+        'veilura:productivity:settings',
+        JSON.stringify({ privacy: { screenCapture: false } }),
+      );
+      try {
+        enableChannelCaptureWithResponses({
+          capture_screenshot_command: null,
+        });
+
+        render(<App />);
+        await act(async () => {});
+        await showOverlay();
+
+        await act(async () => {
+          fireEvent.click(
+            screen.getByRole('button', { name: 'Take screenshot' }),
+          );
+        });
+
+        const captureCalls = invoke.mock.calls.filter(
+          ([cmd]) => cmd === 'capture_screenshot_command',
+        );
+        expect(captureCalls).toHaveLength(0);
+      } finally {
+        window.localStorage.removeItem('veilura:productivity:settings');
+      }
+    });
+
     it('does not invoke capture_screenshot_command when at max images', async () => {
       enableChannelCaptureWithResponses({
         save_image_command: '/tmp/staged/img.jpg',

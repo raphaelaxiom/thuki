@@ -46,7 +46,9 @@ use tauri::Manager;
 
 /// Per-model inference settings. Mirrors `PerModelSettings` in
 /// `src/features/modelsio/types.ts`.
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+// NOTE: no `Copy` — `system_prompt_override: String` is not Copy
+// (the feat-models-io branch derived it; that fails compilation).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PerModelSettings {
     pub temperature: f64,
@@ -466,6 +468,37 @@ pub fn record_token_stats(stats: TokenStats) {
     }
 }
 
+/// Session running totals for [`record_engine_usage`]. Kept beside the
+/// last-stats slot so a stream function can record real engine usage
+/// without threading totals through every caller.
+fn session_token_totals() -> &'static Mutex<(u64, u64)> {
+    static TOTALS: OnceLock<Mutex<(u64, u64)>> = OnceLock::new();
+    TOTALS.get_or_init(|| Mutex::new((0, 0)))
+}
+
+/// Record one engine response's real reported usage, accumulating the
+/// session totals. Callers pass only what the engine actually reported
+/// (`prompt_eval_count` / `eval_count` on Ollama, `usage` on `/v1`); when
+/// the engine reports nothing, callers must not call this — the UI then
+/// shows "no usage numbers" instead of invented figures.
+pub fn record_engine_usage(prompt_tokens: u64, completion_tokens: u64, elapsed_ms: u64) {
+    let (total_prompt, total_completion) = match session_token_totals().lock() {
+        Ok(mut totals) => {
+            totals.0 = totals.0.saturating_add(prompt_tokens);
+            totals.1 = totals.1.saturating_add(completion_tokens);
+            *totals
+        }
+        Err(_) => (prompt_tokens, completion_tokens),
+    };
+    record_token_stats(compute_token_stats(
+        prompt_tokens,
+        completion_tokens,
+        elapsed_ms,
+        total_prompt,
+        total_completion,
+    ));
+}
+
 // ─── Filesystem helpers ────────────────────────────────────────────────────
 
 fn modelsio_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
@@ -531,7 +564,7 @@ pub fn models_io_get_model_settings(
     app: tauri::AppHandle,
     model_id: String,
 ) -> Result<Option<PerModelSettings>, String> {
-    Ok(load_settings_map(&app).get(&model_id).copied())
+    Ok(load_settings_map(&app).get(&model_id).cloned())
 }
 
 /// Disk usage of the real model store: one row per blob/partial + total

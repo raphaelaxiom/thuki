@@ -44,6 +44,12 @@ pub struct OpenAiChatParams {
     /// directly. Honored only on the built-in engine via
     /// [`reasoning_template_kwargs`]; remote `/v1` servers ignore it.
     pub enable_thinking: bool,
+    /// Per-model sampling temperature (Phase 2C). `Some` sends the key;
+    /// `None` leaves the server default untouched.
+    pub temperature: Option<f64>,
+    /// Per-model nucleus sampling threshold (Phase 2C). Same `Some`/`None`
+    /// contract as [`Self::temperature`].
+    pub top_p: Option<f64>,
 }
 
 /// Error returned by [`request_openai_json`]. Mirrors the classification the
@@ -82,11 +88,24 @@ struct SseChoice {
     delta: SseDelta,
 }
 
+/// `usage` object in a `/v1/chat/completions` SSE event (sent when the
+/// request asked for it via `stream_options.include_usage`, e.g. the
+/// built-in engine). Real engine-reported token counts.
+#[derive(Deserialize)]
+struct SseUsage {
+    #[serde(default)]
+    prompt_tokens: u64,
+    #[serde(default)]
+    completion_tokens: u64,
+}
+
 /// The JSON payload of one `data:` SSE line.
 #[derive(Deserialize)]
 struct SseEvent {
     #[serde(default)]
     choices: Vec<SseChoice>,
+    #[serde(default)]
+    usage: Option<SseUsage>,
 }
 
 /// `choices[i].message` object in a non-streaming `/v1/chat/completions`
@@ -333,8 +352,25 @@ pub async fn stream_openai_chat(
         api_key,
         flavor,
         enable_thinking,
+        temperature,
+        top_p,
     } = params;
-    let body = chat_request_body(&model, &messages, flavor, enable_thinking);
+    let mut body = chat_request_body(&model, &messages, flavor, enable_thinking);
+    // Per-model sampling (Phase 2C): sent only when the user customized
+    // the model. Built-in additionally asks for usage so the real engine
+    // token counts reach token stats; remote servers are not asked
+    // (their `stream_options` support varies), but usage is parsed
+    // whenever a server sends it anyway.
+    if let Some(t) = temperature {
+        body["temperature"] = serde_json::json!(t);
+    }
+    if let Some(p) = top_p {
+        body["top_p"] = serde_json::json!(p);
+    }
+    if flavor == V1Flavor::Builtin {
+        body["stream_options"] = serde_json::json!({ "include_usage": true });
+    }
+    let stream_started = std::time::Instant::now();
     let mut request = client
         .post(format!("{base_url}/v1/chat/completions"))
         .json(&body);
@@ -367,6 +403,9 @@ pub async fn stream_openai_chat(
 
     let mut stream = response.bytes_stream();
     let mut buffer: Vec<u8> = Vec::new();
+    // Latest engine-reported usage seen on this stream, recorded on
+    // terminal completion so token stats carry real numbers, never guesses.
+    let mut last_usage: Option<(u64, u64)> = None;
 
     loop {
         tokio::select! {
@@ -377,6 +416,15 @@ pub async fn stream_openai_chat(
                 drop(stream);
                 on_chunk(StreamChunk::Cancelled);
                 return accumulated;
+            }
+            _ = tokio::time::sleep(std::time::Duration::from_millis(50)) => {
+                // Phase 2C stop generation: the models_io stop flag is
+                // polled alongside the existing cancel token.
+                if crate::models_io::take_generation_cancel_requested() {
+                    drop(stream);
+                    on_chunk(StreamChunk::Cancelled);
+                    return accumulated;
+                }
             }
             chunk_opt = stream.next() => {
                 match chunk_opt {
@@ -399,6 +447,13 @@ pub async fn stream_openai_chat(
                                 continue;
                             };
                             if payload == "[DONE]" {
+                                if let Some((prompt_tokens, completion_tokens)) = last_usage {
+                                    crate::models_io::record_engine_usage(
+                                        prompt_tokens,
+                                        completion_tokens,
+                                        stream_started.elapsed().as_millis() as u64,
+                                    );
+                                }
                                 on_chunk(StreamChunk::Done);
                                 return accumulated;
                             }
@@ -407,6 +462,10 @@ pub async fn stream_openai_chat(
                             let Ok(event) = serde_json::from_str::<SseEvent>(payload) else {
                                 continue;
                             };
+                            if let Some(usage) = event.usage {
+                                last_usage =
+                                    Some((usage.prompt_tokens, usage.completion_tokens));
+                            }
                             if let Some(choice) = event.choices.first() {
                                 // Whatever reasoning the model emits is always
                                 // shown (never hidden): an `Optional` model that
@@ -461,6 +520,13 @@ pub async fn stream_openai_chat(
                             "{}",
                             eof_without_done_diagnostic(accumulated.len(), token_events)
                         );
+                        if let Some((prompt_tokens, completion_tokens)) = last_usage {
+                            crate::models_io::record_engine_usage(
+                                prompt_tokens,
+                                completion_tokens,
+                                stream_started.elapsed().as_millis() as u64,
+                            );
+                        }
                         on_chunk(StreamChunk::Done);
                         return accumulated;
                     }
@@ -590,6 +656,8 @@ mod tests {
             api_key: None,
             flavor: V1Flavor::Remote,
             enable_thinking: false,
+            temperature: None,
+            top_p: None,
         }
     }
 

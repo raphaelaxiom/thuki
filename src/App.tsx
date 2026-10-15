@@ -56,10 +56,22 @@ import { ImagePreviewModal } from './components/ImagePreviewModal';
 import { TipBar } from './components/TipBar';
 import { UpdateFooterBar } from './components/UpdateFooterBar';
 import { useTips } from './hooks/useTips';
+import { ConversationsFeature } from './features/conversations';
+import type {
+  ChatMessageLike,
+  ConversationMeta,
+} from './features/conversations';
+import { ModelsIoPanel } from './features/modelsio';
+import type { ModelMeta as ModelsIoModelMeta } from './features/modelsio';
+import { ProductivityHome } from './features/productivity';
+import {
+  applyAppearance,
+  loadSettings,
+} from './features/productivity/settings';
 import { useUpdater } from './hooks/useUpdater';
 import type { AttachedImage } from './types/image';
 import { MAX_IMAGE_SIZE_BYTES } from './types/image';
-import type { ConversationSummary } from './types/history';
+import type { ConversationSummary, PersistedMessage } from './types/history';
 import { useConfig } from './contexts/ConfigContext';
 import {
   COMMANDS,
@@ -2237,6 +2249,141 @@ function App() {
     resetForNewConversation();
   }, [isSaved, messages.length, resetForNewConversation]);
 
+  // ── Phase 2 features drawer (conversations / models & I/O /
+  // productivity) ────────────────────────────────────────────────────
+  const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
+  const [featureTab, setFeatureTab] = useState<
+    'conversations' | 'models' | 'productivity'
+  >('conversations');
+  const [featureConversations, setFeatureConversations] = useState<
+    ConversationMeta[]
+  >([]);
+  const [systemActionNotice, setSystemActionNotice] = useState<string | null>(
+    null,
+  );
+
+  /** Appearance from Productivity → Appearance applies on launch. */
+  useEffect(() => {
+    try {
+      applyAppearance(loadSettings());
+    } catch {
+      // Corrupt stored settings: the panels fall back to defaults.
+    }
+  }, []);
+
+  /** Seed the conversations tab from the real SQLite history. */
+  const handleFeaturesToggle = useCallback(() => {
+    if (!isFeaturesOpen) {
+      void listConversations()
+        .then((summaries) =>
+          setFeatureConversations(
+            summaries.map((summary) => ({
+              id: summary.id,
+              title: summary.title,
+              model: summary.model,
+              updated_at: summary.updated_at,
+              message_count: summary.message_count,
+            })),
+          ),
+        )
+        .catch(() => {
+          // History unavailable: the panel still works on its
+          // localStorage organisation state.
+        });
+    }
+    setIsFeaturesOpen(!isFeaturesOpen);
+  }, [listConversations, isFeaturesOpen]);
+
+  /** Messages for one conversation, for the panel's search / export.
+   *  Read-only: invokes `load_conversation` directly instead of the
+   *  history hook's loader, which would switch the session's conversation
+   *  identity to the panel's target as a side effect. */
+  const handleFeatureLoadMessages = useCallback(
+    async (conversationId: string): Promise<ChatMessageLike[]> => {
+      const persisted = await invoke<PersistedMessage[]>('load_conversation', {
+        conversationId,
+      });
+      return persisted.map((message) => ({
+        role: message.role,
+        content: message.content,
+      }));
+    },
+    [],
+  );
+
+  /** Persist an imported / duplicated conversation to SQLite. */
+  const handleFeatureImport = useCallback(
+    async (meta: ConversationMeta, messages: ChatMessageLike[]) => {
+      try {
+        await invoke('conv_ext_import', {
+          payload: {
+            title: meta.title,
+            model: meta.model,
+            messages: messages.map((message) => ({
+              role: message.role,
+              content: message.content,
+            })),
+          },
+        });
+      } catch {
+        // The panel already holds the conversation in memory; the SQLite
+        // copy is best-effort until the next drawer open re-seeds.
+      }
+    },
+    [],
+  );
+
+  /** Real picker inventory mapped to the Models / I/O panel's shape. */
+  const modelsIoModels = useMemo<ModelsIoModelMeta[]>(
+    () =>
+      availableModels.map((id) => ({
+        id,
+        displayName: modelDisplayNames[id] ?? id,
+        sizeBytes: modelSizesBytes[id] ?? 0,
+        paramsB: null,
+        contextLength: 0,
+        quant: '',
+        vision: modelCapabilities[id]?.vision ?? false,
+        downloaded: true,
+        notes: '',
+      })),
+    [availableModels, modelDisplayNames, modelSizesBytes, modelCapabilities],
+  );
+
+  /**
+   * Phase 2 cross-feature events (INTEGRATION-productivity §2b–§2c):
+   * - `veilura:quick-action` (window event, from QuickActions): send the
+   *   redacted prompt through the existing chat pipeline. preventDefault
+   *   marks it handled so the panel reports "Sent" instead of falling
+   *   back to the `submit_quick_action` invoke.
+   * - `veilura:new-chat` (window event from MenubarExtras, Tauri event
+   *   from the tray "New Chat" item): start a fresh conversation.
+   * - `veilura:quit-requested` (window event from MenubarExtras): quit
+   *   through the same download-aware path as the tray / app-menu Quit.
+   */
+  useEffect(() => {
+    const onQuickAction = (event: Event) => {
+      const detail = (event as CustomEvent<{ prompt?: unknown }>).detail;
+      if (typeof detail?.prompt !== 'string' || detail.prompt === '') return;
+      event.preventDefault();
+      void ask(detail.prompt);
+    };
+    const onNewChat = () => handleNewConversation();
+    const onQuitRequested = () => {
+      void invoke('request_app_quit').catch(() => {});
+    };
+    window.addEventListener('veilura:quick-action', onQuickAction);
+    window.addEventListener('veilura:new-chat', onNewChat);
+    window.addEventListener('veilura:quit-requested', onQuitRequested);
+    const unlistenPromise = listen('veilura:new-chat', onNewChat);
+    return () => {
+      window.removeEventListener('veilura:quick-action', onQuickAction);
+      window.removeEventListener('veilura:new-chat', onNewChat);
+      window.removeEventListener('veilura:quit-requested', onQuitRequested);
+      void unlistenPromise.then((unlisten) => unlisten());
+    };
+  }, [ask, handleNewConversation]);
+
   /** Saves the current conversation then starts a fresh one. */
   const handleSaveAndNew = useCallback(async () => {
     try {
@@ -2377,6 +2524,14 @@ function App() {
     /* v8 ignore start -- defensive guard: button is always disabled at max images, so this branch is unreachable through normal UI interaction */
     if (attachedImages.length >= config.window.maxImages) return;
     /* v8 ignore stop */
+    // Productivity → Privacy toggle gates the frontend capture pipeline:
+    // with screen capture off, refuse instead of capturing.
+    if (!loadSettings().privacy.screenCapture) {
+      setCaptureError(
+        'Screen capture is turned off in Productivity → Privacy.',
+      );
+      return;
+    }
     const base64 = await invoke<string | null>('capture_screenshot_command');
     if (!base64) return;
     const binary = atob(base64);
@@ -4322,6 +4477,8 @@ function App() {
                                     : undefined
                                 }
                                 isExportOpen={isExportOpen}
+                                onFeaturesToggle={handleFeaturesToggle}
+                                isFeaturesOpen={isFeaturesOpen}
                                 providerKind={
                                   config.inference.activeProviderKind
                                 }
@@ -4340,6 +4497,88 @@ function App() {
                               />
                             ) : null}
                           </AnimatePresence>
+
+                          {/* Phase 2 features drawer: Conversations /
+                              Models & I/O / Productivity panels, toggled
+                              from the header Features (✦) button. */}
+                          {isChatMode && isFeaturesOpen ? (
+                            <div
+                              data-testid="features-drawer"
+                              className="border-t border-surface-border max-h-[420px] overflow-y-auto"
+                            >
+                              <div
+                                role="tablist"
+                                aria-label="Features"
+                                className="flex gap-2 px-4 pt-3"
+                              >
+                                {(
+                                  [
+                                    ['conversations', 'Conversations'],
+                                    ['models', 'Models & I/O'],
+                                    ['productivity', 'Productivity'],
+                                  ] as const
+                                ).map(([id, label]) => (
+                                  <button
+                                    key={id}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={featureTab === id}
+                                    onClick={() => setFeatureTab(id)}
+                                    className="px-3 py-1.5 rounded-lg text-xs cursor-pointer"
+                                  >
+                                    {label}
+                                  </button>
+                                ))}
+                              </div>
+                              {systemActionNotice ? (
+                                <p className="px-4 pt-2 text-xs text-text-secondary">
+                                  Last system action: {systemActionNotice}
+                                </p>
+                              ) : null}
+                              {featureTab === 'conversations' ? (
+                                <ConversationsFeature
+                                  conversations={featureConversations}
+                                  loadMessages={handleFeatureLoadMessages}
+                                  onOpenConversation={(id) =>
+                                    void handleLoadConversation(id)
+                                  }
+                                  onConversationsChanged={(next) =>
+                                    setFeatureConversations([...next])
+                                  }
+                                  onImportConversation={(meta, messages) =>
+                                    void handleFeatureImport(meta, messages)
+                                  }
+                                  onInsertPrompt={(filledText) =>
+                                    setQuery(filledText)
+                                  }
+                                  onResult={(result) =>
+                                    setSystemActionNotice(result.message)
+                                  }
+                                />
+                              ) : null}
+                              {featureTab === 'models' ? (
+                                <ModelsIoPanel
+                                  models={modelsIoModels}
+                                  modelVision={
+                                    modelCapabilities[activeModel ?? '']
+                                      ?.vision ?? false
+                                  }
+                                  initialReply={
+                                    [...messages]
+                                      .reverse()
+                                      .find(
+                                        (message) =>
+                                          message.role === 'assistant',
+                                      )?.content
+                                  }
+                                  onStop={() => void cancel()}
+                                />
+                              ) : null}
+                              {featureTab === 'productivity' ? (
+                                <ProductivityHome />
+                              ) : null}
+                            </div>
+                          ) : null}
 
                           {/* Ask-bar mode model picker drawer - above the input bar.
                     In chat mode the trigger and drawer move to the header area above. */}

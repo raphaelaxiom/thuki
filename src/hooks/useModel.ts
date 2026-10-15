@@ -1,5 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { Channel, invoke } from '@tauri-apps/api/core';
+import {
+  DEFAULT_PER_MODEL_SETTINGS,
+  getInferenceParamsForModel,
+} from '../features/modelsio';
 import type { SearchResultPreview, SearchStage } from '../types/search';
 
 /**
@@ -765,6 +769,33 @@ export function useModel(
         ? '/search'
         : (slashCommand ?? (think ? '/think' : null));
 
+      // Per-model inference settings (Phase 2C): resolve the active
+      // model's stored settings and send only fields the user actually
+      // customized (anything still at the default is sent as null so the
+      // backend falls back to the global config / previous behaviour).
+      // A missing model id (no selection yet) sends all nulls.
+      const inferenceParams =
+        activeModel != null ? getInferenceParamsForModel(activeModel) : null;
+      const temperature =
+        inferenceParams !== null &&
+        inferenceParams.temperature !== DEFAULT_PER_MODEL_SETTINGS.temperature
+          ? inferenceParams.temperature
+          : null;
+      const topP =
+        inferenceParams !== null &&
+        inferenceParams.topP !== DEFAULT_PER_MODEL_SETTINGS.topP
+          ? inferenceParams.topP
+          : null;
+      const contextLength =
+        inferenceParams !== null &&
+        inferenceParams.contextLength !== DEFAULT_PER_MODEL_SETTINGS.contextLength
+          ? inferenceParams.contextLength
+          : null;
+      const systemPromptOverride =
+        inferenceParams !== null && inferenceParams.systemPromptOverride !== ''
+          ? inferenceParams.systemPromptOverride
+          : null;
+
       try {
         await invoke('ask_model', {
           message: promptOverride ?? displayContent,
@@ -776,6 +807,10 @@ export function useModel(
           slashCommand: resolvedSlashCommand,
           allowOversized: allowOversized ?? false,
           forceSearch: forceSearch ?? false,
+          temperature,
+          topP,
+          contextLength,
+          systemPromptOverride,
           onEvent: channel,
         });
       } catch {

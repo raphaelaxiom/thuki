@@ -64,7 +64,7 @@ export function PrivacyPanel() {
         label="Screen capture"
         checked={settings.privacy.screenCapture}
         onChange={(next) => setPrivacy({ screenCapture: next })}
-        hint="Capture the screen for screenshots / OCR. Off by default."
+        hint="Capture the screen for screenshots / OCR. On by default — turn off to block screenshots."
       />
       <Toggle
         label="Web search"
