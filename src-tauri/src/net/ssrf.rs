@@ -42,6 +42,11 @@ pub enum SsrfError {
     /// The URL scheme was outside the `http`/`https` allowlist.
     #[error("blocked URL scheme: {0}")]
     BlockedScheme(String),
+    /// The URL carried embedded credentials (`user:pass@host`). Credentials
+    /// in a fetched URL leak into logs, are a phishing/smuggling vector, and
+    /// are never legitimate for web-search fetches.
+    #[error("blocked URL with embedded credentials")]
+    BlockedCredentials,
     /// A hostname resolved to zero addresses.
     #[error("host resolved to no addresses")]
     NoAddresses,
@@ -139,12 +144,16 @@ where
 
 /// Validates a request URL before it is issued and on every redirect hop.
 ///
-/// Enforces the `http`/`https` scheme allowlist and, for IP-literal hosts,
-/// rejects non-globally-routable literals. Domain hosts pass here and are
-/// screened later by [`screen_addrs`] at resolve time.
+/// Enforces the `http`/`https` scheme allowlist, rejects embedded
+/// credentials (`user:pass@host`), and, for IP-literal hosts, rejects
+/// non-globally-routable literals. Domain hosts pass here and are screened
+/// later by [`screen_addrs`] at resolve time.
 pub fn validate_request_url(url: &Url) -> Result<(), SsrfError> {
     if !matches!(url.scheme(), "http" | "https") {
         return Err(SsrfError::BlockedScheme(url.scheme().to_owned()));
+    }
+    if !url.username().is_empty() || url.password().is_some() {
+        return Err(SsrfError::BlockedCredentials);
     }
     match url.host() {
         Some(Host::Ipv4(ip)) => reject_if_blocked(IpAddr::V4(ip)),
@@ -299,6 +308,21 @@ mod tests {
     fn validate_url_blocks_file_scheme() {
         let e = validate_request_url(&Url::parse("file:///etc/passwd").unwrap()).unwrap_err();
         assert!(matches!(e, SsrfError::BlockedScheme(_)));
+    }
+
+    #[test]
+    fn validate_url_blocks_embedded_credentials() {
+        // `user:pass@host` and bare `user@host` both leak credentials into
+        // logs and are a classic smuggling/phishing shape; search-result
+        // URLs never legitimately carry them.
+        for s in [
+            "http://user:secret@example.com/",
+            "https://user@example.com/path",
+            "http://admin:password@8.8.8.8/",
+        ] {
+            let e = validate_request_url(&Url::parse(s).unwrap()).unwrap_err();
+            assert_eq!(e, SsrfError::BlockedCredentials, "{s}");
+        }
     }
 
     #[test]

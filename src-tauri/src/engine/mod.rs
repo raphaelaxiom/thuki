@@ -8,5 +8,6 @@
 
 pub mod orphan;
 pub mod process;
+pub mod recovery;
 pub mod runner;
 pub mod state;

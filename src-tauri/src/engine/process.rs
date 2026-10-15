@@ -10,6 +10,7 @@
 
 use std::collections::VecDeque;
 use std::future::Future;
+use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -20,6 +21,42 @@ use crate::config::defaults::{
     ENGINE_HEALTH_PROBE_TIMEOUT_SECS, ENGINE_STDERR_TAIL_LINES, ENGINE_STDERR_TAIL_LINE_MAX_BYTES,
     LLAMA_SERVER_CACHE_RAM_MIB, LLAMA_SERVER_PARALLEL_SLOTS,
 };
+
+/// The only host the bundled engine may bind. `llama-server` serves the
+/// local model over HTTP with no authentication, so binding anything but
+/// loopback would expose unauthenticated inference (and prompt content) to
+/// the LAN. Every spawn path goes through [`validate_engine_bind_host`]
+/// against this constant; a non-loopback value fails the spawn instead of
+/// starting a reachable server.
+pub const ENGINE_BIND_HOST: &str = "127.0.0.1";
+
+/// Refuses to start the engine on a non-loopback bind host. Only the
+/// loopback literals `127.0.0.1` and `::1` are accepted: `localhost` is
+/// deliberately rejected because it resolves through the hosts file / DNS,
+/// which an attacker-controlled entry could point at a non-loopback
+/// address, and `0.0.0.0` / LAN addresses are never legitimate here.
+pub fn validate_engine_bind_host(host: &str) -> Result<(), String> {
+    match host {
+        "127.0.0.1" | "::1" => Ok(()),
+        other => Err(format!(
+            "engine bind host must be loopback (127.0.0.1 or ::1), got: {other}"
+        )),
+    }
+}
+
+/// Refuses an engine bind address whose IP is not loopback. The socket
+/// half of [`validate_engine_bind_host`]: even if the host string were
+/// somehow loopback-shaped, the resolved address must itself be loopback
+/// before any listener is created.
+pub fn validate_engine_bind_addr(addr: SocketAddr) -> Result<(), String> {
+    if addr.ip().is_loopback() {
+        Ok(())
+    } else {
+        Err(format!(
+            "engine bind address must be loopback, got: {addr}"
+        ))
+    }
+}
 
 /// Everything needed to launch one engine process.
 #[derive(Debug, Clone, PartialEq)]
@@ -142,7 +179,7 @@ fn llama_server_args(args: &SpawnArgs) -> Vec<std::ffi::OsString> {
     argv.push("--ctx-size".into());
     argv.push(args.num_ctx.to_string().into());
     argv.push("--host".into());
-    argv.push("127.0.0.1".into());
+    argv.push(ENGINE_BIND_HOST.into());
     argv.push("--port".into());
     argv.push(args.port.to_string().into());
     argv.push("--no-webui".into());
@@ -307,6 +344,11 @@ fn reset_child_signal_mask() -> std::io::Result<()> {
 impl EngineProcess for TokioEngineProcess {
     #[cfg_attr(coverage_nightly, coverage(off))]
     async fn spawn(&self, args: &SpawnArgs) -> Result<Box<dyn EngineChild>, String> {
+        // Fail closed: a non-loopback bind host must never reach exec.
+        // The constant is loopback today; this guard makes a future edit
+        // that changes it (or a caller-supplied host) a loud spawn failure
+        // instead of a silently LAN-reachable unauthenticated server.
+        validate_engine_bind_host(ENGINE_BIND_HOST)?;
         let mut command = tokio::process::Command::new(&self.binary);
         command
             .args(llama_server_args(args))
@@ -342,8 +384,13 @@ impl EngineProcess for TokioEngineProcess {
 
     #[cfg_attr(coverage_nightly, coverage(off))]
     fn free_port(&self) -> Result<u16, String> {
-        let listener = std::net::TcpListener::bind("127.0.0.1:0").map_err(|e| e.to_string())?;
-        Ok(listener.local_addr().map_err(|e| e.to_string())?.port())
+        let listener =
+            std::net::TcpListener::bind(format!("{ENGINE_BIND_HOST}:0")).map_err(|e| e.to_string())?;
+        let addr = listener.local_addr().map_err(|e| e.to_string())?;
+        // Defence in depth: the OS should hand back a loopback address for
+        // a loopback bind, but verify rather than assume.
+        validate_engine_bind_addr(addr)?;
+        Ok(addr.port())
     }
 
     #[cfg_attr(coverage_nightly, coverage(off))]
@@ -497,5 +544,78 @@ mod tests {
                 "512",
             ]
         );
+    }
+
+    // ── Loopback-only bind (audit fix) ──────────────────────────────────
+
+    #[test]
+    fn engine_bind_host_constant_is_loopback() {
+        assert_eq!(ENGINE_BIND_HOST, "127.0.0.1");
+        assert!(validate_engine_bind_host(ENGINE_BIND_HOST).is_ok());
+    }
+
+    #[test]
+    fn validate_engine_bind_host_accepts_loopback_literals_only() {
+        assert!(validate_engine_bind_host("127.0.0.1").is_ok());
+        assert!(validate_engine_bind_host("::1").is_ok());
+    }
+
+    #[test]
+    fn validate_engine_bind_host_rejects_everything_else() {
+        // 0.0.0.0 = all interfaces; LAN / public addresses expose the
+        // unauthenticated server; `localhost` resolves via hosts/DNS and
+        // must not be trusted as loopback.
+        for host in [
+            "0.0.0.0",
+            "192.168.1.1",
+            "10.0.0.1",
+            "172.16.0.1",
+            "8.8.8.8",
+            "localhost",
+            "",
+            "example.com",
+            "::",
+        ] {
+            assert!(
+                validate_engine_bind_host(host).is_err(),
+                "{host} must be refused"
+            );
+        }
+    }
+
+    #[test]
+    fn validate_engine_bind_addr_accepts_loopback_only() {
+        use std::str::FromStr;
+        assert!(
+            validate_engine_bind_addr(SocketAddr::from_str("127.0.0.1:4242").unwrap()).is_ok()
+        );
+        assert!(
+            validate_engine_bind_addr(SocketAddr::from_str("[::1]:4242").unwrap()).is_ok()
+        );
+        for s in ["0.0.0.0:4242", "192.168.1.1:4242", "10.0.0.1:4242", "[::]:4242"] {
+            assert!(
+                validate_engine_bind_addr(SocketAddr::from_str(s).unwrap()).is_err(),
+                "{s} must be refused"
+            );
+        }
+    }
+
+    #[test]
+    fn llama_server_args_never_binds_non_loopback() {
+        let argv = llama_server_args(&args(None));
+        let as_str: Vec<String> = argv
+            .iter()
+            .map(|s| s.to_string_lossy().into_owned())
+            .collect();
+        // Exactly one --host, and its value passes the loopback guard.
+        let hosts: Vec<&String> = as_str
+            .windows(2)
+            .filter(|w| w[0] == "--host")
+            .map(|w| &w[1])
+            .collect();
+        assert_eq!(hosts.len(), 1);
+        assert!(validate_engine_bind_host(hosts[0]).is_ok());
+        // No wildcard / LAN bind anywhere in the argv.
+        assert!(!as_str.iter().any(|s| s == "0.0.0.0"));
     }
 }
