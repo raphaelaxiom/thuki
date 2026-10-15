@@ -2456,9 +2456,18 @@ fn config_file_has_providers(path: &std::path::Path) -> bool {
 #[cfg_attr(coverage_nightly, coverage(off))]
 fn engine_sidecar_path() -> std::path::PathBuf {
     if cfg!(debug_assertions) {
+        // Debug builds run straight from the repo: use the target-triple-
+        // suffixed binary matching this build's arch (arm64 on Apple
+        // Silicon, x86_64 on Intel), as produced by
+        // scripts/ensure-llama-server.ts.
+        let sidecar = if cfg!(target_arch = "x86_64") {
+            "llama-server-x86_64-apple-darwin"
+        } else {
+            "llama-server-aarch64-apple-darwin"
+        };
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("binaries")
-            .join("llama-server-aarch64-apple-darwin")
+            .join(sidecar)
     } else {
         std::env::current_exe()
             .ok()

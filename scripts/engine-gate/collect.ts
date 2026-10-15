@@ -10,7 +10,7 @@ import { writeFileSync } from 'node:fs';
 import { SAMPLING } from './config';
 import { CORRECTNESS_PROMPTS } from './prompts';
 
-const BINARY = 'src-tauri/binaries/llama-server-aarch64-apple-darwin';
+const BINARY = `src-tauri/binaries/llama-server-${process.arch === 'x64' ? 'x86_64' : 'aarch64'}-apple-darwin`;
 const PORT = 8181;
 const BASE = `http://127.0.0.1:${PORT}`;
 const HEALTH_TIMEOUT_MS = 120_000;

@@ -1,7 +1,13 @@
 // Builds the pinned llama.cpp `llama-server` sidecar from source for the bundled
 // inference engine. Runs before every dev/build (see package.json); the stamp
-// file makes repeat runs an instant no-op. macOS arm64 only: other platforms
-// (Ubuntu CI lint/test jobs) exit 0 without building anything.
+// file makes repeat runs an instant no-op. macOS only (arm64 on Apple Silicon,
+// x86_64 on Intel); other platforms (Ubuntu CI lint/test jobs) exit 0 without
+// building anything.
+//
+// The target architecture derives from the build host (`process.arch`) and
+// can be overridden with THUKI_LLAMA_ARCH ('arm64' | 'x86_64'). The stamp
+// includes the arch, so switching hosts forces a rebuild instead of reusing
+// a stale binary for the other arch.
 //
 // Why build instead of downloading ggml-org's prebuilt: their official arm64
 // release binary is built on a macOS-26 runner with no deployment-target floor,
@@ -44,13 +50,33 @@ const LLAMA_CPP_REPO = 'https://github.com/ggml-org/llama.cpp.git';
 // in sync with `minimumSystemVersion` in src-tauri/tauri.conf.json.
 const MACOS_DEPLOYMENT_TARGET = '13.4';
 
+// Target CPU architecture for the bundled engine. Derived from the build
+// host (arm64 on Apple Silicon, x64 on Intel Macs), overridable with
+// THUKI_LLAMA_ARCH ('arm64' | 'x86_64'). The Rust side resolves the matching
+// triple-suffixed binary at runtime (engine_sidecar_path in
+// src-tauri/src/lib.rs), and Tauri's `externalBin` strips the triple suffix
+// when bundling, so both arch builds share one config.
+const TARGET_ARCH = ((): 'arm64' | 'x86_64' => {
+  const override = process.env.THUKI_LLAMA_ARCH;
+  if (override === 'arm64' || override === 'x86_64') {
+    return override;
+  }
+  if (override !== undefined) {
+    fail(`THUKI_LLAMA_ARCH must be 'arm64' or 'x86_64', got '${override}'`);
+  }
+  return process.arch === 'x64' ? 'x86_64' : 'arm64';
+})();
+const LLAMA_TRIPLE =
+  TARGET_ARCH === 'x86_64' ? 'x86_64-apple-darwin' : 'aarch64-apple-darwin';
+const LIPO_ARCH = TARGET_ARCH === 'x86_64' ? 'x86_64' : 'arm64';
+
 // CMake flags that make the build macOS 13.4 compatible and bundle-shaped.
 // CMAKE_OSX_DEPLOYMENT_TARGET is the load-bearing one (weak Metal import); the
 // rest keep the output relocatable, dependency-clean, and identical in shape to
 // what the bundle expects. See the file header for the why.
 const CMAKE_FLAGS = [
   '-DCMAKE_BUILD_TYPE=Release',
-  '-DCMAKE_OSX_ARCHITECTURES=arm64',
+  '-DCMAKE_OSX_ARCHITECTURES=' + TARGET_ARCH,
   `-DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOS_DEPLOYMENT_TARGET}`,
   // No homebrew OpenSSL: it is absent on user Macs and is itself built for a
   // newer macOS, which would re-raise the deployment floor.
@@ -62,7 +88,9 @@ const CMAKE_FLAGS = [
   '-DGGML_METAL=ON',
   // Embed the Metal shaders in the dylib: no extra bundled file, no runtime compile.
   '-DGGML_METAL_EMBED_LIBRARY=ON',
-  '-DGGML_METAL_USE_BF16=ON',
+  // BF16 weight storage needs Apple Silicon GPU support; Intel GPUs lack
+  // BF16, so it stays off on x86_64 (ggml would fail to use it there).
+  `-DGGML_METAL_USE_BF16=${TARGET_ARCH === 'arm64' ? 'ON' : 'OFF'}`,
   '-DGGML_RPC=ON',
   '-DLLAMA_BUILD_SERVER=ON',
   '-DLLAMA_BUILD_TOOLS=ON',
@@ -71,11 +99,12 @@ const CMAKE_FLAGS = [
 ];
 
 const DEST = 'src-tauri/binaries';
-const BIN = `${DEST}/llama-server-aarch64-apple-darwin`;
+const BIN = `${DEST}/llama-server-${LLAMA_TRIPLE}`;
 const STAMP = `${DEST}/.llama-cpp-version`;
-// The deployment target is part of the stamp: changing the supported macOS floor
+// The deployment target AND the arch are part of the stamp: changing the
+// supported macOS floor, or switching between Apple Silicon and Intel,
 // must force a rebuild even when the tag and commit are unchanged.
-const STAMP_CONTENT = `${LLAMA_CPP_TAG} ${LLAMA_CPP_COMMIT} macos${MACOS_DEPLOYMENT_TARGET}`;
+const STAMP_CONTENT = `${LLAMA_CPP_TAG} ${LLAMA_CPP_COMMIT} macos${MACOS_DEPLOYMENT_TARGET} ${TARGET_ARCH}`;
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const destDir = resolve(repoRoot, DEST);
@@ -306,9 +335,9 @@ function ensureMetalCompiler(): void {
 function verifyMacosCompatible(binDir: string): void {
   const server = join(binDir, 'llama-server');
   const metal = join(binDir, 'libggml-metal.0.dylib');
-  // arm64 only: the bundled sidecar triple is aarch64-apple-darwin.
-  if (run('lipo', ['-archs', server]).trim() !== 'arm64') {
-    fail('built llama-server is not an arm64 binary');
+  // Arch must match the target triple: arm64 on Apple Silicon, x86_64 on Intel.
+  if (run('lipo', ['-archs', server]).trim() !== LIPO_ARCH) {
+    fail(`built llama-server is not an ${LIPO_ARCH} binary`);
   }
   // Deployment target must be exactly the floor, not the build host's newer one.
   const minos = /minos (\d+\.\d+)/.exec(run('otool', ['-l', metal]))?.[1];
@@ -316,13 +345,18 @@ function verifyMacosCompatible(binDir: string): void {
     fail(`built libggml-metal targets macOS ${minos ?? '?'}, expected ${MACOS_DEPLOYMENT_TARGET}`);
   }
   // The macOS-15 Metal symbol must be a WEAK import, else dyld aborts below 15.
-  const residencyLine = run('nm', ['-m', metal])
-    .split('\n')
-    .find((line) => /residencyset/i.test(line));
-  if (residencyLine === undefined || !/weak external/.test(residencyLine)) {
-    fail(
-      `MTLResidencySetDescriptor is not a weak import; the build would dyld-fail below macOS 15`,
-    );
+  // MTLResidencySetDescriptor exists only on Apple Silicon (Intel GPUs have
+  // no residency sets), so this check applies to arm64 builds only; on
+  // x86_64 the symbol is simply absent, which is the correct state.
+  if (TARGET_ARCH === 'arm64') {
+    const residencyLine = run('nm', ['-m', metal])
+      .split('\n')
+      .find((line) => /residencyset/i.test(line));
+    if (residencyLine === undefined || !/weak external/.test(residencyLine)) {
+      fail(
+        `MTLResidencySetDescriptor is not a weak import; the build would dyld-fail below macOS 15`,
+      );
+    }
   }
   // No homebrew / non-system dylib deps: absent on user Macs and re-raise the floor.
   if (/\/opt\/homebrew|\/usr\/local/.test(run('otool', ['-L', server]))) {
@@ -380,9 +414,9 @@ function buildFromSource(workDir: string): string {
   return binDir;
 }
 
-if (process.platform !== 'darwin' || process.arch !== 'arm64') {
+if (process.platform !== 'darwin') {
   console.log(
-    `ensure-llama-server: skipping on ${process.platform}/${process.arch} (sidecar is macOS arm64 only)`,
+    `ensure-llama-server: skipping on ${process.platform}/${process.arch} (sidecar is macOS only)`,
   );
   process.exit(0);
 }

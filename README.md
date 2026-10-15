@@ -50,7 +50,7 @@ If Thuki is part of your workflow it will keep working, and the Apache 2.0 licen
 
 ## Install on macOS
 
-> **Requirements:** macOS 13.4 (Ventura) or later, Apple Silicon (M1-M5).
+> **Requirements:** macOS 13.4 (Ventura) or later, Apple Silicon (M1–M5) or Intel (x86_64).
 
 ```bash
 curl -fsSL https://thuki.app/install.sh | sh
