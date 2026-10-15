@@ -99,6 +99,7 @@ pub fn start_activation_tracking(state: LastActiveAppState) {
 /// thread.
 #[tauri::command]
 #[cfg_attr(coverage_nightly, coverage(off))]
+#[allow(clippy::result_unit_err)]
 pub async fn replace_selection(
     text: String,
     last_active: tauri::State<'_, LastActiveAppState>,

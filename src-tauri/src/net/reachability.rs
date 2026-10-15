@@ -114,6 +114,7 @@ pub enum ReachabilityVerdict {
 /// production resolves DNS, tests script a verdict, so the pure decision logic
 /// in [`offline_cutoff`] is covered without a syscall or a network.
 #[async_trait]
+#[allow(clippy::double_must_use)]
 pub trait Reachability: Send + Sync {
     /// Probes the network once and reports what it could prove.
     async fn probe(&self) -> ReachabilityVerdict;

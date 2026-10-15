@@ -36,6 +36,7 @@ pub struct SpawnArgs {
 
 /// A live engine process the runner can await or kill.
 #[async_trait]
+#[allow(clippy::double_must_use)]
 pub trait EngineChild: Send {
     /// Resolves when the process exits (normally or by kill).
     async fn wait_exit(&mut self);
@@ -51,6 +52,7 @@ pub trait EngineChild: Send {
 
 /// Spawn-and-probe seam between the runner actor and the operating system.
 #[async_trait]
+#[allow(clippy::double_must_use)]
 pub trait EngineProcess: Send + Sync + 'static {
     /// Launches one engine process described by `args`.
     async fn spawn(&self, args: &SpawnArgs) -> Result<Box<dyn EngineChild>, String>;

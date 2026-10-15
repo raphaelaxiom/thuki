@@ -144,6 +144,7 @@ const MAX_QUERIES: usize = 3;
 /// branch logic is tested with [`FakePrePass`]; the builtin engine backing lives
 /// in the coverage-excluded [`BuiltinPrePass`].
 #[async_trait]
+#[allow(clippy::double_must_use)]
 pub trait PrePass: Send + Sync {
     /// Decides search intent for `latest_user_message` given the conversation
     /// so far, under the classifier's own persona-free prompt.

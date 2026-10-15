@@ -195,6 +195,7 @@ pub enum SearchFailReason {
 /// the turn) from a transport failure (escalate to a fresh search), mirroring
 /// [`SufficiencyJudge::judge`].
 #[async_trait]
+#[allow(clippy::double_must_use)]
 pub trait Synthesizer: Send + Sync {
     /// Generates the complete grounded answer for `messages`, returning the full
     /// buffered text. Never streams a token to the user.

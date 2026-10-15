@@ -93,6 +93,7 @@ pub enum TransportError {
 // ─── Trait ───────────────────────────────────────────────────────────────────
 
 #[async_trait]
+#[allow(clippy::double_must_use)]
 pub trait HttpTransport: Send + Sync {
     /// Issues `req` under the full SSRF/redirect/size policy and returns the
     /// capped response.

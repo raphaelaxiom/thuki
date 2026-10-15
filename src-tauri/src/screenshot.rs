@@ -385,6 +385,7 @@ fn capture_full_screen_raw(anchor: Option<(f64, f64)>) -> Result<(u32, u32, Vec<
         // Convert BGRA to RGBA in-place (swap B and R channels).
         // CoreGraphics BGRA layout: [B, G, R, A] per pixel.
         // image crate Rgba layout:  [R, G, B, A] per pixel.
+        #[allow(clippy::chunks_exact_to_as_chunks)]
         for chunk in pixel_bytes.chunks_exact_mut(4) {
             chunk.swap(0, 2); // Swap B <-> R
         }
