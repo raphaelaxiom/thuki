@@ -1,16 +1,16 @@
-name: Build Intel DMG
+name: Build Veilura Intel DMG
 
-# One-shot Intel (x86_64) build of Thuki. The shipped app is Apple Silicon
-# only: scripts/ensure-llama-server.ts builds the llama.cpp sidecar for the
-# host arch, src-tauri/src/lib.rs resolves the matching triple-suffixed
-# sidecar, and this workflow runs on the last GitHub-hosted Intel runner
-# (macos-15-intel, available until ~Aug 2027).
+# One-shot Intel (x86_64) build of Veilura.
+# Veilura ships its own llama.cpp sidecar: scripts/ensure-llama-server.ts builds
+# the llama.cpp sidecar for the host arch, src-tauri/src/lib.rs resolves the
+# matching triple-suffixed sidecar, and this workflow runs on the last
+# GitHub-hosted Intel runner (macos-15-intel, available until ~Aug 2027).
 #
 # Manual trigger only (workflow_dispatch) — it never runs on push/PR, so it
-# cannot interfere with the upstream arm64 release pipeline.
+# cannot interfere with any release pipeline.
 #
-# Output: a single uploaded artifact, Thuki-<version>-Intel-x64.dmg,
-# containing Thuki.app with x86_64 Mach-O binaries throughout (app binary,
+# Output: a single uploaded artifact, Veilura-<version>-Intel-x64.dmg,
+# containing Veilura.app with x86_64 Mach-O binaries throughout (app binary,
 # llama-server sidecar, all bundled dylibs), verified in-workflow with lipo.
 
 on:
@@ -84,7 +84,7 @@ jobs:
       # artifacts. An Intel build must NOT self-update into an arm64 build
       # it cannot execute, so the updater is off in this build — same
       # approach as the nightly workflow. Product name/identifier stay
-      # "Thuki" / com.quietnode.thuki so the app installs as Thuki.app.
+      # "Veilura" / com.veilura.app so the app installs as Veilura.app.
       - name: Disable updater for Intel build
         run: |
           command -v jq >/dev/null 2>&1 || brew install jq
@@ -101,11 +101,11 @@ jobs:
       - name: Verify .app bundle is x86_64 throughout
         run: |
           set -euo pipefail
-          APP='src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Thuki.app'
+          APP='src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Veilura.app'
           test -d "$APP" || { echo "missing .app: $APP"; exit 1; }
           echo "--- app binary ---"
-          lipo -archs "$APP/Contents/MacOS/thuki"
-          test "$(lipo -archs "$APP/Contents/MacOS/thuki")" = "x86_64"
+          lipo -archs "$APP/Contents/MacOS/veilura"
+          test "$(lipo -archs "$APP/Contents/MacOS/veilura")" = "x86_64"
           echo "--- sidecar ---"
           lipo -archs "$APP/Contents/MacOS/llama-server"
           test "$(lipo -archs "$APP/Contents/MacOS/llama-server")" = "x86_64"
@@ -123,7 +123,7 @@ jobs:
 
       - name: Ad-hoc sign the app
         run: |
-          APP_BUNDLE='src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Thuki.app'
+          APP_BUNDLE='src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Veilura.app'
           codesign --deep --force --sign - "$APP_BUNDLE"
           codesign --verify --verbose "$APP_BUNDLE"
 
@@ -134,26 +134,26 @@ jobs:
         run: |
           set -euo pipefail
           VERSION=$(jq -r .version src-tauri/tauri.conf.json)
-          DMG_NAME="Thuki-${VERSION}-Intel-x64.dmg"
+          DMG_NAME="Veilura-${VERSION}-Intel-x64.dmg"
           echo "DMG_NAME=$DMG_NAME" >> "$GITHUB_ENV"
-          mkdir -p /tmp/thuki-dmg-src
-          cp -R "src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Thuki.app" /tmp/thuki-dmg-src/
+          mkdir -p /tmp/veilura-dmg-src
+          cp -R "src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Veilura.app" /tmp/veilura-dmg-src/
           mkdir -p dist-intel
           create-dmg \
-            --volname "Thuki" \
+            --volname "Veilura" \
             --background "src-tauri/assets/dmg-background.png" \
             --window-pos 200 120 \
             --window-size 600 380 \
             --icon-size 128 \
-            --icon "Thuki.app" 170 170 \
-            --hide-extension "Thuki.app" \
+            --icon "Veilura.app" 170 170 \
+            --hide-extension "Veilura.app" \
             --app-drop-link 430 170 \
             "dist-intel/$DMG_NAME" \
-            "/tmp/thuki-dmg-src"
-          rm -rf /tmp/thuki-dmg-src
+            "/tmp/veilura-dmg-src"
+          rm -rf /tmp/veilura-dmg-src
           ls -la dist-intel/
 
-      - name: Verify DMG mounts and contains Thuki.app
+      - name: Verify DMG mounts and contains Veilura.app
         run: |
           set -euo pipefail
           DMG="dist-intel/$DMG_NAME"
@@ -161,14 +161,14 @@ jobs:
           hdiutil verify "$DMG"
           MOUNT=$(hdiutil attach -nobrowse -readonly "$DMG" | awk '/\/Volumes\// {print $NF}')
           echo "mounted at: $MOUNT"
-          test -d "$MOUNT/Thuki.app" || { echo "Thuki.app missing in DMG"; hdiutil detach "$MOUNT"; exit 1; }
-          lipo -archs "$MOUNT/Thuki.app/Contents/MacOS/thuki"
+          test -d "$MOUNT/Veilura.app" || { echo "Veilura.app missing in DMG"; hdiutil detach "$MOUNT"; exit 1; }
+          lipo -archs "$MOUNT/Veilura.app/Contents/MacOS/veilura"
           hdiutil detach "$MOUNT"
 
       - name: Upload Intel DMG artifact
         uses: actions/upload-artifact@v5
         with:
-          name: Thuki-Intel-x64-dmg
+          name: Veilura-Intel-x64-dmg
           path: dist-intel/*.dmg
           if-no-files-found: error
           retention-days: 30
