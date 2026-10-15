@@ -182,7 +182,7 @@ describe('SettingsWindow', () => {
     ).toBeNull();
 
     await act(async () => {
-      emitTauriEvent('thuki://settings-show-discover', undefined);
+      emitTauriEvent('veilura://settings-show-discover', undefined);
       await Promise.resolve();
     });
 
@@ -206,7 +206,7 @@ describe('SettingsWindow', () => {
     );
 
     await act(async () => {
-      emitTauriEvent('thuki://settings-show-behavior', undefined);
+      emitTauriEvent('veilura://settings-show-behavior', undefined);
       await Promise.resolve();
     });
 
@@ -229,7 +229,7 @@ describe('SettingsWindow', () => {
 
     // Second deep-link while still on Behavior restarts the wiggle (nonce bump).
     await act(async () => {
-      emitTauriEvent('thuki://settings-show-behavior', undefined);
+      emitTauriEvent('veilura://settings-show-behavior', undefined);
       await Promise.resolve();
     });
     expect(screen.getByTestId('auto-search-wiggle')).toBeInTheDocument();
@@ -253,7 +253,7 @@ describe('SettingsWindow', () => {
     );
 
     await act(async () => {
-      emitTauriEvent('thuki://settings-show-behavior-auto-save', undefined);
+      emitTauriEvent('veilura://settings-show-behavior-auto-save', undefined);
       await Promise.resolve();
     });
 
@@ -291,7 +291,7 @@ describe('SettingsWindow', () => {
     // providers deep-link has something to undo: Discover is gated for the
     // ollama SAMPLE config, surfacing the switch prompt.
     await act(async () => {
-      emitTauriEvent('thuki://settings-show-discover', undefined);
+      emitTauriEvent('veilura://settings-show-discover', undefined);
       await Promise.resolve();
     });
     expect(
@@ -300,7 +300,7 @@ describe('SettingsWindow', () => {
 
     // The providers deep-link returns to Providers: the gate disappears.
     await act(async () => {
-      emitTauriEvent('thuki://settings-show-providers', undefined);
+      emitTauriEvent('veilura://settings-show-providers', undefined);
       await Promise.resolve();
     });
     expect(
@@ -444,7 +444,7 @@ describe('SettingsWindow', () => {
 
   it('renders the corrupt-recovery banner when get_corrupt_marker returns one', async () => {
     const marker: CorruptMarker = {
-      path: '/Users/x/Library/Application Support/com.quietnode.thuki/config.toml.corrupt-99',
+      path: '/Users/x/Library/Application Support/com.veilura.app/config.toml.corrupt-99',
       ts: 99,
     };
     invokeMock.mockImplementation(async (cmd: string) => {

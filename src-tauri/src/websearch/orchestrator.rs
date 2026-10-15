@@ -847,7 +847,7 @@ fn message_body_without_search_command(latest_user: &str) -> &str {
 
 /// True when the user's message is only the bare token `SJC` (optional
 /// `/search` prefix). That token is both Vietnam's dominant gold brand and
-/// San Jose's IATA code; without an explicit weather/airport cue, Thuki
+/// San Jose's IATA code; without an explicit weather/airport cue, Veilura
 /// prefers gold for this product (local-first VN market). Pure and total.
 fn is_bare_sjc_token(latest_user: &str) -> bool {
     message_body_without_search_command(latest_user).eq_ignore_ascii_case("sjc")

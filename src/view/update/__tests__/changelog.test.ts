@@ -17,19 +17,19 @@ All notable changes to this project will be documented in this file.
 
 - something not yet shipped
 
-## [0.14.0](https://github.com/quiet-node/thuki/compare/v0.13.1...v0.14.0) (2026-06-07)
+## [0.14.0](https://github.com/veilura/veilura/compare/v0.13.1...v0.14.0) (2026-06-07)
 
 ### Features
 
 * allow drafting messages while streaming ([#200](https://x/200))
 
-## [0.13.1](https://github.com/quiet-node/thuki/compare/v0.13.0...v0.13.1) (2026-05-26)
+## [0.13.1](https://github.com/veilura/veilura/compare/v0.13.0...v0.13.1) (2026-05-26)
 
 ### Bug Fixes
 
 * fix caret drift
 
-## [0.13.0](https://github.com/quiet-node/thuki/compare/v0.12.0...v0.13.0) (2026-05-25)
+## [0.13.0](https://github.com/veilura/veilura/compare/v0.12.0...v0.13.0) (2026-05-25)
 
 ### Features
 

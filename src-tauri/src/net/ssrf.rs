@@ -2,7 +2,7 @@
 //!
 //! Web search fetches attacker-influenced URLs (search-result links, redirect
 //! chains, model-rewritten queries). Without a guard, a crafted URL could make
-//! Thuki connect to a loopback service, a cloud metadata endpoint
+//! Veilura connect to a loopback service, a cloud metadata endpoint
 //! (`169.254.169.254`), or a private-LAN host: a classic server-side request
 //! forgery. Every function here is pure and total so the full range table is
 //! covered by fast unit tests; the I/O that consumes them lives in

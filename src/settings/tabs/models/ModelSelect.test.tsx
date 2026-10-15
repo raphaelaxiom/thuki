@@ -297,17 +297,17 @@ describe('ModelSelect', () => {
     fireEvent.keyDown(input, { key: 'ArrowUp' });
     expect(input).toHaveAttribute(
       'aria-activedescendant',
-      'thuki-model-select-listbox-option-2',
+      'veilura-model-select-listbox-option-2',
     );
     fireEvent.keyDown(input, { key: 'Home' });
     expect(input).toHaveAttribute(
       'aria-activedescendant',
-      'thuki-model-select-listbox-option-0',
+      'veilura-model-select-listbox-option-0',
     );
     fireEvent.keyDown(input, { key: 'End' });
     expect(input).toHaveAttribute(
       'aria-activedescendant',
-      'thuki-model-select-listbox-option-2',
+      'veilura-model-select-listbox-option-2',
     );
   });
 
@@ -324,7 +324,7 @@ describe('ModelSelect', () => {
     fireEvent.mouseEnter(screen.getByRole('option', { name: /Gamma/ }));
     expect(screen.getByRole('combobox')).toHaveAttribute(
       'aria-activedescendant',
-      'thuki-model-select-listbox-option-2',
+      'veilura-model-select-listbox-option-2',
     );
   });
 

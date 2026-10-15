@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Thuki",
-  "version": "0.16.3",
-  "identifier": "com.quietnode.thuki",
+  "productName": "Veilura",
+  "version": "1.0.0",
+  "identifier": "com.veilura.app",
   "build": {
     "beforeDevCommand": "bun run frontend:dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Thuki",
+        "title": "Veilura",
         "width": 600,
         "height": 700,
         "resizable": true,
@@ -26,7 +26,7 @@
       },
       {
         "label": "settings",
-        "title": "Thuki Settings",
+        "title": "Veilura Settings",
         "url": "index.html#/settings",
         "width": 760,
         "height": 520,
@@ -80,7 +80,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "homepage": "https://www.thuki.app/",
+    "homepage": "https://veilura.online/",
     "externalBin": [
       "binaries/llama-server"
     ],
@@ -113,7 +113,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/quiet-node/thuki/releases/latest/download/latest.json"
+        "https://veilura.online/updates/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDUwQjZFQTM0M0I3Q0E1QzEKUldUQnBYdzdOT3EyVUdxMEFQTEhVdjFWbEZZbi84LzJZMVZheXB2WUs3eTBEMUhsdUR5SUVXVy8K",
       "windows": {

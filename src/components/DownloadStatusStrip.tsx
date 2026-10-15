@@ -85,7 +85,7 @@ function ControlKeyCap() {
 }
 
 /**
- * The reassurance half of the alternating label (ask bar only): closing Thuki
+ * The reassurance half of the alternating label (ask bar only): closing Veilura
  * keeps the download going, but quitting stops it. Double-tapping Control (the
  * toggle hotkey, shown as a keycap) closes the visible overlay, since there is
  * no window chrome to click.
@@ -127,16 +127,16 @@ function BrowsePrompt() {
   );
 }
 
-const ORANGE = 'rgb(255,141,92)';
-const ORANGE_FILL = 'linear-gradient(90deg,#ffa06f,#d45a1e)';
+const VIOLET = 'rgb(124,108,240)';
+const VIOLET_FILL = 'linear-gradient(90deg,#b3a8ff,#4f46e5)';
 const MUTED = 'rgba(255,255,255,0.4)';
 const MUTED_FILL = 'rgba(255,255,255,0.28)';
 const GREEN = 'rgb(95,207,134)';
 const GREEN_FILL = '#5fcf86';
 const RED = 'rgb(239,68,68)';
 const RED_FILL = '#ef4444';
-/** Brand-orange used for the primary inline action (Resume / Retry). */
-const ACTION = '#ff8d5c';
+/** Brand-violet used for the primary inline action (Resume / Retry). */
+const ACTION = '#7c6cf0';
 
 /** Seconds rendered as a compact countdown: "45s", "5m", "2h 1m". */
 function formatEta(etaSeconds: number): string {
@@ -280,7 +280,7 @@ export function DownloadStatusStrip({
     // controls of its own. The re-hash of a multi-GB partial is a slow read, so
     // the sub-line reassures the user it is working rather than hung.
     return (
-      <Shell color={ORANGE} fill={ORANGE_FILL} percent={status.percent}>
+      <Shell color={VIOLET} fill={VIOLET_FILL} percent={status.percent}>
         <span className="flex-1 flex flex-col leading-snug">
           <span>Verifying…</span>
           <span style={{ color: MUTED }} className="text-[11px]">
@@ -370,7 +370,7 @@ function DownloadingRow({
       ? `${status.percent}% · ${formatEta(status.etaSeconds)} left`
       : `${status.percent}%`;
   return (
-    <Shell color={ORANGE} fill={ORANGE_FILL} percent={status.percent}>
+    <Shell color={VIOLET} fill={VIOLET_FILL} percent={status.percent}>
       {/* Crossfade between the labels so each swap is a soft dissolve, not a
           hard cut. mode="wait" fades the old out before the new fades in. */}
       <AnimatePresence mode="wait">

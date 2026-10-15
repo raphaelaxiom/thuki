@@ -15,7 +15,7 @@ const DRAG_THRESHOLD_PX = 6;
 /**
  * Floating minimized icon shown when the chat overlay is collapsed.
  *
- * Renders the Thuki logo in a small circular button. Supports:
+ * Renders the Veilura logo in a small circular button. Supports:
  * - Dragging: pointer move past threshold calls the native window drag.
  * - Restore: plain click (no drag) calls onRestore.
  * - Working: the mascot does a soft elastic "jelly wobble" and a warm jewel
@@ -41,7 +41,7 @@ export const MinimizedIcon = memo(function MinimizedIcon({
   return (
     <button
       type="button"
-      aria-label="Restore Thuki"
+      aria-label="Restore Veilura"
       className="flex w-full h-full items-center justify-center cursor-pointer select-none bg-transparent p-0 border-0"
       onPointerDown={(e) => {
         downPosRef.current = { x: e.clientX, y: e.clientY };
@@ -69,10 +69,10 @@ export const MinimizedIcon = memo(function MinimizedIcon({
           relative to this 48px wrapper, so it tracks the logo's bottom-right
           corner rather than the window's. */}
       <span className="relative inline-flex">
-        {/* Thuki logo: bare 48px natural shape, no background, no rounded crop. */}
+        {/* Veilura logo: bare 48px natural shape, no background, no rounded crop. */}
         <img
-          src="/thuki-logo.png"
-          alt="Thuki"
+          src="/veilura-logo.png"
+          alt="Veilura"
           className={`w-12 h-12${logoMotion}`}
           draggable={false}
         />

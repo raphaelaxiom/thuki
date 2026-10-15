@@ -50,6 +50,7 @@ const TIER_LEVELS: Record<StarterTier, { speed: number; quality: number }> = {
 /** Short "On your Mac" label + color per RAM fit. */
 const FIT_SHORT: Record<RamFit, { label: string; color: string }> = {
   fits: { label: 'Comfortable', color: '#5fcf86' },
+  // Intentional warning amber for 'Tight' / failure (semantic, not brand).
   tight: { label: 'Tight', color: '#ff8d5c' },
   too_big: { label: 'Heavy', color: '#ef4444' },
 };
@@ -221,7 +222,7 @@ export function StarterMatrix({
               fontFamily: 'inherit',
               fontSize: 11.5,
               fontWeight: 700,
-              color: 'rgba(255,141,92,0.7)',
+              color: 'rgba(124,108,240,0.7)',
               cursor: 'pointer',
             }}
           >
@@ -248,7 +249,7 @@ export function StarterMatrix({
               fontFamily: 'inherit',
               fontSize: 11.5,
               fontWeight: 700,
-              color: 'rgba(255,141,92,0.7)',
+              color: 'rgba(124,108,240,0.7)',
               cursor: 'pointer',
             }}
           >
@@ -484,7 +485,7 @@ function BarCell({ level }: { level: number }) {
             inset: '0 auto 0 0',
             width: `${Math.round(level * 100)}%`,
             borderRadius: 999,
-            background: 'linear-gradient(90deg, #ff8d5c, #d45a1e)',
+            background: 'linear-gradient(90deg, #7c6cf0, #4f46e5)',
           }}
         />
       </div>
@@ -577,7 +578,7 @@ function DownloadCell({
           style={{
             fontSize: 11.5,
             fontWeight: 700,
-            color: '#ff8d5c',
+            color: '#ff8d5c', // failure text: intentional warning amber, not brand.
             marginBottom: 9,
             lineHeight: 1.35,
           }}
@@ -632,7 +633,7 @@ function DownloadCell({
           fontFamily: 'inherit',
           padding: 0,
           border: `1px solid ${
-            hover ? 'rgba(255,255,255,0.22)' : 'rgba(255,141,92,0.3)'
+            hover ? 'rgba(255,255,255,0.22)' : 'rgba(124,108,240,0.3)'
           }`,
           background: 'rgba(255,255,255,0.06)',
           display: 'flex',
@@ -641,7 +642,7 @@ function DownloadCell({
           transition: 'border-color 0.4s ease',
         }}
       >
-        {/* One warm gradient that desaturates to a neutral "stop" grey via a
+        {/* One violet gradient that desaturates to a neutral "stop" grey via a
             filter (gradients cannot tween, but filters can), so the hover
             shift is smooth. */}
         <span
@@ -653,7 +654,7 @@ function DownloadCell({
             width: `${pct}%`,
             borderRadius: 12,
             background:
-              'linear-gradient(135deg, #ffa06f, #ff8d5c 40%, #d45a1e)',
+              'linear-gradient(135deg, #b3a8ff, #7c6cf0 40%, #4f46e5)',
             filter: hover
               ? 'grayscale(0.95) brightness(0.82)'
               : 'grayscale(0) brightness(1)',
@@ -718,7 +719,7 @@ function DownloadCell({
         borderRadius: 12,
         overflow: 'hidden',
         border: `1px solid ${
-          ready ? 'rgba(95,207,134,0.45)' : 'rgba(255,141,92,0.3)'
+          ready ? 'rgba(95,207,134,0.45)' : 'rgba(124,108,240,0.3)'
         }`,
         background: 'rgba(255,255,255,0.06)',
         display: 'flex',
@@ -735,7 +736,7 @@ function DownloadCell({
           opacity: 0.92,
           background: ready
             ? 'linear-gradient(135deg, #5fcf86, #3a9d63)'
-            : 'linear-gradient(135deg, #ffa06f, #ff8d5c 40%, #d45a1e)',
+            : 'linear-gradient(135deg, #b3a8ff, #7c6cf0 40%, #4f46e5)',
         }}
       />
       <span
@@ -857,15 +858,15 @@ function ActionButton({
         opacity: disabled ? 0.5 : 1,
         color: recommended ? '#fff' : 'rgba(255,255,255,0.9)',
         background: recommended
-          ? 'linear-gradient(135deg, #ffa06f 0%, #ff8d5c 35%, #d45a1e 100%)'
+          ? 'linear-gradient(135deg, #b3a8ff 0%, #7c6cf0 35%, #4f46e5 100%)'
           : showHover
             ? 'rgba(255,255,255,0.08)'
             : 'rgba(255,255,255,0.045)',
         border: recommended
           ? 'none'
-          : `1px solid ${showHover ? 'rgba(255,141,92,0.35)' : 'rgba(255,255,255,0.1)'}`,
+          : `1px solid ${showHover ? 'rgba(124,108,240,0.35)' : 'rgba(255,255,255,0.1)'}`,
         boxShadow: recommended
-          ? '0 10px 24px -10px rgba(255,110,50,0.65), 0 1px 0 rgba(255,255,255,0.22) inset'
+          ? '0 10px 24px -10px rgba(124,108,240,0.55), 0 1px 0 rgba(255,255,255,0.22) inset'
           : 'none',
         filter: showHover && recommended ? 'brightness(1.07)' : 'none',
         transition:
@@ -924,7 +925,7 @@ function ResumeButton({
         opacity: disabled ? 0.5 : 1,
         fontFamily: 'inherit',
         padding: 0,
-        border: '1px solid rgba(255,141,92,0.3)',
+        border: '1px solid rgba(124,108,240,0.3)',
         background: 'rgba(255,255,255,0.06)',
         display: 'flex',
         alignItems: 'center',
@@ -938,7 +939,7 @@ function ResumeButton({
           inset: '0 auto 0 0',
           width: `${pct}%`,
           borderRadius: 12,
-          background: 'linear-gradient(135deg, #ffa06f, #ff8d5c 40%, #d45a1e)',
+          background: 'linear-gradient(135deg, #b3a8ff, #7c6cf0 40%, #4f46e5)',
           opacity: showHover ? 1 : 0.5,
           transition: 'opacity 0.4s ease',
         }}

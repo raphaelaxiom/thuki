@@ -29,19 +29,19 @@
 //!
 //! `#[ignore]`d exactly like its siblings: never touches CI, coverage, or a
 //! network call by default. Run explicitly against one or two already-running
-//! engines (`THUKI_EVAL_PORT_GPT_OSS` and, optionally, `THUKI_EVAL_PORT_GEMMA`
+//! engines (`VEILURA_EVAL_PORT_GPT_OSS` and, optionally, `VEILURA_EVAL_PORT_GEMMA`
 //! when a second model is loaded on its own port):
 //!
 //! ```sh
-//! THUKI_EVAL_PORT_GPT_OSS=8812 THUKI_EVAL_PORT_GEMMA=8813 \
+//! VEILURA_EVAL_PORT_GPT_OSS=8812 VEILURA_EVAL_PORT_GEMMA=8813 \
 //!   cargo test --test live_language_parity_eval -- --ignored --nocapture --test-threads=1
 //! ```
 
-use thuki_agent_lib::commands::ChatMessage;
-use thuki_agent_lib::config::defaults::{PREPASS_MAX_TOKENS, PREPASS_TIMEOUT_S};
-use thuki_agent_lib::openai::{request_openai_json, V1Flavor};
-use thuki_agent_lib::websearch::prefilter::{prefilter, PreFilterVerdict};
-use thuki_agent_lib::websearch::prepass::{BuiltinPrePass, PrePass, SearchDecision};
+use veilura_agent_lib::commands::ChatMessage;
+use veilura_agent_lib::config::defaults::{PREPASS_MAX_TOKENS, PREPASS_TIMEOUT_S};
+use veilura_agent_lib::openai::{request_openai_json, V1Flavor};
+use veilura_agent_lib::websearch::prefilter::{prefilter, PreFilterVerdict};
+use veilura_agent_lib::websearch::prepass::{BuiltinPrePass, PrePass, SearchDecision};
 
 use tokio_util::sync::CancellationToken;
 
@@ -340,28 +340,28 @@ async fn run_parity_eval(base_url: &str, model_label: &str) {
 }
 
 #[tokio::test]
-#[ignore = "needs a live llama-server; set THUKI_EVAL_PORT_GPT_OSS / THUKI_EVAL_PORT_GEMMA"]
+#[ignore = "needs a live llama-server; set VEILURA_EVAL_PORT_GPT_OSS / VEILURA_EVAL_PORT_GEMMA"]
 async fn live_language_parity_eval() {
     let mut ran_any = false;
 
-    if let Ok(port) = std::env::var("THUKI_EVAL_PORT_GPT_OSS") {
+    if let Ok(port) = std::env::var("VEILURA_EVAL_PORT_GPT_OSS") {
         run_parity_eval(&format!("http://127.0.0.1:{port}"), "gpt-oss").await;
         ran_any = true;
     } else {
-        eprintln!("[parity] THUKI_EVAL_PORT_GPT_OSS not set; skipping gpt-oss");
+        eprintln!("[parity] VEILURA_EVAL_PORT_GPT_OSS not set; skipping gpt-oss");
     }
 
-    if let Ok(port) = std::env::var("THUKI_EVAL_PORT_GEMMA") {
+    if let Ok(port) = std::env::var("VEILURA_EVAL_PORT_GEMMA") {
         run_parity_eval(&format!("http://127.0.0.1:{port}"), "gemma").await;
         ran_any = true;
     } else {
         eprintln!(
-            "[parity] THUKI_EVAL_PORT_GEMMA not set; gemma UNMEASURED. Not simulated, not extrapolated."
+            "[parity] VEILURA_EVAL_PORT_GEMMA not set; gemma UNMEASURED. Not simulated, not extrapolated."
         );
     }
 
     assert!(
         ran_any,
-        "set at least THUKI_EVAL_PORT_GPT_OSS to run this eval"
+        "set at least VEILURA_EVAL_PORT_GPT_OSS to run this eval"
     );
 }

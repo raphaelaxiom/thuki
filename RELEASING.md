@@ -1,4 +1,4 @@
-# Releasing Thuki
+# Releasing Veilura
 
 Releases are fully automated. There is no manual tagging, no manual changelog editing, and no manual version bumping.
 
@@ -6,14 +6,14 @@ Releases are fully automated. There is no manual tagging, no manual changelog ed
 
 Every commit merged to `main` that follows the [Conventional Commits](https://www.conventionalcommits.org/) format is picked up by [release-please](https://github.com/googleapis/release-please). It continuously maintains an open "release PR" that:
 
-- Bumps the version in `package.json` and `src-tauri/Cargo.toml`
+- Bumps the version in `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`
 - Updates `CHANGELOG.md` with the new entries grouped by type
 
 When you are ready to ship, merge that PR. That triggers the build workflow, which:
 
 1. Runs the full test and validation suite
-2. Builds `Thuki.app`
-3. Creates a GitHub Release with the changelog notes and `Thuki.app.tar.gz` as the downloadable asset
+2. Builds `Veilura.app`
+3. Creates a GitHub Release with the changelog notes and `Veilura.app.tar.gz` as the downloadable asset
 
 ## Commit Types and Version Bumps
 
@@ -23,7 +23,7 @@ release-please reads commit prefixes to decide how to bump the version:
 | :--- | :--- | :--- |
 | `feat:` | `feat: add voice input` | Minor (`0.1.0` → `0.2.0`) |
 | `fix:` | `fix: hotkey not firing` | Patch (`0.1.0` → `0.1.1`) |
-| `feat!:` or `BREAKING CHANGE:` | `feat!: new IPC protocol` | Major, but while below `1.0.0` it bumps Minor (`0.1.0` → `0.2.0`) under `bump-minor-pre-major` |
+| `feat!:` or `BREAKING CHANGE:` | `feat!: new IPC protocol` | Major (`1.0.0` → `2.0.0`). The old `bump-minor-pre-major` rule no longer applies now that the product is at `1.0.0`. |
 | `docs:`, `chore:`, `refactor:`, etc. | `docs: update README` | No bump |
 
 ## Step-by-Step

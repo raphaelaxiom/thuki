@@ -1,6 +1,6 @@
 //! Live-memory admission control for loading a model into the built-in engine.
 //!
-//! Issue #296: on a memory-constrained Mac, Thuki auto-loaded a large model
+//! Issue #296: on a memory-constrained Mac, Veilura auto-loaded a large model
 //! with no free-memory check, contributing to a whole-machine freeze. This
 //! module adds a preflight that estimates a model's resident footprint, reads
 //! how much system memory is actually available right now, and produces a
@@ -471,7 +471,7 @@ pub fn available_memory_bytes() -> u64 {
         // it (mirrors `startup_guard`'s forgiving-boundary eprintln convention).
         let dr = mach_port_deallocate(libc::mach_task_self(), host);
         if dr != libc::KERN_SUCCESS {
-            eprintln!("thuki: [memory] mach_port_deallocate(host) failed: {dr}");
+            eprintln!("veilura: [memory] mach_port_deallocate(host) failed: {dr}");
         }
         if kr != libc::KERN_SUCCESS {
             return 0;

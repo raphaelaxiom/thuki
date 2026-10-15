@@ -258,7 +258,7 @@ mod tests {
     }
 
     fn temp_dir() -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("thuki-test-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("veilura-test-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&dir).unwrap();
         dir
     }
@@ -346,7 +346,7 @@ mod tests {
     #[test]
     fn remove_image_idempotent_on_missing_file() {
         let base = temp_dir();
-        let result = remove_image(&base, "/tmp/nonexistent-thuki-image.jpg");
+        let result = remove_image(&base, "/tmp/nonexistent-veilura-image.jpg");
         assert!(result.is_ok());
         fs::remove_dir_all(&base).unwrap();
     }
@@ -457,14 +457,14 @@ mod tests {
 
     #[test]
     fn encode_images_as_base64_rejects_missing_file() {
-        let result = encode_images_as_base64(&["/tmp/nonexistent-thuki.jpg".to_string()]);
+        let result = encode_images_as_base64(&["/tmp/nonexistent-veilura.jpg".to_string()]);
         assert!(result.is_err());
     }
 
     #[test]
     fn images_root_resolves_correctly() {
-        let base = Path::new("/tmp/thuki-test");
-        assert_eq!(images_root(base), PathBuf::from("/tmp/thuki-test/images"));
+        let base = Path::new("/tmp/veilura-test");
+        assert_eq!(images_root(base), PathBuf::from("/tmp/veilura-test/images"));
     }
 
     #[test]

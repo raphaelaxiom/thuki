@@ -2,9 +2,9 @@
 
 The Context Window slider in Settings goes up to 1 M tokens, but the value that's actually _good_ for your machine depends on your GPU memory and the model you picked. This guide explains what those numbers mean and walks you through finding your sweet spot in about 5 minutes.
 
-> macOS only. Thuki is a Mac app and the steps below assume Apple Silicon (M1/M2/M3/M4/M5).
+> macOS only. Veilura is a Mac app and the steps below assume Apple Silicon (M1/M2/M3/M4/M5).
 >
-> See [thuki.app](https://www.thuki.app/) for project info, downloads, and documentation.
+> See [veilura.online](https://veilura.online/) for project info, downloads, and documentation.
 
 ## Which provider this applies to
 
@@ -13,7 +13,7 @@ The Context Window value (`num_ctx`) is sent to whichever provider is active:
 - **Built-in engine (the default):** the value is passed to the bundled `llama-server` process as `--ctx-size` when it starts. The context size is fixed for the lifetime of the process, so changing it in Settings restarts the engine (a model reload, a few seconds). The three signals below and the Activity Monitor steps apply unchanged; the `ollama ps` steps do not, so watch Memory Pressure and GPU History instead.
 - **Ollama provider:** everything in this guide applies as written, including the `ollama ps` checks.
 
-The Keep Warm knob (`keep_warm_inactivity_minutes`, in Settings or `[inference]` in `config.toml`) governs both local providers: minutes of inactivity before Thuki releases the active model from memory. For the built-in engine it stops the `llama-server` sidecar; for Ollama it sets the `keep_alive`. `0` uses the provider's natural short default (about 5 minutes), and `-1` keeps the model resident forever.
+The Keep Warm knob (`keep_warm_inactivity_minutes`, in Settings or `[inference]` in `config.toml`) governs both local providers: minutes of inactivity before Veilura releases the active model from memory. For the built-in engine it stops the `llama-server` sidecar; for Ollama it sets the `keep_alive`. `0` uses the provider's natural short default (about 5 minutes), and `-1` keeps the model resident forever.
 
 ## Quick vocabulary
 
@@ -48,7 +48,7 @@ These are the only signals you need to decide whether your settings are healthy:
 
 ### Step 1 — Pick a starting value
 
-Open Thuki **Settings → Context Window**. Set the slider to **16384** (16K). This is the default and works on most Macs.
+Open Veilura **Settings → Context Window**. Set the slider to **16384** (16K). This is the default and works on most Macs.
 
 ### Step 2 — Open Activity Monitor's Memory tab
 
@@ -77,7 +77,7 @@ GPU History is a separate floating window inside Activity Monitor. To open it:
 
 ### Step 5 — Send a test message
 
-Open Thuki and send your usual kind of question, or paste a long block of text and ask about it. While the reply streams, watch:
+Open Veilura and send your usual kind of question, or paste a long block of text and ask about it. While the reply streams, watch:
 
 - The **GPU History** bars should spike high.
 - **Memory Pressure** should stay green.
@@ -110,7 +110,7 @@ Note the SIZE value. You'll compare it against the next try.
 
 ### Step 7 — Bump the context and repeat
 
-Go back to Thuki Settings and double the value (16K → 32K → 64K → ...). Send another test message. Re-run `ollama ps`.
+Go back to Veilura Settings and double the value (16K → 32K → 64K → ...). Send another test message. Re-run `ollama ps`.
 
 Stop the moment **any** of these happens:
 
@@ -120,20 +120,20 @@ Stop the moment **any** of these happens:
 
 ### Step 8 — Lock in your sweet spot
 
-Set Thuki to one tier _below_ your last working value for safety margin. Example: 64K worked but `SIZE` was tight against your unified memory total → use 32K. You're done.
+Set Veilura to one tier _below_ your last working value for safety margin. Example: 64K worked but `SIZE` was tight against your unified memory total → use 32K. You're done.
 
 ## Picking Keep Warm
 
 Keep Warm is the second knob in the same Settings section. It tells the active local provider how long to leave the model in memory between messages.
 
 - **`0`** — use the provider's built-in ~5-minute default. Good baseline.
-- **5 to 30 minutes** — good if you use Thuki in bursts every few minutes.
+- **5 to 30 minutes** — good if you use Veilura in bursts every few minutes.
 - **`-1`** — always loaded. Only choose this if you have memory headroom and want zero cold-start ever.
 - **Unload now** — manual eject when you're done for the day.
 
 ## Common results explained
 
-- **"GPU is 0% when Thuki is idle."** Normal. Keep Warm holds the model in memory, but the GPU only fires during generation. Memory residency and active compute are different things.
+- **"GPU is 0% when Veilura is idle."** Normal. Keep Warm holds the model in memory, but the GPU only fires during generation. Memory residency and active compute are different things.
 - **"CPU stays low even during a reply."** Normal. Metal runs the math on the GPU; the CPU only orchestrates.
 - **"I set 1 M but `ollama ps` shows 128 K."** Normal. Ollama caps at the model's trained max and silently clamps down.
 - **"Model unloads on its own."** Either your Keep Warm timer expired or something else (you, or another tool) ran `ollama stop`.

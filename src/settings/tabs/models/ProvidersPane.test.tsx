@@ -616,7 +616,7 @@ describe('ProvidersPane generation', () => {
       }),
     );
     expect(invokeMock).toHaveBeenCalledWith('open_url', {
-      url: 'https://github.com/quiet-node/thuki/blob/main/docs/tuning-context-window.md#the-5-minute-benchmark-recipe',
+      url: 'https://github.com/veilura/veilura/blob/main/docs/tuning-context-window.md#the-5-minute-benchmark-recipe',
     });
   });
 

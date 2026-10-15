@@ -1,6 +1,6 @@
-# Contributing to Thuki
+# Contributing to Veilura
 
-Thank you for your interest in contributing to [Thuki](https://www.thuki.app/)! This guide will walk you through everything you need to get started.
+Thank you for your interest in contributing to [Veilura](https://veilura.online/)! This guide will walk you through everything you need to get started.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ Thank you for your interest in contributing to [Thuki](https://www.thuki.app/)! 
 
 ## Prerequisites
 
-You'll need the following tools installed before you can build Thuki:
+You'll need the following tools installed before you can build Veilura:
 
 ### Required
 
@@ -31,7 +31,7 @@ curl -fsSL https://bun.sh/install | bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-After installation, restart your shell or run `source ~/.cargo/env` to make `cargo` available. Thuki builds against stable Rust.
+After installation, restart your shell or run `source ~/.cargo/env` to make `cargo` available. Veilura builds against stable Rust.
 
 Running the coverage suite (required before submitting a PR) also needs the `nightly-2026-03-30` toolchain with `llvm-tools`:
 
@@ -39,7 +39,7 @@ Running the coverage suite (required before submitting a PR) also needs the `nig
 rustup toolchain install nightly-2026-03-30 --component llvm-tools
 ```
 
-**macOS:** Thuki is macOS-only. It uses NSPanel and Core Graphics APIs that are not available on other platforms.
+**macOS:** Veilura is macOS-only. It uses NSPanel and Core Graphics APIs that are not available on other platforms.
 
 **CMake:** required to build the bundled llama.cpp inference engine from source
 
@@ -55,7 +55,7 @@ sudo xcode-select -s /Applications/Xcode.app
 
 ### Optional
 
-No AI backend setup is required: Thuki bundles its own llama.cpp inference engine, and the dev/build scripts build the pinned `llama-server` sidecar from source automatically (this uses the CMake and Xcode prerequisites above; see Development Setup below). Install these only if you want to develop against an alternative provider:
+No AI backend setup is required: Veilura bundles its own llama.cpp inference engine, and the dev/build scripts build the pinned `llama-server` sidecar from source automatically (this uses the CMake and Xcode prerequisites above; see Development Setup below). Install these only if you want to develop against an alternative provider:
 
 **Ollama:** to test the Ollama provider against a native install
 
@@ -68,8 +68,8 @@ No AI backend setup is required: Thuki bundles its own llama.cpp inference engin
 1. **Fork and clone the repository**
 
    ```bash
-   git clone https://github.com/quiet-node/thuki.git
-   cd thuki
+   git clone https://github.com/veilura/veilura.git
+   cd veilura
    ```
 
 2. **Install frontend dependencies**
@@ -80,15 +80,15 @@ No AI backend setup is required: Thuki bundles its own llama.cpp inference engin
 
 3. **AI engine: built automatically**
 
-   Thuki bundles its own inference engine (llama.cpp's `llama-server`). On a fresh clone, the first `bun run dev` (or `build:backend` / `build:release`) automatically runs `bun run engine:ensure`, which clones the pinned llama.cpp tag, verifies the commit, then builds and installs the binary and its dylibs under `src-tauri/binaries/` (gitignored). That first build compiles llama.cpp from source, so it takes a while and needs the CMake and Xcode prerequisites above; later runs are an instant no-op until the pin changes. You pick and download a starter model inside the app's onboarding flow.
+   Veilura bundles its own inference engine (llama.cpp's `llama-server`). On a fresh clone, the first `bun run dev` (or `build:backend` / `build:release`) automatically runs `bun run engine:ensure`, which clones the pinned llama.cpp tag, verifies the commit, then builds and installs the binary and its dylibs under `src-tauri/binaries/` (gitignored). That first build compiles llama.cpp from source, so it takes a while and needs the CMake and Xcode prerequisites above; later runs are an instant no-op until the pin changes. You pick and download a starter model inside the app's onboarding flow.
 
    **Optional: develop against an alternative provider**
 
-   To test the Ollama provider, run a native Ollama install with a model pulled (`ollama pull gemma4:e2b`; Thuki's Ollama provider defaults to `http://127.0.0.1:11434`).
+   To test the Ollama provider, run a native Ollama install with a model pulled (`ollama pull gemma4:e2b`; Veilura's Ollama provider defaults to `http://127.0.0.1:11434`).
 
 4. **Configuration** (optional)
 
-   Thuki writes a default config file to `~/Library/Application Support/com.quietnode.thuki/config.toml` on first launch. To customize anything (model, system prompt, window dimensions, activation timing, quote display), edit that file and relaunch. See [docs/configurations.md](docs/configurations.md) for the full schema.
+   Veilura writes a default config file to `~/Library/Application Support/com.veilura.app/config.toml` on first launch. To customize anything (model, system prompt, window dimensions, activation timing, quote display), edit that file and relaunch. See [docs/configurations.md](docs/configurations.md) for the full schema.
 
    Built-in web search is keyless and in-process: the pipeline lives in `src-tauri/src/websearch/` with SSRF-safe HTTP in `src-tauri/src/net/`. Design handbook: [docs/built-in-web-search.md](docs/built-in-web-search.md). Privacy egress: [docs/search-privacy.md](docs/search-privacy.md). Constants: [docs/configurations.md](docs/configurations.md). Manual live eval harnesses (ignored by default CI): [docs/search-eval.md](docs/search-eval.md).
 
@@ -100,7 +100,7 @@ No AI backend setup is required: Thuki bundles its own llama.cpp inference engin
 
    On first run, macOS will prompt for Accessibility permission. This is required for the global keyboard shortcut. Grant it once; it persists across restarts.
 
-   **Dev runs and permissions:** `bun run dev` launches a bare binary (`src-tauri/target/debug/thuki`), not an app bundle, so macOS attributes Accessibility and Screen Recording grants to the terminal app running the command (Terminal.app, iTerm, VS Code, etc.), not to Thuki. Grant both permissions to that terminal app. Switching terminal apps means re-granting.
+   **Dev runs and permissions:** `bun run dev` launches a bare binary (`src-tauri/target/debug/veilura`), not an app bundle, so macOS attributes Accessibility and Screen Recording grants to the terminal app running the command (Terminal.app, iTerm, VS Code, etc.), not to Veilura. Grant both permissions to that terminal app. Switching terminal apps means re-granting.
 
 ---
 
@@ -202,6 +202,6 @@ Key style rules:
 
 ## Good First Issues
 
-New to the codebase? Look for issues tagged [`good first issue`](https://github.com/quiet-node/thuki/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) on GitHub. These are scoped to be approachable without deep knowledge of the full system.
+New to the codebase? Look for issues tagged [`good first issue`](https://github.com/veilura/veilura/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) on GitHub. These are scoped to be approachable without deep knowledge of the full system.
 
 If you have a question or want to discuss an approach before writing code, open an issue or start a discussion; we're happy to help.

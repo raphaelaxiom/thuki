@@ -26,7 +26,7 @@
 //! turn down the normal engine path: the vertical can only ever improve a turn,
 //! never lose one.
 //!
-//! Both requests carry a descriptive `User-Agent` identifying Thuki with a
+//! Both requests carry a descriptive `User-Agent` identifying Veilura with a
 //! contact URL, per
 //! [Wikimedia's User-Agent policy](https://meta.wikimedia.org/wiki/User-Agent_policy):
 //! verified live 2026-07-08 that a request with no (or a generic) User-Agent
@@ -49,7 +49,7 @@ const SUMMARY_PATH: &str = "/api/rest_v1/page/summary";
 
 /// Descriptive User-Agent Wikimedia's API etiquette policy requires; a
 /// missing or generic one is rejected with `403` (verified live 2026-07-08).
-const WIKI_USER_AGENT: &str = "Thuki/1.0 (https://thuki.app; contact@thuki.app)";
+const WIKI_USER_AGENT: &str = "Veilura/1.0 (https://veilura.online; contact@veilura.online)";
 
 /// A resolved Wikipedia summary: its canonical title, lead-paragraph extract,
 /// and the article's page URL.

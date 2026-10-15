@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import type React from 'react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import thukiLogo from '../../../src-tauri/icons/128x128.png';
+import veiluraLogo from '../../../src-tauri/icons/128x128.png';
 import { useFitOnboardingWindow } from '../../hooks/useFitOnboardingWindow';
 import { StepCard, Badge } from './_shared';
 
@@ -70,12 +70,12 @@ const KeyboardIcon = () => (
       width="14"
       height="10"
       rx="2"
-      stroke="#ff8d5c"
+      stroke="#7c6cf0"
       strokeWidth="1.5"
     />
     <path
       d="M5 8h1M8 8h1M11 8h1M5 11h8"
-      stroke="#ff8d5c"
+      stroke="#7c6cf0"
       strokeWidth="1.5"
       strokeLinecap="round"
     />
@@ -97,15 +97,15 @@ const ScreenIcon = ({ active }: { active: boolean }) => (
       width="14"
       height="9"
       rx="2"
-      stroke={active ? '#ff8d5c' : '#6b6660'}
+      stroke={active ? '#7c6cf0' : '#6b6660'}
       strokeWidth="1.5"
     />
-    <circle cx="9" cy="9.5" r="2" fill={active ? '#ff8d5c' : '#6b6660'} />
+    <circle cx="9" cy="9.5" r="2" fill={active ? '#7c6cf0' : '#6b6660'} />
     <circle
       cx="9"
       cy="9.5"
       r="3.5"
-      stroke={active ? '#ff8d5c' : '#6b6660'}
+      stroke={active ? '#7c6cf0' : '#6b6660'}
       strokeWidth="0.8"
       opacity="0.4"
     />
@@ -154,7 +154,7 @@ const Spinner = () => (
  */
 export function PermissionsStep() {
   // Match the transparent window to the card so its empty area never blocks
-  // clicks to the apps behind Thuki (the card has a fixed layout, so the fit
+  // clicks to the apps behind Veilura (the card has a fixed layout, so the fit
   // runs once on mount).
   const cardRef = useRef<HTMLDivElement>(null);
   useFitOnboardingWindow(cardRef, null);
@@ -191,7 +191,7 @@ export function PermissionsStep() {
   // no relaunch needed) and by the post-restart resume path. Opens System
   // Settings directly and polls AXIsProcessTrusted until the user toggles
   // the permission on. The first AXIsProcessTrusted call from a fresh PID
-  // is what registers Thuki in the System Settings list, so polling does
+  // is what registers Veilura in the System Settings list, so polling does
   // double duty here.
   const startAccessibilityFlow = useCallback(async () => {
     setAccessibilityStatus('requesting');
@@ -214,7 +214,7 @@ export function PermissionsStep() {
   }, [stopAxPolling]);
 
   const startScreenRecordingFlow = useCallback(async () => {
-    // CGRequestScreenCaptureAccess is the call that adds Thuki to the
+    // CGRequestScreenCaptureAccess is the call that adds Veilura to the
     // Screen Recording list AND surfaces the macOS allow dialog. Without
     // it the entry never appears, so the user has nothing to toggle.
     await invoke('request_screen_recording_access');
@@ -337,8 +337,8 @@ export function PermissionsStep() {
           // during a mid-resize measure (see the picker card in ModelCheckStep).
           flexShrink: 0,
           background:
-            'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(255,141,92,0.14) 0%, rgba(28,24,20,0.97) 60%), rgba(28,24,20,0.97)',
-          border: '1px solid rgba(255, 141, 92, 0.2)',
+            'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(124,108,240,0.14) 0%, rgba(28,26,58,0.97) 60%), rgba(28,26,58,0.97)',
+          border: '1px solid rgba(124, 108, 240, 0.2)',
           borderRadius: 24,
           padding: '32px 26px 26px',
           // Drop shadow handled by native macOS (set_has_shadow(true) in
@@ -357,7 +357,7 @@ export function PermissionsStep() {
             right: 0,
             height: 1,
             background:
-              'linear-gradient(90deg, transparent, rgba(255,141,92,0.4), transparent)',
+              'linear-gradient(90deg, transparent, rgba(124,108,240,0.4), transparent)',
           }}
         />
 
@@ -368,10 +368,10 @@ export function PermissionsStep() {
           style={{ textAlign: 'center', marginBottom: 18, cursor: 'grab' }}
         >
           <img
-            src={thukiLogo}
+            src={veiluraLogo}
             width={64}
             height={64}
-            alt="Thuki"
+            alt="Veilura"
             style={{
               objectFit: 'contain',
               pointerEvents: 'none',
@@ -393,7 +393,7 @@ export function PermissionsStep() {
             margin: '0 0 20px',
           }}
         >
-          {"Let's get Thuki set up"}
+          {"Let's get Veilura set up"}
         </h1>
 
         {/* Steps */}
@@ -418,8 +418,8 @@ export function PermissionsStep() {
                 justifyContent: 'center',
                 background: accessibilityGranted
                   ? 'rgba(34,197,94,0.12)'
-                  : 'rgba(255,141,92,0.12)',
-                border: `1px solid ${accessibilityGranted ? 'rgba(34,197,94,0.2)' : 'rgba(255,141,92,0.25)'}`,
+                  : 'rgba(124,108,240,0.12)',
+                border: `1px solid ${accessibilityGranted ? 'rgba(34,197,94,0.2)' : 'rgba(124,108,240,0.25)'}`,
               }}
             >
               {accessibilityGranted ? <CheckIcon /> : <KeyboardIcon />}
@@ -436,7 +436,7 @@ export function PermissionsStep() {
                 Accessibility
               </div>
               <div style={{ fontSize: 12, color: '#6b6660', lineHeight: 1.5 }}>
-                Lets Thuki respond to activator key (<KeyChip label="⌃" />
+                Lets Veilura respond to activator key (<KeyChip label="⌃" />
                 <KeyChip label="⌃" />)
               </div>
             </div>
@@ -459,9 +459,9 @@ export function PermissionsStep() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 background: accessibilityGranted
-                  ? 'rgba(255,141,92,0.12)'
+                  ? 'rgba(124,108,240,0.12)'
                   : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${accessibilityGranted ? 'rgba(255,141,92,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                border: `1px solid ${accessibilityGranted ? 'rgba(124,108,240,0.25)' : 'rgba(255,255,255,0.06)'}`,
               }}
             >
               <ScreenIcon active={accessibilityGranted} />
@@ -523,9 +523,9 @@ export function PermissionsStep() {
               <>
                 <CTAButton
                   onClick={handleQuitAndRelaunch}
-                  aria-label="Quit and Reopen Thuki"
+                  aria-label="Quit and Reopen Veilura"
                 >
-                  Quit & Reopen Thuki
+                  Quit & Reopen Veilura
                 </CTAButton>
                 <p
                   style={{
@@ -584,8 +584,8 @@ function CTAButton({
         width: '100%',
         padding: '13px',
         background: isDisabled
-          ? 'rgba(255,141,92,0.4)'
-          : 'linear-gradient(135deg, #ff8d5c 0%, #d45a1e 100%)',
+          ? 'rgba(124,108,240,0.4)'
+          : 'linear-gradient(135deg, #7c6cf0 0%, #4f46e5 100%)',
         color: 'white',
         fontSize: 14,
         fontWeight: 600,

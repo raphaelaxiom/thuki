@@ -5,10 +5,10 @@ import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import type { ChangelogSection } from './changelog';
 
 /**
- * Thuki signature ease: calm decelerate used by the ask-bar morph and
+ * Veilura signature ease: calm decelerate used by the ask-bar morph and
  * command-suggestion expand (cubic-bezier(0.16, 1, 0.3, 1)).
  */
-const THUKI_EASE = [0.16, 1, 0.3, 1] as const;
+const VEILURA_EASE = [0.16, 1, 0.3, 1] as const;
 
 interface ChangelogAccordionProps {
   sections: ChangelogSection[];
@@ -23,7 +23,7 @@ interface ChangelogAccordionProps {
  * Collapsible per-version release notes for What's New and Settings Changelog.
  * Newest section starts expanded; older rows stay collapsed. Bodies animate
  * open/closed with the same height+opacity ease as the ask-bar popovers so
- * the motion matches the rest of Thuki. Content reuses `MarkdownRenderer`.
+ * the motion matches the rest of Veilura. Content reuses `MarkdownRenderer`.
  */
 export function ChangelogAccordion({
   sections,
@@ -43,7 +43,7 @@ export function ChangelogAccordion({
       reduceMotion
         ? { duration: 0 }
         : {
-            height: { duration: 0.28, ease: THUKI_EASE },
+            height: { duration: 0.28, ease: VEILURA_EASE },
             opacity: { duration: 0.2, ease: 'easeOut' as const },
           },
     [reduceMotion],

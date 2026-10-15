@@ -661,8 +661,8 @@ export function AskBarView({
       >
         <div className="flex items-center w-full px-3 py-2.5 gap-2">
           <img
-            src="/thuki-logo.png"
-            alt="Thuki"
+            src="/veilura-logo.png"
+            alt="Veilura"
             className={`shrink-0 transition-all duration-300 ease-out ${
               isChatMode ? 'w-6 h-6 rounded-lg' : 'w-10 h-10 rounded-xl'
             }`}
@@ -697,9 +697,9 @@ export function AskBarView({
               value={query}
               onValueChange={handleValueChange}
               onFirstKeystroke={onFirstKeystroke}
-              placeholder={isChatMode ? 'Reply...' : 'Ask Thuki anything...'}
+              placeholder={isChatMode ? 'Reply...' : 'Ask Veilura anything...'}
               inputRef={inputRef}
-              contentEditableClassName="askbar-input thuki-text-base w-full bg-transparent outline-none text-text-primary py-2 px-1 whitespace-pre-wrap break-words"
+              contentEditableClassName="askbar-input veilura-text-base w-full bg-transparent outline-none text-text-primary py-2 px-1 whitespace-pre-wrap break-words"
               suggestionsOpen={showSuggestions}
               keyHandlers={keyHandlers}
               onPaste={handlePaste}

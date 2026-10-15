@@ -229,7 +229,7 @@ describe('AutoPrimeSkippedStrip', () => {
       screen.getByText('Only ~4.0 GB free. Qwen3.5 9B needs ~8.0 GB.'),
     ).toBeInTheDocument();
     expect(screen.getByTestId('memory-freeze-note')).toHaveTextContent(
-      'That is far too tight to load on its own. Thuki always asks at this level, because loading can slow your Mac badly or freeze it.',
+      'That is far too tight to load on its own. Veilura always asks at this level, because loading can slow your Mac badly or freeze it.',
     );
     // The old staged copy is gone in this band.
     expect(screen.queryByTestId('auto-prime-skipped-consequence')).toBeNull();

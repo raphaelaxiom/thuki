@@ -1,6 +1,6 @@
 /**
  * Loads the resolved `RawAppConfig` on mount and keeps it in sync via two
- * channels: the `thuki://config-updated` broadcast (fired after ANY in-app
+ * channels: the `veilura://config-updated` broadcast (fired after ANY in-app
  * config write, including a model change made from the overlay window) and
  * the Settings window's `tauri://focus` event (covers external hand-edits to
  * the file).
@@ -29,7 +29,7 @@ import type { RawAppConfig } from '../types';
  * Backend broadcast fired after the in-memory `AppConfig` is replaced. Mirrors
  * the Rust-side `CONFIG_UPDATED_EVENT` and the literal used in `ConfigContext`.
  */
-const CONFIG_UPDATED_EVENT = 'thuki://config-updated';
+const CONFIG_UPDATED_EVENT = 'veilura://config-updated';
 
 export interface ConfigSyncHandle {
   config: RawAppConfig | null;

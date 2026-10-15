@@ -17,7 +17,7 @@ export const OLLAMA_LIBRARY_URL = 'https://ollama.com/library';
  * the full sentence in one read.
  */
 export const OLLAMA_PILL_TOOLTIP =
-  'Browse and pull any model on Ollama. Thuki auto-detects it.';
+  'Browse and pull any model on Ollama. Veilura auto-detects it.';
 
 /**
  * Tooltip for the built-in "Browse models" pill, which opens the Settings
@@ -44,7 +44,7 @@ const CHECK_ICON_PATH = (
   />
 );
 
-const LISTBOX_ID = 'thuki-model-picker-listbox';
+const LISTBOX_ID = 'veilura-model-picker-listbox';
 
 /**
  * Builds the capability caption rendered beneath each picker row's model

@@ -88,7 +88,7 @@ describe('AskBarView', () => {
         inputRef={makeRef()}
       />,
     );
-    expect(screen.getByText('Ask Thuki anything...')).toBeInTheDocument();
+    expect(screen.getByText('Ask Veilura anything...')).toBeInTheDocument();
   });
 
   it('renders the input with chat mode placeholder', () => {
@@ -382,7 +382,7 @@ describe('AskBarView', () => {
         inputRef={makeRef()}
       />,
     );
-    const logo = container.querySelector('img[alt="Thuki"]');
+    const logo = container.querySelector('img[alt="Veilura"]');
     expect(logo).not.toBeNull();
     expect(logo?.classList.contains('w-10')).toBe(true);
     expect(logo?.classList.contains('h-10')).toBe(true);
@@ -402,7 +402,7 @@ describe('AskBarView', () => {
         inputRef={makeRef()}
       />,
     );
-    const logo = container.querySelector('img[alt="Thuki"]');
+    const logo = container.querySelector('img[alt="Veilura"]');
     expect(logo).not.toBeNull();
     expect(logo?.classList.contains('w-6')).toBe(true);
     expect(logo?.classList.contains('h-6')).toBe(true);

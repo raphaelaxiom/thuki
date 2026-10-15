@@ -161,7 +161,7 @@ function failureHeadline(kind: string, message: string): string {
     case 'disk_full':
       return 'Not enough disk space. Free up space and retry.';
     case 'engine':
-      return "Thuki's engine could not start.";
+      return "Veilura's engine could not start.";
     default:
       return message;
   }
@@ -371,6 +371,7 @@ export function Detail({
     <p
       style={{
         fontSize: 11,
+        // Intentional warning amber (semantic, not brand) — kept in the Veilura rebrand.
         color: warn ? '#ff8d5c' : 'rgba(255,255,255,0.45)',
         lineHeight: 1.5,
         margin: 0,
@@ -437,7 +438,7 @@ function Edge({
       ? '#5fcf86'
       : tone === 'red'
         ? '#ef6b6b'
-        : 'linear-gradient(90deg, #ffa06f, #d45a1e)';
+        : 'linear-gradient(90deg, #b3a8ff, #4f46e5)';
   return (
     <span
       data-progress-bar
@@ -502,7 +503,7 @@ function GhostButton({
         cursor: 'pointer',
         whiteSpace: 'nowrap',
         padding: '2px 4px',
-        color: tone === 'accent' ? '#ff8d5c' : 'rgba(236,234,231,0.54)',
+        color: tone === 'accent' ? '#7c6cf0' : 'rgba(236,234,231,0.54)',
       }}
     >
       {label}
@@ -576,7 +577,7 @@ export function FlowButton({
         padding: '6px 12px',
         borderRadius: 8,
         background: primary
-          ? 'linear-gradient(135deg, #ff8d5c 0%, #d45a1e 100%)'
+          ? 'linear-gradient(135deg, #7c6cf0 0%, #4f46e5 100%)'
           : 'rgba(255,255,255,0.04)',
         border: primary ? 'none' : '1px solid rgba(255,255,255,0.1)',
         color: primary ? 'white' : 'rgba(255,255,255,0.7)',

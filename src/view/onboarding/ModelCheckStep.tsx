@@ -20,7 +20,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import type React from 'react';
 import { useState, useEffect, useRef, useCallback, forwardRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import thukiLogo from '../../../src-tauri/icons/128x128.png';
+import veiluraLogo from '../../../src-tauri/icons/128x128.png';
 import { useFitOnboardingWindow } from '../../hooks/useFitOnboardingWindow';
 import { useConfig } from '../../contexts/ConfigContext';
 import { useDownloadCtx } from '../../contexts/DownloadContext';
@@ -367,8 +367,8 @@ const BuiltinShell = forwardRef<HTMLDivElement, { children: React.ReactNode }>(
             // size invariant so the picker always lands at its full width.
             flexShrink: 0,
             background:
-              'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(255,141,92,0.14) 0%, rgba(28,24,20,0.97) 60%), rgba(28,24,20,0.97)',
-            border: '1px solid rgba(255, 141, 92, 0.2)',
+              'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(124,108,240,0.14) 0%, rgba(28,26,58,0.97) 60%), rgba(28,26,58,0.97)',
+            border: '1px solid rgba(124, 108, 240, 0.2)',
             borderRadius: 24,
             padding: '26px 22px 22px',
             boxShadow: '0 0 40px rgba(255,100,40,0.07)',
@@ -384,7 +384,7 @@ const BuiltinShell = forwardRef<HTMLDivElement, { children: React.ReactNode }>(
               right: 0,
               height: 1,
               background:
-                'linear-gradient(90deg, transparent, rgba(255,141,92,0.4), transparent)',
+                'linear-gradient(90deg, transparent, rgba(124,108,240,0.4), transparent)',
             }}
           />
 
@@ -393,10 +393,10 @@ const BuiltinShell = forwardRef<HTMLDivElement, { children: React.ReactNode }>(
             style={{ textAlign: 'center', marginBottom: 12, cursor: 'grab' }}
           >
             <img
-              src={thukiLogo}
+              src={veiluraLogo}
               width={40}
               height={40}
-              alt="Thuki"
+              alt="Veilura"
               style={{
                 objectFit: 'contain',
                 pointerEvents: 'none',
@@ -429,7 +429,7 @@ const BuiltinShell = forwardRef<HTMLDivElement, { children: React.ReactNode }>(
               maxWidth: 560,
             }}
           >
-            Pick a starter model for Thuki. More models are available later in
+            Pick a starter model for Veilura. More models are available later in
             Settings.
           </p>
 
@@ -514,7 +514,7 @@ function OllamaModelCheck() {
   const titleSub = isProbing
     ? 'Checking your local Ollama setup…'
     : ollamaConnected
-      ? "Almost there. Let's pick a model for Thuki."
+      ? "Almost there. Let's pick a model for Veilura."
       : 'Runs Ollama locally. Your chats stay on this machine.';
 
   return (
@@ -538,8 +538,8 @@ function OllamaModelCheck() {
           // window width during a mid-resize measure (see the picker card).
           flexShrink: 0,
           background:
-            'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(255,141,92,0.14) 0%, rgba(28,24,20,0.97) 60%), rgba(28,24,20,0.97)',
-          border: '1px solid rgba(255, 141, 92, 0.2)',
+            'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(124,108,240,0.14) 0%, rgba(28,26,58,0.97) 60%), rgba(28,26,58,0.97)',
+          border: '1px solid rgba(124, 108, 240, 0.2)',
           borderRadius: 24,
           padding: '26px 22px 22px',
           boxShadow: '0 0 40px rgba(255,100,40,0.07)',
@@ -556,7 +556,7 @@ function OllamaModelCheck() {
             right: 0,
             height: 1,
             background:
-              'linear-gradient(90deg, transparent, rgba(255,141,92,0.4), transparent)',
+              'linear-gradient(90deg, transparent, rgba(124,108,240,0.4), transparent)',
           }}
         />
 
@@ -565,10 +565,10 @@ function OllamaModelCheck() {
           style={{ textAlign: 'center', marginBottom: 12, cursor: 'grab' }}
         >
           <img
-            src={thukiLogo}
+            src={veiluraLogo}
             width={40}
             height={40}
-            alt="Thuki"
+            alt="Veilura"
             style={{
               objectFit: 'contain',
               pointerEvents: 'none',
@@ -620,7 +620,7 @@ function OllamaModelCheck() {
             display: 'block',
             width: '100%',
             padding: '11px',
-            background: 'linear-gradient(135deg, #ff8d5c 0%, #d45a1e 100%)',
+            background: 'linear-gradient(135deg, #7c6cf0 0%, #4f46e5 100%)',
             color: 'white',
             fontSize: 14,
             fontWeight: 600,
@@ -686,7 +686,7 @@ function Rail({ stepOneActive, stepOneDone, stepTwoActive }: RailProps) {
           left: 11,
           width: 1,
           background:
-            'linear-gradient(180deg, rgba(255,141,92,0.25), rgba(255,255,255,0.04))',
+            'linear-gradient(180deg, rgba(124,108,240,0.25), rgba(255,255,255,0.04))',
         }}
       />
 
@@ -717,9 +717,9 @@ function RailNode({ number, variant, topGap = 0 }: RailNodeProps) {
     { bg: string; border: string; color: string }
   > = {
     active: {
-      bg: 'rgba(255,141,92,0.1)',
-      border: 'rgba(255,141,92,0.4)',
-      color: '#ff8d5c',
+      bg: 'rgba(124,108,240,0.1)',
+      border: 'rgba(124,108,240,0.4)',
+      color: '#7c6cf0',
     },
     done: {
       bg: 'rgba(34,197,94,0.12)',
@@ -873,7 +873,7 @@ function RowOne({ active, done }: RowOneProps) {
               >
                 <span
                   style={{
-                    color: 'rgba(255,141,92,0.75)',
+                    color: 'rgba(124,108,240,0.75)',
                     marginRight: 6,
                   }}
                 >
@@ -1058,17 +1058,17 @@ interface TabButtonProps {
 function TabButton({ label, selected, onClick }: TabButtonProps) {
   const [hover, setHover] = useState(false);
   const borderColor = selected
-    ? 'rgba(255, 141, 92, 0.28)'
+    ? 'rgba(124, 108, 240, 0.28)'
     : hover
       ? 'rgba(255, 255, 255, 0.1)'
       : 'transparent';
   const bg = selected
-    ? 'rgba(255, 141, 92, 0.1)'
+    ? 'rgba(124, 108, 240, 0.1)'
     : hover
       ? 'rgba(255, 255, 255, 0.04)'
       : 'rgba(255, 255, 255, 0.025)';
   const color = selected
-    ? '#ff8d5c'
+    ? '#7c6cf0'
     : hover
       ? 'rgba(255,255,255,0.85)'
       : 'rgba(255,255,255,0.55)';
@@ -1141,14 +1141,14 @@ function CopyButton({
   const borderColor = copied
     ? 'rgba(34,197,94,0.55)'
     : hover
-      ? 'rgba(255,141,92,0.55)'
+      ? 'rgba(124,108,240,0.55)'
       : 'rgba(255,255,255,0.12)';
   const labelColor =
     hover || copied ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.7)';
   const glyphColor = copied
     ? '#22c55e'
     : hover
-      ? '#ff8d5c'
+      ? '#7c6cf0'
       : 'rgba(255,255,255,0.7)';
 
   return (

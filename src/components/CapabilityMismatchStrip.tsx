@@ -32,7 +32,7 @@ const NAV_ACTIONS = {
  * Renders one {@link StripLink} as an inline button. A `url` link opens the
  * page in the browser and shows the ↗ external-link glyph; a `nav` link runs
  * the in-app action (open the Settings Models tab on the Providers or Discover
- * pane) and omits ↗ since it stays in Thuki.
+ * pane) and omits ↗ since it stays in Veilura.
  */
 function StripLinkButton({ link }: { link: StripLink }) {
   const nav = 'nav' in link ? NAV_ACTIONS[link.nav] : null;

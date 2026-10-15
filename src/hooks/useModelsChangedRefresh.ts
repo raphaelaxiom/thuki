@@ -18,7 +18,7 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
  * partial download was discarded). Mirrors the Rust-side `MODELS_CHANGED_EVENT`
  * in `models/mod.rs`.
  */
-export const MODELS_CHANGED_EVENT = 'thuki://models-changed';
+export const MODELS_CHANGED_EVENT = 'veilura://models-changed';
 
 /**
  * Re-runs `refresh` whenever another window changes the on-disk model set.

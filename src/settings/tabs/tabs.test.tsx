@@ -295,7 +295,7 @@ describe('AboutTab', () => {
 
   it('renders the centered hero with title, version, and tagline', async () => {
     await renderAbout();
-    expect(screen.getByText('Thuki')).toBeInTheDocument();
+    expect(screen.getByText('Veilura')).toBeInTheDocument();
     expect(screen.getByText(/A floating, local-first AI/)).toBeInTheDocument();
     expect(
       screen.getByText(/No cloud\. No clutter\. Just answers\./),
@@ -330,7 +330,7 @@ describe('AboutTab', () => {
       screen.getByRole('button', { name: /release notes on GitHub/ }),
     );
     expect(invokeMock).toHaveBeenCalledWith('open_url', {
-      url: 'https://github.com/quiet-node/thuki/releases/tag/nightly',
+      url: 'https://github.com/veilura/veilura/releases/tag/nightly',
     });
     vi.unstubAllEnvs();
   });
@@ -338,10 +338,10 @@ describe('AboutTab', () => {
   it('GitHub icon button opens the repo', async () => {
     await renderAbout();
     fireEvent.click(
-      screen.getByRole('button', { name: 'View Thuki on GitHub' }),
+      screen.getByRole('button', { name: 'View Veilura on GitHub' }),
     );
     expect(invokeMock).toHaveBeenCalledWith('open_url', {
-      url: 'https://github.com/quiet-node/thuki',
+      url: 'https://github.com/veilura/veilura',
     });
   });
 
@@ -359,23 +359,25 @@ describe('AboutTab', () => {
     await renderAbout();
     fireEvent.click(screen.getByRole('button', { name: /Open an issue/ }));
     expect(invokeMock).toHaveBeenCalledWith('open_url', {
-      url: 'https://github.com/quiet-node/thuki/issues',
+      url: 'https://github.com/veilura/veilura/issues',
     });
   });
 
-  it('Globe icon button opens thuki.app', async () => {
+  it('Globe icon button opens veilura.online', async () => {
     await renderAbout();
-    fireEvent.click(screen.getByRole('button', { name: /Visit thuki.app/ }));
-    expect(invokeMock).toHaveBeenCalledWith('open_url', {
-      url: 'https://www.thuki.app/',
-    });
-  });
-
-  it('Reveal Thuki app data invokes reveal_config_in_finder', async () => {
-    await renderAbout();
-    await waitFor(() => screen.getByText(/Reveal Thuki app data/));
     fireEvent.click(
-      screen.getByRole('button', { name: /Reveal Thuki app data/ }),
+      screen.getByRole('button', { name: /Visit veilura.online/ }),
+    );
+    expect(invokeMock).toHaveBeenCalledWith('open_url', {
+      url: 'https://veilura.online/',
+    });
+  });
+
+  it('Reveal Veilura app data invokes reveal_config_in_finder', async () => {
+    await renderAbout();
+    await waitFor(() => screen.getByText(/Reveal Veilura app data/));
+    fireEvent.click(
+      screen.getByRole('button', { name: /Reveal Veilura app data/ }),
     );
     expect(invokeMock).toHaveBeenCalledWith('reveal_config_in_finder');
   });
@@ -671,7 +673,7 @@ describe('BehaviorTab', () => {
     );
   });
 
-  const CLOSE_NAME = /Close Thuki after replacing selected text/;
+  const CLOSE_NAME = /Close Veilura after replacing selected text/;
 
   it('renders the Auto close toggle in the Text Replacement section', () => {
     render(<BehaviorTab config={CONFIG} resyncToken={0} onSaved={() => {}} />);

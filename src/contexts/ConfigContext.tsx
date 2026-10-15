@@ -25,7 +25,7 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
  * Kept as a string literal here to avoid pulling a Rust-codegen dep into
  * the frontend.
  */
-const CONFIG_UPDATED_EVENT = 'thuki://config-updated';
+const CONFIG_UPDATED_EVENT = 'veilura://config-updated';
 
 /**
  * Overlay visibility event (mirrors `OVERLAY_VISIBILITY_EVENT` in `App.tsx`).
@@ -34,7 +34,7 @@ const CONFIG_UPDATED_EVENT = 'thuki://config-updated';
  * even if the `config-updated` broadcast was missed while the overlay was
  * hidden. The payload's `state` is `'show' | 'hide-request' | 'restore'`.
  */
-const OVERLAY_VISIBILITY_EVENT = 'thuki://visibility';
+const OVERLAY_VISIBILITY_EVENT = 'veilura://visibility';
 
 /** Shape returned by the Rust `get_config` command (snake_case). Only the
  * fields the runtime tree consumes are declared. */

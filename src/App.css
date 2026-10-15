@@ -14,42 +14,51 @@
     'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 
-  /* Brand palette - single source of truth for all color decisions */
-  --color-primary: #ff8d5c;
-  --color-secondary: #bc5c0b;
-  --color-tertiary: #e69c05;
-  --color-neutral: #1a1a1c;
+  /* Brand palette - single source of truth for all color decisions.
+     Veilura palette: deep indigo/violet + aurora teal/mint accent,
+     warm off-white light theme. Phase 2 builds on these tokens. */
+  --color-primary: #7c6cf0;
+  --color-secondary: #4f46e5;
+  --color-tertiary: #2dd4bf;
+  --color-neutral: #12102a;
+
+  /* Veilura brand tokens (extend the palette; do not fork the stack) */
+  --color-aurora-teal: #2dd4bf;
+  --color-aurora-mint: #5eead4;
+  --color-veil-indigo: #312e81;
+  --color-veil-deep: #1b1838;
+  --color-paper: #faf7f2;
 
   /* Status accent: "ready" green for the minimized done indicator. Sits
-     outside the warm brand palette on purpose, a conventional ready/available
-     signal that must read instantly distinct from the warm working state. */
+     outside the violet brand palette on purpose, a conventional ready/available
+     signal that must read instantly distinct from the violet working state. */
   --color-ready: #34d399;
 
   /* Surface tokens derived from the palette */
-  --color-surface-base: rgba(22, 18, 15, 0.98);
-  --color-surface-elevated: rgba(38, 30, 24, 0.6);
-  --color-surface-border: rgba(255, 141, 92, 0.12);
+  --color-surface-base: rgba(24, 22, 48, 0.98);
+  --color-surface-elevated: rgba(40, 36, 74, 0.6);
+  --color-surface-border: rgba(124, 108, 240, 0.16);
 
   /* Text tokens */
-  --color-text-primary: #f0f0f2;
-  --color-text-secondary: #8a8a8e;
+  --color-text-primary: #f2f1fb;
+  --color-text-secondary: #9a97b8;
 
   /* Streamdown theme tokens (shadcn/ui convention) */
-  --color-muted: rgba(42, 42, 46, 0.6);
-  --color-muted-foreground: #8a8a8e;
-  --color-border: rgba(255, 141, 92, 0.1);
-  --color-sidebar: rgba(28, 28, 32, 0.95);
-  --color-foreground: #f0f0f2;
-  --color-background: rgb(22, 18, 15);
+  --color-muted: rgba(48, 44, 88, 0.6);
+  --color-muted-foreground: #9a97b8;
+  --color-border: rgba(124, 108, 240, 0.14);
+  --color-sidebar: rgba(28, 26, 58, 0.95);
+  --color-foreground: #f2f1fb;
+  --color-background: rgb(24, 22, 48);
 
   /* Elevation - input bar mode (compact floating effect, Spotlight-inspired) */
   --shadow-bar:
-    0 6px 20px -6px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 141, 92, 0.12);
+    0 6px 20px -6px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(124, 108, 240, 0.16);
 
   /* Elevation - chat window mode (layered depth without excessive spread) */
   --shadow-chat:
     0 4px 14px -3px rgba(0, 0, 0, 0.5), 0 1px 4px -1px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 141, 92, 0.12);
+    0 0 0 1px rgba(124, 108, 240, 0.16);
 }
 
 html,
@@ -70,10 +79,10 @@ body {
     border-radius 0.5s cubic-bezier(0.12, 0.8, 0.2, 1.18);
   background-image: radial-gradient(
     ellipse 70% 40% at 50% 0%,
-    rgba(255, 141, 92, 0.08) 0%,
+    rgba(124, 108, 240, 0.12) 0%,
     transparent 65%
   );
-  border-top-color: rgba(255, 141, 92, 0.2);
+  border-top-color: rgba(124, 108, 240, 0.25);
 }
 
 /* Subtle glowing line at the very top edge - matches approved onboarding style */
@@ -87,7 +96,7 @@ body {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 141, 92, 0.35),
+    rgba(124, 108, 240, 0.5),
     transparent
   );
   pointer-events: none;
@@ -101,26 +110,26 @@ body {
 }
 
 /**
- * User bubble - warm gradient from primary brand color to a deeper amber.
+ * User bubble - violet gradient from primary brand color to a deeper indigo.
  * Subtle inner glow at the top for depth perception.
  */
 .chat-bubble-user {
-  background: linear-gradient(135deg, #ff8d5c 0%, #e06b30 100%);
+  background: linear-gradient(135deg, #7c6cf0 0%, #4f46e5 100%);
   box-shadow:
-    0 2px 12px -2px rgba(255, 141, 92, 0.3),
+    0 2px 12px -2px rgba(124, 108, 240, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 /**
  * AI bubble - frosted glass surface with a subtle border for depth.
- * Harmonizes with the warm ambient dark overlay backdrop.
+ * Harmonizes with the indigo-tinted ambient dark overlay backdrop.
  */
 .chat-bubble-ai {
-  background: rgba(36, 30, 26, 0.95);
+  background: rgba(32, 29, 60, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-top-color: rgba(255, 141, 92, 0.1);
+  border-top-color: rgba(124, 108, 240, 0.15);
   box-shadow:
     0 2px 8px -2px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -128,13 +137,13 @@ body {
 
 /**
  * L3 citation total-failure honesty note: hairline left rail only, no box
- * fill. Italic muted secondary so it reads as Thuki-owned caveats under the
+ * fill. Italic muted secondary so it reads as Veilura-owned caveats under the
  * cream answer body and above sources chrome.
  */
 .honest-failure-note {
   margin: 0.75rem 0 0;
   padding: 0 0 0 10px;
-  border-left: 1.5px solid rgba(232, 184, 109, 0.45);
+  border-left: 1.5px solid rgba(45, 212, 191, 0.5);
   font-size: 12.5px;
   line-height: 1.5;
   font-style: italic;
@@ -231,14 +240,14 @@ body {
   color: var(--color-text-secondary);
 }
 
-/* AI prose: warm cream, looser leading. Scoped to .markdown-body so UI chrome stays separate. */
+/* AI prose: soft lavender-tinted prose, looser leading. Scoped to .markdown-body so UI chrome stays separate. */
 .markdown-body {
   font-family: var(--font-sans);
-  color: #fbe8c6;
-  font-size: var(--thuki-text-base, 16.5px);
-  line-height: var(--thuki-text-line-height, 1.6);
-  letter-spacing: var(--thuki-text-letter-spacing, 0.3px);
-  font-weight: var(--thuki-text-font-weight, 600);
+  color: #edebff;
+  font-size: var(--veilura-text-base, 16.5px);
+  line-height: var(--veilura-text-line-height, 1.6);
+  letter-spacing: var(--veilura-text-letter-spacing, 0.3px);
+  font-weight: var(--veilura-text-font-weight, 600);
 }
 
 /* User-tunable text scale shared by the user chat bubble text and the AskBar
@@ -246,11 +255,11 @@ body {
  * effect in App.tsx; the fallbacks preserve the pre-tunable Tailwind metrics
  * (text-sm = 14px, leading-5 = 1.25, no letter-spacing, weight 500) when the
  * variables are unset (e.g. test environments without the effect mounted). */
-.thuki-text-base {
-  font-size: var(--thuki-text-base, 14px);
-  line-height: var(--thuki-text-line-height, 1.25);
-  letter-spacing: var(--thuki-text-letter-spacing, 0px);
-  font-weight: var(--thuki-text-font-weight, 500);
+.veilura-text-base {
+  font-size: var(--veilura-text-base, 14px);
+  line-height: var(--veilura-text-line-height, 1.25);
+  letter-spacing: var(--veilura-text-letter-spacing, 0px);
+  font-weight: var(--veilura-text-font-weight, 500);
 }
 
 /* ─── Markdown Body: Prose Defaults ───
@@ -316,9 +325,9 @@ body {
 [data-streamdown='code-block'] {
   position: relative; /* anchors the absolutely-repositioned actions wrapper */
   background: rgba(18, 18, 22, 0.95);
-  border-color: rgba(255, 141, 92, 0.22);
+  border-color: rgba(124, 108, 240, 0.22);
   box-shadow:
-    0 0 0 1px rgba(255, 141, 92, 0.06),
+    0 0 0 1px rgba(124, 108, 240, 0.06),
     0 4px 16px -4px rgba(0, 0, 0, 0.5);
 }
 
@@ -336,14 +345,14 @@ body {
 }
 
 [data-streamdown='code-block-header'] {
-  color: rgba(255, 141, 92, 0.55);
+  color: rgba(124, 108, 240, 0.55);
   padding-left: 8px;
 }
 
 [data-streamdown='code-block-body'] {
   background: transparent;
   border: none;
-  border-top: 1px solid rgba(255, 141, 92, 0.08);
+  border-top: 1px solid rgba(124, 108, 240, 0.08);
 }
 
 /* ─── Code Block Copy Button ───
@@ -391,13 +400,13 @@ body {
     background-color 150ms ease;
 }
 .citation-link:hover {
-  color: #e8835a;
+  color: #9b8cff;
   background-color: rgba(232, 131, 90, 0.14);
 }
 .citation-link:focus-visible {
   outline: none;
-  color: #e8835a;
-  box-shadow: 0 0 0 2px rgba(255, 141, 92, 0.32);
+  color: #9b8cff;
+  box-shadow: 0 0 0 2px rgba(124, 108, 240, 0.32);
 }
 .search-bubble[data-active-citation='1'] .citation-link[data-citation='1'],
 .search-bubble[data-active-citation='2'] .citation-link[data-citation='2'],
@@ -409,7 +418,7 @@ body {
 .search-bubble[data-active-citation='8'] .citation-link[data-citation='8'],
 .search-bubble[data-active-citation='9'] .citation-link[data-citation='9'],
 .search-bubble[data-active-citation='10'] .citation-link[data-citation='10'] {
-  color: #e8835a;
+  color: #9b8cff;
   background-color: rgba(232, 131, 90, 0.18);
 }
 
@@ -430,11 +439,11 @@ body {
   gap: 6px;
   padding: 3px 9px 3px 6px;
   border-radius: 999px;
-  background: rgba(255, 141, 92, 0.1);
-  border: 1px solid rgba(255, 141, 92, 0.22);
+  background: rgba(124, 108, 240, 0.1);
+  border: 1px solid rgba(124, 108, 240, 0.22);
   font-size: 11px;
   font-weight: 700;
-  color: #ffc4a8;
+  color: #c7c2ff;
   line-height: 1.2;
 }
 .sources-chips-pulse > span {
@@ -677,7 +686,7 @@ body {
   background:
     radial-gradient(
       ellipse 70% 40% at 50% 0%,
-      rgba(255, 141, 92, 0.08) 0%,
+      rgba(124, 108, 240, 0.08) 0%,
       transparent 65%
     ),
     var(--color-surface-base);
@@ -695,7 +704,7 @@ body {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 141, 92, 0.35),
+    rgba(124, 108, 240, 0.35),
     transparent
   );
 }
@@ -803,7 +812,7 @@ body {
    visible. The base/settled state is declaratively visible; collapse and
    expand layer transient animations on top. Timings mirror the JS
    MORPH_DURATION_S (0.36s) constant. */
-.thuki-mascot {
+.veilura-mascot {
   opacity: 1;
   transform: scale(1);
   transform-origin: center;
@@ -812,8 +821,8 @@ body {
    end-state, so even if this animation is throttled and never runs, the icon
    still paints at opacity:1. `both` fill holds the 0% frame during the delay
    and the 100% frame after. */
-.thuki-mascot-bloom {
-  animation: thuki-mascot-bloom 0.42s ease-out 0.04s both;
+.veilura-mascot-bloom {
+  animation: veilura-mascot-bloom 0.42s ease-out 0.04s both;
 }
 /* On expand the mascot snaps invisible INSTANTLY (no transition). This is
    load-bearing, not cosmetic: expanding moves the native window (to grow the
@@ -824,10 +833,10 @@ body {
    commit as the move dispatch, there is simply nothing visible to flash; the
    chat scaling in from the anchor corner carries the "grows out of the icon"
    continuity instead. Do NOT add a transition here. */
-.thuki-mascot-leaving {
+.veilura-mascot-leaving {
   opacity: 0;
 }
-@keyframes thuki-mascot-bloom {
+@keyframes veilura-mascot-bloom {
   0% {
     opacity: 0;
     transform: scale(0.3);
@@ -847,7 +856,7 @@ body {
  * parked mascot does a soft elastic squash-and-stretch (it looks alive, not
  * badged) and a small glossy jewel breathes at its bottom-right corner. When a
  * reply lands while minimized the mascot does one elastic pop and the jewel
- * holds a steady warm amber, the persistent "reply waiting" cue. The wobble is
+ * holds a steady violet, the persistent "reply waiting" cue. The wobble is
  * the personality; the jewel is the explicit working/done signal.
  */
 
@@ -902,21 +911,21 @@ body {
    INTERPOLATE: animating a registered <color> re-renders the radial gradient
    each frame. A plain `transition`/`@keyframes` on a `background` gradient
    does not animate, which is why the working->done color change hard-cut
-   before. Initial values are the working (orange) stops. */
+   before. Initial values are the working (violet) stops. */
 @property --jewel-hi {
   syntax: '<color>';
   inherits: false;
-  initial-value: #ffd9a8;
+  initial-value: #c7c2ff;
 }
 @property --jewel-core {
   syntax: '<color>';
   inherits: false;
-  initial-value: #ff8d5c;
+  initial-value: #7c6cf0;
 }
 @property --jewel-rim {
   syntax: '<color>';
   inherits: false;
-  initial-value: #bc5c0b;
+  initial-value: #4f46e5;
 }
 
 /* Jewel status bead, pinned just inside the mascot's bottom-right corner. */
@@ -934,27 +943,27 @@ body {
     var(--jewel-rim)
   );
 }
-/* Working: warm orange jewel that gently breathes. */
+/* Working: violet jewel that gently breathes. */
 .minimized-jewel-working {
-  --jewel-hi: #ffd9a8;
-  --jewel-core: #ff8d5c;
-  --jewel-rim: #bc5c0b;
+  --jewel-hi: #c7c2ff;
+  --jewel-core: #7c6cf0;
+  --jewel-rim: #4f46e5;
   animation: minimized-jewel-breathe 1.6s ease-in-out infinite;
 }
 @keyframes minimized-jewel-breathe {
   0%,
   100% {
-    box-shadow: 0 0 0 2px rgba(255, 141, 92, 0.12);
+    box-shadow: 0 0 0 2px rgba(124, 108, 240, 0.14);
     opacity: 0.85;
   }
   50% {
-    box-shadow: 0 0 0 5px rgba(255, 141, 92, 0.22);
+    box-shadow: 0 0 0 5px rgba(124, 108, 240, 0.26);
     opacity: 1;
   }
 }
-/* Done: settles on a green "ready" jewel, but does NOT hard-cut from orange.
-   The handoff animation morphs the bead orange -> a bright pale-gold flash
-   (this avoids a muddy orange->green midtone and reads as a confirming "ding")
+/* Done: settles on a green "ready" jewel, but does NOT hard-cut from violet.
+   The handoff animation morphs the bead violet -> a bright pale-mint flash
+   (this avoids a muddy violet->green midtone and reads as a confirming "ding")
    -> green, swelling the glow and popping scale once, in sync with the
    mascot's completion pop. `both` holds the green end frame afterward. */
 .minimized-jewel-done {
@@ -966,18 +975,18 @@ body {
 }
 @keyframes minimized-jewel-handoff {
   0% {
-    --jewel-hi: #ffd9a8;
-    --jewel-core: #ff8d5c;
-    --jewel-rim: #bc5c0b;
+    --jewel-hi: #c7c2ff;
+    --jewel-core: #7c6cf0;
+    --jewel-rim: #4f46e5;
     transform: scale(1);
-    box-shadow: 0 0 0 2px rgba(255, 141, 92, 0.25);
+    box-shadow: 0 0 0 2px rgba(124, 108, 240, 0.3);
   }
   45% {
     --jewel-hi: #ffffff;
-    --jewel-core: #ffe6a6;
-    --jewel-rim: #e69c05;
+    --jewel-core: #b9f5e5;
+    --jewel-rim: #2dd4bf;
     transform: scale(1.3);
-    box-shadow: 0 0 8px rgba(255, 214, 140, 0.95);
+    box-shadow: 0 0 8px rgba(94, 234, 212, 0.95);
   }
   100% {
     --jewel-hi: #d1fae5;

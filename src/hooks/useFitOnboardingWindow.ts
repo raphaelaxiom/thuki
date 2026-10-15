@@ -30,7 +30,7 @@ const REVEAL_QUIET_MS = 150;
  *
  * The onboarding window is transparent, so any part of the window not covered
  * by the visible card still captures mouse clicks meant for the apps behind
- * Thuki. A fixed window taller than the card therefore leaves an invisible
+ * Veilura. A fixed window taller than the card therefore leaves an invisible
  * click-blocking margin. Measuring the card and matching the window to it
  * removes that margin.
  *

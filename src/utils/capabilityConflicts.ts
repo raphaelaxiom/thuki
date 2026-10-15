@@ -8,7 +8,7 @@ import type { ModelCapabilities } from '../types/model';
  * have the repo checked out locally.
  */
 export const OCR_COMMANDS_DOC_URL =
-  'https://github.com/quiet-node/thuki/blob/main/docs/ocr-commands.md';
+  'https://github.com/veilura/veilura/blob/main/docs/ocr-commands.md';
 
 /**
  * Ollama's official download page, embedded in the unreachable copy so a
@@ -22,7 +22,7 @@ export const OLLAMA_DOWNLOAD_URL = 'https://ollama.com/download';
  * An inline clickable action embedded in a strip message. A `url` link opens
  * an external page in the user's browser and carries the ↗ external-link glyph;
  * a `nav` link runs an in-app navigation and omits ↗ because it never leaves
- * Thuki. The two nav targets open the Settings window's Models tab on the
+ * Veilura. The two nav targets open the Settings window's Models tab on the
  * `settings-providers` (the provider switcher) or `settings-discover` (the
  * download picker) pane.
  */
@@ -109,7 +109,7 @@ const EMPTY_HISTORY_STATE: HistoryCapabilityState = {
  * App.tsx can route through one symbol per state.
  */
 export const NO_MODELS_INSTALLED_MESSAGE =
-  "Thuki couldn't find any models. Pull one from Ollama with `ollama pull <model>`, then come back.";
+  "Veilura couldn't find any models. Pull one from Ollama with `ollama pull <model>`, then come back.";
 
 /**
  * Copy used when the local Ollama daemon cannot be reached (connection
@@ -164,7 +164,7 @@ export const OPENAI_NO_MODEL_MESSAGE =
  * specific than retrying.
  */
 export const MODEL_STATE_UNAVAILABLE_MESSAGE =
-  "Thuki couldn't check your models. Try again in a moment.";
+  "Veilura couldn't check your models. Try again in a moment.";
 
 /**
  * Copy used when models are installed but none is active yet. The in-chat

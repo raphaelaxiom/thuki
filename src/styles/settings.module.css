@@ -1,16 +1,16 @@
 /* ─────────────────────────────────────────────────────────────────────────
- * Thuki Settings panel — chat-app aesthetic.
+ * Veilura Settings panel — chat-app aesthetic.
  *
- * Visual language matches the Thuki chat overlay (App.css): warm dark
- * surface (var(--color-surface-base)), faint radial-orange aura at the
+ * Visual language matches the Veilura chat overlay (App.css): indigo-tinted dark
+ * surface (var(--color-surface-base)), faint radial-violet aura at the
  * top, a single hairline glow line at the very top edge (like
  * .morphing-container::before), AI-bubble-style hairline borders
- * (rgba(255,255,255,0.06) with rgba(255,141,92,0.1) at the top),
+ * (rgba(255,255,255,0.06) with rgba(124,108,240,0.1) at the top),
  * subtle 12px rounding, no chunky pill tabs, no hard top-bar divider.
  *
  * Topbar is a horizontal row of icon-above-label tabs (CodexBar layout)
  * that bleeds seamlessly into the body — no border line, just a faded
- * hairline gradient. Active tab uses a subtle dark inset + warm orange
+ * hairline gradient. Active tab uses a subtle dark inset + violet
  * icon/label; inactive tabs are gray.
  *
  * The window itself is a real NSWindow; OS chrome (title bar, traffic
@@ -38,10 +38,10 @@
   --t1: #eceae7;
   --t2: rgba(236, 234, 231, 0.54);
   --t3: rgba(236, 234, 231, 0.34);
-  --accent: #ff8d5c;
-  --accent-soft: rgba(255, 141, 92, 0.14);
-  /* Capability-pill text colours: a calm warm trio, each distinct and none
-   * reusing a status colour (or purple/blue/green). Text = stone, Vision =
+  --accent: #7c6cf0;
+  --accent-soft: rgba(124, 108, 240, 0.14);
+  /* Capability-pill text colours: a calm trio, each distinct and none
+   * reusing a status colour or the brand violet. Text = stone, Vision =
    * dusty rose, Thinking = wheat gold. */
   --cap-text: #b8aa9a;
   --cap-vision: #d59aad;
@@ -65,7 +65,7 @@
    * space above the traffic-light dots — mirrors the chat overlay's
    * outer `pt-2` padding so both panels feel the same vertically. */
   padding-top: 8px;
-  /* Premium flat base (warm off-black), elevation comes from light overlays
+  /* Premium flat base (indigo-tinted off-black), elevation comes from light overlays
    * on the surfaces above it, not a muddy radial wash. */
   background: var(--base);
   color: var(--t1);
@@ -74,7 +74,7 @@
   font-size: 13px;
   user-select: none;
   border: 1px solid var(--hair);
-  border-top-color: rgba(255, 141, 92, 0.2);
+  border-top-color: rgba(124, 108, 240, 0.2);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -90,7 +90,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 141, 92, 0.35),
+    rgba(124, 108, 240, 0.35),
     transparent
   );
   pointer-events: none;
@@ -216,7 +216,7 @@
 }
 .sideItem:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 141, 92, 0.32);
+  box-shadow: 0 0 0 2px rgba(124, 108, 240, 0.32);
 }
 .sideItemActive {
   color: var(--t1);
@@ -234,7 +234,7 @@
   stroke-width: 1.6;
   opacity: 0.9;
 }
-/* Active section: the icon carries the accent. One active signal (orange
+/* Active section: the icon carries the accent. One active signal (violet
  * icon + stronger fill + bright label), no separate rail bar that read as
  * clutter against the filled pill. */
 .sideItemActive .sideItemIcon {
@@ -299,7 +299,7 @@
 .segItemActive {
   color: var(--accent);
   background: rgba(0, 0, 0, 0.28);
-  box-shadow: inset 0 0 0 1px rgba(255, 141, 92, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(124, 108, 240, 0.1);
 }
 .segItemLabel {
   color: inherit;
@@ -340,12 +340,12 @@
 .hero {
   box-sizing: border-box;
   padding: 18px;
-  border: 1px solid rgba(255, 141, 92, 0.3);
+  border: 1px solid rgba(124, 108, 240, 0.3);
   border-radius: 14px;
   background: linear-gradient(
     180deg,
-    rgba(255, 141, 92, 0.06),
-    rgba(255, 141, 92, 0.02)
+    rgba(124, 108, 240, 0.06),
+    rgba(124, 108, 240, 0.02)
   );
 }
 .heroHead {
@@ -439,7 +439,7 @@
 }
 .switchBtn:hover:not(:disabled) {
   color: var(--t1);
-  border-color: rgba(255, 141, 92, 0.5);
+  border-color: rgba(124, 108, 240, 0.5);
   background: var(--accent-soft);
 }
 .switchBtn:disabled {
@@ -493,7 +493,7 @@
   height: 30px;
   text-align: right;
   background: rgba(36, 30, 26, 0.6);
-  border: 1px solid rgba(255, 141, 92, 0.3);
+  border: 1px solid rgba(124, 108, 240, 0.3);
   border-radius: 8px;
   padding: 0 10px;
   color: var(--accent);
@@ -510,8 +510,8 @@
   margin: 0;
 }
 .genCtxInput:focus-visible {
-  border-color: rgba(255, 141, 92, 0.6);
-  box-shadow: 0 0 0 3px rgba(255, 141, 92, 0.12);
+  border-color: rgba(124, 108, 240, 0.6);
+  box-shadow: 0 0 0 3px rgba(124, 108, 240, 0.12);
 }
 .genCtxValueUnit {
   font-size: 12px;
@@ -696,9 +696,9 @@
     border-color 150ms ease;
 }
 .infoBtn:hover {
-  background: rgba(255, 141, 92, 0.12);
+  background: rgba(124, 108, 240, 0.12);
   color: var(--accent);
-  border-color: rgba(255, 141, 92, 0.4);
+  border-color: rgba(124, 108, 240, 0.4);
 }
 .infoBtn:focus-visible {
   outline: 2px solid var(--accent);
@@ -731,14 +731,14 @@
   line-height: 1.45;
 }
 
-/* ─── Inputs (chat-bubble-ai vocabulary: hairline, warm top edge) ───────── */
+/* ─── Inputs (chat-bubble-ai vocabulary: hairline, violet top edge) ───────── */
 
 .input,
 .textarea {
   width: 100%;
   background: rgba(36, 30, 26, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-top-color: rgba(255, 141, 92, 0.1);
+  border-top-color: rgba(124, 108, 240, 0.1);
   border-radius: 8px;
   color: var(--t1);
   font-family: inherit;
@@ -763,15 +763,15 @@
 .textarea:hover {
   background: rgba(36, 30, 26, 0.8);
   border-color: rgba(255, 255, 255, 0.1);
-  border-top-color: rgba(255, 141, 92, 0.18);
+  border-top-color: rgba(124, 108, 240, 0.18);
 }
 .input:focus-visible,
 .textarea:focus-visible {
   outline: none;
   background: rgba(36, 30, 26, 0.95);
-  border-color: rgba(255, 141, 92, 0.42);
+  border-color: rgba(124, 108, 240, 0.42);
   box-shadow:
-    0 0 0 3px rgba(255, 141, 92, 0.1),
+    0 0 0 3px rgba(124, 108, 240, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .inputError {
@@ -786,7 +786,7 @@
   height: 32px;
   background: rgba(36, 30, 26, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-top-color: rgba(255, 141, 92, 0.1);
+  border-top-color: rgba(124, 108, 240, 0.1);
   border-radius: 8px;
   padding: 0 10px 0 12px;
   color: var(--t1);
@@ -803,19 +803,19 @@
 }
 .dropdown:focus-visible {
   outline: none;
-  border-color: rgba(255, 141, 92, 0.42);
-  box-shadow: 0 0 0 3px rgba(255, 141, 92, 0.1);
+  border-color: rgba(124, 108, 240, 0.42);
+  box-shadow: 0 0 0 3px rgba(124, 108, 240, 0.1);
 }
 
 /* ─── Buttons (chat-bubble-ai surface for ghost / chat-bubble-user gradient
- *    feel for primary; the warm gradient is reserved for primary action
+ *    feel for primary; the violet gradient is reserved for primary action
  *    buttons used sparingly, like Reveal/Dismiss in the banner are ghost). */
 
 .button {
   background: rgba(36, 30, 26, 0.95);
   color: var(--t1);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-top-color: rgba(255, 141, 92, 0.1);
+  border-top-color: rgba(124, 108, 240, 0.1);
   border-radius: 8px;
   padding: 6px 13px;
   font-size: 12.5px;
@@ -831,13 +831,13 @@
 .button:hover {
   background: rgba(46, 38, 32, 0.95);
   border-color: rgba(255, 255, 255, 0.1);
-  border-top-color: rgba(255, 141, 92, 0.2);
+  border-top-color: rgba(124, 108, 240, 0.2);
 }
 .button:focus-visible {
   outline: none;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 0 0 3px rgba(255, 141, 92, 0.22);
+    0 0 0 3px rgba(124, 108, 240, 0.22);
 }
 .button:disabled {
   opacity: 0.4;
@@ -878,11 +878,11 @@
  * reads as a calm tint, not a solid fill, so it names the action without
  * shouting (restraint over decoration). Hover blooms a soft, slow accent glow:
  * the override transition below is intentionally a touch longer than the base
- * button's so the warm ring feels like it eases in rather than snaps. */
+ * button's so the violet ring feels like it eases in rather than snaps. */
 .buttonPrimary {
   background: var(--accent-soft);
-  border-color: rgba(255, 141, 92, 0.38);
-  border-top-color: rgba(255, 141, 92, 0.45);
+  border-color: rgba(124, 108, 240, 0.38);
+  border-top-color: rgba(124, 108, 240, 0.45);
   color: var(--accent);
   font-weight: 600;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -892,15 +892,15 @@
     box-shadow 260ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 .buttonPrimary:hover {
-  background: rgba(255, 141, 92, 0.22);
-  border-color: rgba(255, 141, 92, 0.6);
+  background: rgba(124, 108, 240, 0.22);
+  border-color: rgba(124, 108, 240, 0.6);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 0 4px rgba(255, 141, 92, 0.1),
-    0 2px 10px -4px rgba(255, 141, 92, 0.35);
+    0 0 0 4px rgba(124, 108, 240, 0.1),
+    0 2px 10px -4px rgba(124, 108, 240, 0.35);
 }
 
-/* ─── Slider (hairline rail with warm gradient thumb) ───────────────────── */
+/* ─── Slider (hairline rail with violet gradient thumb) ───────────────────── */
 
 .sliderRow {
   display: flex;
@@ -924,10 +924,10 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff8d5c 0%, #e06b30 100%);
+  background: linear-gradient(135deg, #7c6cf0 0%, #5b4ee0 100%);
   border: none;
   box-shadow:
-    0 0 10px rgba(255, 141, 92, 0.45),
+    0 0 10px rgba(124, 108, 240, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     0 1px 3px rgba(0, 0, 0, 0.4);
   cursor: grab;
@@ -936,24 +936,24 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff8d5c 0%, #e06b30 100%);
+  background: linear-gradient(135deg, #7c6cf0 0%, #5b4ee0 100%);
   border: none;
   box-shadow:
-    0 0 10px rgba(255, 141, 92, 0.45),
+    0 0 10px rgba(124, 108, 240, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
   cursor: grab;
 }
 .sliderInput:focus-visible::-webkit-slider-thumb {
   box-shadow:
-    0 0 14px rgba(255, 141, 92, 0.65),
-    0 0 0 3px rgba(255, 141, 92, 0.22),
+    0 0 14px rgba(124, 108, 240, 0.65),
+    0 0 0 3px rgba(124, 108, 240, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 .valChip {
   background: rgba(36, 30, 26, 0.95);
   color: var(--t1);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-top-color: rgba(255, 141, 92, 0.1);
+  border-top-color: rgba(124, 108, 240, 0.1);
   border-radius: 6px;
   padding: 3px 10px;
   font-size: 11.5px;
@@ -985,7 +985,7 @@
 }
 .ctxChipInput {
   background: rgba(36, 30, 26, 0.95);
-  border: 1px solid rgba(255, 141, 92, 0.3);
+  border: 1px solid rgba(124, 108, 240, 0.3);
   border-radius: 6px;
   color: var(--accent);
   font-size: 13px;
@@ -1007,7 +1007,7 @@
 }
 .ctxChipInput:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2.5px rgba(255, 141, 92, 0.18);
+  box-shadow: 0 0 0 2.5px rgba(124, 108, 240, 0.18);
 }
 .ctxChipUnit {
   font-size: 11px;
@@ -1042,9 +1042,9 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff8d5c 0%, #e06b30 100%);
+  background: linear-gradient(135deg, #7c6cf0 0%, #5b4ee0 100%);
   box-shadow:
-    0 0 12px rgba(255, 141, 92, 0.55),
+    0 0 12px rgba(124, 108, 240, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     0 1px 3px rgba(0, 0, 0, 0.4);
   cursor: grab;
@@ -1053,17 +1053,17 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff8d5c 0%, #e06b30 100%);
+  background: linear-gradient(135deg, #7c6cf0 0%, #5b4ee0 100%);
   border: none;
   box-shadow:
-    0 0 12px rgba(255, 141, 92, 0.55),
+    0 0 12px rgba(124, 108, 240, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
   cursor: grab;
 }
 .ctxSlider:focus-visible::-webkit-slider-thumb {
   box-shadow:
-    0 0 14px rgba(255, 141, 92, 0.65),
-    0 0 0 3px rgba(255, 141, 92, 0.22),
+    0 0 14px rgba(124, 108, 240, 0.65),
+    0 0 0 3px rgba(124, 108, 240, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 /* Tick labels are positioned absolutely at exact log-scale percentages.
@@ -1105,17 +1105,17 @@
     color 120ms ease;
 }
 .ctxPill:hover {
-  background: rgba(255, 141, 92, 0.1);
-  border-color: rgba(255, 141, 92, 0.22);
+  background: rgba(124, 108, 240, 0.1);
+  border-color: rgba(124, 108, 240, 0.22);
   color: var(--accent);
 }
 .ctxPill:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 141, 92, 0.3);
+  box-shadow: 0 0 0 2px rgba(124, 108, 240, 0.3);
 }
 .ctxPillActive {
-  background: rgba(255, 141, 92, 0.14);
-  border-color: rgba(255, 141, 92, 0.3);
+  background: rgba(124, 108, 240, 0.14);
+  border-color: rgba(124, 108, 240, 0.3);
   color: var(--accent);
 }
 .ctxHelper {
@@ -1128,9 +1128,9 @@
   display: flex;
   gap: 7px;
   padding: 8px 10px;
-  background: rgba(255, 141, 92, 0.05);
-  border: 1px solid rgba(255, 141, 92, 0.14);
-  border-left: 2px solid rgba(255, 141, 92, 0.38);
+  background: rgba(124, 108, 240, 0.05);
+  border: 1px solid rgba(124, 108, 240, 0.14);
+  border-left: 2px solid rgba(124, 108, 240, 0.38);
   border-radius: 0 6px 6px 0;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.48);
@@ -1138,7 +1138,7 @@
 }
 .ctxVramIcon {
   flex-shrink: 0;
-  color: rgba(255, 141, 92, 0.7);
+  color: rgba(124, 108, 240, 0.7);
   font-size: 11px;
   margin-top: 0.5px;
 }
@@ -1148,18 +1148,18 @@
   background: transparent;
   border: 0;
   font: inherit;
-  color: rgba(255, 141, 92, 0.85);
+  color: rgba(124, 108, 240, 0.85);
   text-decoration: none;
   white-space: nowrap;
   font-weight: 500;
   cursor: pointer;
 }
 .ctxVramLink:hover {
-  color: rgba(255, 141, 92, 1);
+  color: rgba(124, 108, 240, 1);
   text-decoration: underline;
 }
 .ctxVramLink:focus-visible {
-  outline: 1px solid rgba(255, 141, 92, 0.6);
+  outline: 1px solid rgba(124, 108, 240, 0.6);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -1176,7 +1176,7 @@
   width: auto;
   min-width: 132px;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-top-color: rgba(255, 141, 92, 0.1);
+  border-top-color: rgba(124, 108, 240, 0.1);
   border-radius: 8px;
   background: rgba(36, 30, 26, 0.6);
   overflow: hidden;
@@ -1201,7 +1201,7 @@
 }
 .stepperBtn:focus-visible {
   outline: none;
-  background: rgba(255, 141, 92, 0.14);
+  background: rgba(124, 108, 240, 0.14);
   color: var(--accent);
 }
 .stepperBtn:disabled {
@@ -1217,7 +1217,7 @@
   color: var(--t1);
 }
 
-/* ─── Saved chip (warm gradient like user bubble, but small) ────────────── */
+/* ─── Saved chip (violet gradient like user bubble, but small) ────────────── */
 
 .savedPill {
   position: fixed;
@@ -1227,11 +1227,11 @@
   background-color: #2a221d;
   background-image: linear-gradient(
     135deg,
-    rgba(255, 141, 92, 0.22) 0%,
+    rgba(124, 108, 240, 0.22) 0%,
     rgba(224, 107, 48, 0.18) 100%
   );
   color: var(--accent);
-  border: 1px solid rgba(255, 141, 92, 0.45);
+  border: 1px solid rgba(124, 108, 240, 0.45);
   border-radius: 999px;
   padding: 5px 13px;
   font-size: 11px;
@@ -1313,7 +1313,7 @@
 .dialog {
   background: rgba(36, 30, 26, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-top-color: rgba(255, 141, 92, 0.18);
+  border-top-color: rgba(124, 108, 240, 0.18);
   border-radius: 14px;
   padding: 22px 24px;
   min-width: 340px;
@@ -1321,7 +1321,7 @@
   box-shadow:
     0 4px 14px -3px rgba(0, 0, 0, 0.5),
     0 1px 4px -1px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 141, 92, 0.12),
+    0 0 0 1px rgba(124, 108, 240, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   animation: dialogPanelIn 180ms ease-out;
 }
@@ -1422,7 +1422,7 @@
   width: 72px;
   height: 72px;
   margin-bottom: 10px;
-  filter: drop-shadow(0 8px 24px rgba(255, 141, 92, 0.22));
+  filter: drop-shadow(0 8px 24px rgba(124, 108, 240, 0.22));
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -1471,7 +1471,7 @@
 .iconLinkBtn:focus-visible {
   outline: none;
   color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(255, 141, 92, 0.35);
+  box-shadow: 0 0 0 2px rgba(124, 108, 240, 0.35);
   border-radius: 6px;
 }
 .aboutInfoLine {
@@ -1530,11 +1530,11 @@
 }
 .toggleOn {
   background: var(--accent);
-  border-color: rgba(255, 141, 92, 0.5);
+  border-color: rgba(124, 108, 240, 0.5);
 }
 .toggle:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 141, 92, 0.22);
+  box-shadow: 0 0 0 3px rgba(124, 108, 240, 0.22);
 }
 .toggleThumb {
   position: absolute;
@@ -1662,7 +1662,7 @@
   margin: 0;
 }
 .keepWarmNumberInput:focus-visible {
-  border-bottom-color: rgba(255, 141, 92, 0.7);
+  border-bottom-color: rgba(124, 108, 240, 0.7);
 }
 .keepWarmUnit {
   font-size: 12px;
@@ -1684,7 +1684,7 @@
   gap: 5px;
   padding: 5px 11px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 141, 92, 0.18);
+  border: 1px solid rgba(124, 108, 240, 0.18);
   background: transparent;
   color: var(--accent);
   font-size: 12px;
@@ -1698,12 +1698,12 @@
   flex-shrink: 0;
 }
 .keepWarmEjectPill:hover:not(:disabled) {
-  background: rgba(255, 141, 92, 0.08);
-  border-color: rgba(255, 141, 92, 0.36);
+  background: rgba(124, 108, 240, 0.08);
+  border-color: rgba(124, 108, 240, 0.36);
 }
 .keepWarmEjectPill:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 141, 92, 0.32);
+  box-shadow: 0 0 0 2px rgba(124, 108, 240, 0.32);
 }
 .keepWarmEjectPill:disabled {
   cursor: default;
@@ -1792,7 +1792,7 @@
 .devTrigger:focus-visible {
   outline: none;
   border-radius: 4px;
-  box-shadow: 0 0 0 2px rgba(255, 141, 92, 0.32);
+  box-shadow: 0 0 0 2px rgba(124, 108, 240, 0.32);
 }
 
 .devTag {
@@ -1928,8 +1928,8 @@
   border-radius: 6px;
   font-size: 11.5px;
   font-weight: 500;
-  background: rgba(255, 141, 92, 0.16);
-  border: 1px solid rgba(255, 141, 92, 0.3);
+  background: rgba(124, 108, 240, 0.16);
+  border: 1px solid rgba(124, 108, 240, 0.3);
   color: var(--accent);
   cursor: pointer;
 }
@@ -2011,8 +2011,8 @@
   gap: 6px;
   padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 141, 92, 0.3);
-  background: rgba(255, 141, 92, 0.12);
+  border: 1px solid rgba(124, 108, 240, 0.3);
+  background: rgba(124, 108, 240, 0.12);
   color: var(--accent);
   font-size: 12px;
   font-weight: 500;
@@ -2025,12 +2025,12 @@
   white-space: nowrap;
 }
 .updateHeroBtn:hover:not(:disabled) {
-  background: rgba(255, 141, 92, 0.18);
-  border-color: rgba(255, 141, 92, 0.42);
+  background: rgba(124, 108, 240, 0.18);
+  border-color: rgba(124, 108, 240, 0.42);
 }
 .updateHeroBtn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 141, 92, 0.32);
+  box-shadow: 0 0 0 2px rgba(124, 108, 240, 0.32);
 }
 .updateHeroBtn:disabled {
   cursor: default;
@@ -2126,12 +2126,12 @@
 .changelogNotes :global(.markdown-body) a {
   color: var(--accent);
   text-decoration: none;
-  border-bottom: 1px solid rgba(255, 141, 92, 0.28);
+  border-bottom: 1px solid rgba(124, 108, 240, 0.28);
   font-weight: 400;
 }
 
 .changelogNotes :global(.markdown-body) a:hover {
-  border-bottom-color: rgba(255, 141, 92, 0.55);
+  border-bottom-color: rgba(124, 108, 240, 0.55);
 }
 
 .changelogNotes :global(.markdown-body) code {
@@ -2186,8 +2186,8 @@
   margin-top: 10px;
 }
 .providerCardActive {
-  border-color: rgba(255, 141, 92, 0.4);
-  background: rgba(255, 141, 92, 0.05);
+  border-color: rgba(124, 108, 240, 0.4);
+  background: rgba(124, 108, 240, 0.05);
 }
 .providerSelectRow {
   display: flex;
@@ -2196,7 +2196,7 @@
   cursor: pointer;
 }
 .providerRadio {
-  accent-color: #ff8d5c;
+  accent-color: #7c6cf0;
   margin: 0;
 }
 .providerInlineRow {

@@ -15,13 +15,13 @@
 const HELPERS = {
   inference: {
     ollama_base_url:
-      'The address where Thuki reaches your Ollama server. The default works if you run Ollama on this Mac with its standard port. Point it at another machine to use Ollama running elsewhere (one server at a time).',
+      'The address where Veilura reaches your Ollama server. The default works if you run Ollama on this Mac with its standard port. Point it at another machine to use Ollama running elsewhere (one server at a time).',
     keep_warm:
-      'How long Thuki keeps the active model resident in memory between messages, so the next one skips the cold-load wait. Applies to both local providers (the built-in engine and Ollama); it does not apply to a remote OpenAI-compatible server, whose memory Thuki does not manage. Set "Release after" to −1 to keep it resident indefinitely, 0 to use the provider\'s natural short default (about 5 minutes), or a timeout in minutes so memory is reclaimed when you stop using Thuki for a while.',
+      'How long Veilura keeps the active model resident in memory between messages, so the next one skips the cold-load wait. Applies to both local providers (the built-in engine and Ollama); it does not apply to a remote OpenAI-compatible server, whose memory Veilura does not manage. Set "Release after" to −1 to keep it resident indefinitely, 0 to use the provider\'s natural short default (about 5 minutes), or a timeout in minutes so memory is reclaimed when you stop using Veilura for a while.',
     builtin_model:
-      'The downloaded model Thuki\'s built-in engine runs. Pick from the models you have downloaded, or use "Download a model" below to grab a curated starter or any GGUF file from a Hugging Face repo.',
+      'The downloaded model Veilura\'s built-in engine runs. Pick from the models you have downloaded, or use "Download a model" below to grab a curated starter or any GGUF file from a Hugging Face repo.',
     openai_base_url:
-      'The address of your OpenAI-compatible server (LM Studio, Jan, llama-server, and similar all expose one). Thuki calls its /v1 endpoints for chat and model listing. Must start with http:// or https://.',
+      'The address of your OpenAI-compatible server (LM Studio, Jan, llama-server, and similar all expose one). Veilura calls its /v1 endpoints for chat and model listing. Must start with http:// or https://.',
     openai_api_key:
       "The API key sent as a Bearer token to your OpenAI-compatible server, stored only in the macOS Keychain. It is never written to config.toml and never shown again after saving; leave it empty for local servers that don't require one.",
     openai_vision:
@@ -31,17 +31,17 @@ const HELPERS = {
   },
   prompt: {
     system:
-      'Your custom personality or instructions for the AI (for example, "You are a terse Rust expert"). Leave this empty to use Thuki\'s built-in secretary personality. The list of slash commands is always added on top, so /search and friends keep working either way.',
+      'Your custom personality or instructions for the AI (for example, "You are a terse Rust expert"). Leave this empty to use Veilura\'s built-in secretary personality. The list of slash commands is always added on top, so /search and friends keep working either way.',
   },
   window: {
     overlay_width:
-      'How wide the floating Thuki window is, in pixels. Raise for wider input/chat at the cost of more screen space; lower to keep Thuki compact.',
+      'How wide the floating Veilura window is, in pixels. Raise for wider input/chat at the cost of more screen space; lower to keep Veilura compact.',
     max_chat_height:
-      'The largest the chat window can grow to as conversation gets longer. Raise to see more chat history without scrolling; lower to keep Thuki from taking over your screen on long chats.',
+      'The largest the chat window can grow to as conversation gets longer. Raise to see more chat history without scrolling; lower to keep Veilura from taking over your screen on long chats.',
     max_images:
       'How many images you can attach to a single message by pasting or dragging. A /screen capture always adds one more on top of this limit. Raise for richer visual context per message; lower to keep prompts compact.',
     text_base_px:
-      'How big chat text and the input bar text appear, in pixels. Affects the AI replies, your own chat messages, and what you type in the input bar. Other parts of Thuki (Settings, onboarding) keep their fixed sizes. Raise for easier-to-read text; lower to fit more on screen.',
+      'How big chat text and the input bar text appear, in pixels. Affects the AI replies, your own chat messages, and what you type in the input bar. Other parts of Veilura (Settings, onboarding) keep their fixed sizes. Raise for easier-to-read text; lower to fit more on screen.',
     text_line_height:
       'How much vertical space each line of chat text and input text takes, as a multiplier of the font size. Raise for airier, easier-to-skim replies; lower to fit more lines on screen.',
     text_letter_spacing_px:
@@ -61,7 +61,7 @@ const HELPERS = {
     auto_replace:
       'When on, a /rewrite or /refine result is written straight back into your app, replacing your highlighted text, with no click. When off, click the Replace button to send it back. Off by default.',
     auto_close:
-      'When on, Thuki closes itself after a /rewrite or /refine result is replaced into your app (via Auto-replace or the Replace button). Only if the replace succeeds. Off by default.',
+      'When on, Veilura closes itself after a /rewrite or /refine result is replaced into your app (via Auto-replace or the Replace button). Only if the replace succeeds. Off by default.',
     auto_search:
       'On (default): search the web when a plain message needs live facts. Off: stay local unless you type /search.',
     search_notice_acknowledged:
@@ -69,15 +69,15 @@ const HELPERS = {
     auto_save_conversations:
       'On (default): each completed turn is saved to local history without a bookmark click. Off: only an explicit Save keeps the chat.',
     history_retention_days:
-      'How many days saved chats are kept by last activity before Thuki prunes them at startup or when you confirm a shorter window. Raise to keep history longer; lower to reclaim disk sooner; set -1 to keep them forever. 0 and other out-of-range values reset to the default of -1.',
+      'How many days saved chats are kept by last activity before Veilura prunes them at startup or when you confirm a shorter window. Raise to keep history longer; lower to reclaim disk sooner; set -1 to keep them forever. 0 and other out-of-range values reset to the default of -1.',
     auto_save_notice_acknowledged:
       'Internal flag set after you dismiss the one-shot auto-save chat notice. You do not need to edit this; use Auto-save chats to control saving.',
   },
   debug: {
     trace_enabled:
-      'When on, Thuki saves a JSONL trace of every chat and search session to ~/Library/Application Support/com.quietnode.thuki/traces/. Useful for debugging and refining your prompts. Off by default.',
+      'When on, Veilura saves a JSONL trace of every chat and search session to ~/Library/Application Support/com.veilura.app/traces/. Useful for debugging and refining your prompts. Off by default.',
     trace_retention_days:
-      'How many days recorded traces are kept on disk before Thuki prunes them at startup or when you change this. Raise to keep history longer; lower to reclaim disk sooner; set -1 to keep them forever. 0 and other out-of-range values reset to the default of 7.',
+      'How many days recorded traces are kept on disk before Veilura prunes them at startup or when you change this. Raise to keep history longer; lower to reclaim disk sooner; set -1 to keep them forever. 0 and other out-of-range values reset to the default of 7.',
   },
 } as const;
 

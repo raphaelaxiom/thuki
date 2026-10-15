@@ -4,10 +4,10 @@
 //! Two parts:
 //!
 //! 1. **Target tracking.** An `NSWorkspace` activation observer records the PID
-//!    of the last application the user activated that is *not* Thuki. Because
-//!    Thuki's overlay is a non-activating panel, switching into it never fires
+//!    of the last application the user activated that is *not* Veilura. Because
+//!    Veilura's overlay is a non-activating panel, switching into it never fires
 //!    an activation, so this reliably holds "the app you were last really in" —
-//!    whether that is the app you summoned Thuki from (in-place) or a different
+//!    whether that is the app you summoned Veilura from (in-place) or a different
 //!    app you clicked into afterwards (retarget).
 //!
 //! 2. **Writing (synthetic paste).** The target app is activated and, only once
@@ -16,7 +16,7 @@
 //!    so clipboard-history managers skip it), and a synthetic Cmd+V posted
 //!    directly to the target process with `CGEventPostToPid`. Posting to the
 //!    process rather than the system key window means the paste reaches the
-//!    source app even though Thuki's nonactivating panel still holds the key
+//!    source app even though Veilura's nonactivating panel still holds the key
 //!    window, so the overlay stays open instead of having to be dismissed
 //!    first. The clipboard is then restored. If the target never becomes
 //!    frontmost the write is skipped entirely and the clipboard left untouched.
@@ -30,7 +30,7 @@ use std::sync::{Arc, Mutex};
 
 use serde::Serialize;
 
-/// Managed state: PID of the last non-Thuki application to activate, kept
+/// Managed state: PID of the last non-Veilura application to activate, kept
 /// current by the `NSWorkspace` activation observer. This is the app a
 /// `/rewrite` or `/refine` Replace writes into.
 #[derive(Default, Clone)]
@@ -61,7 +61,7 @@ pub enum ReplaceOutcome {
 }
 
 /// Whether an activation of `activated_pid` should be recorded as the write
-/// target: any app other than Thuki itself (`own_pid`). Thuki's own
+/// target: any app other than Veilura itself (`own_pid`). Veilura's own
 /// activations are ignored so summoning the overlay never overwrites the
 /// remembered target.
 pub fn should_record_activation(activated_pid: i32, own_pid: i32) -> bool {
@@ -166,7 +166,7 @@ mod macos {
         fn CGEventSetFlags(event: CFTypeRef, flags: u64);
         // Posts an event directly to a target process, bypassing the key-window
         // routing that `CGEventPost` uses. This delivers the paste to the
-        // source app even though Thuki's panel still holds the system key
+        // source app even though Veilura's panel still holds the system key
         // window, so the overlay does not need to be dismissed first.
         fn CGEventPostToPid(pid: i32, event: CFTypeRef);
     }
@@ -197,7 +197,7 @@ mod macos {
         })
     }
 
-    /// Installs an `NSWorkspace` observer that records every non-Thuki app
+    /// Installs an `NSWorkspace` observer that records every non-Veilura app
     /// activation into `state`. The observer block is leaked deliberately: it
     /// lives for the entire process, so there is never a point at which it
     /// should be torn down.
@@ -269,7 +269,7 @@ mod macos {
 
     /// Posts a synthetic Cmd+V directly to the process `pid`. Targeting the
     /// process rather than the system key window is what lets the paste land in
-    /// the source app while Thuki's panel remains key and visible.
+    /// the source app while Veilura's panel remains key and visible.
     unsafe fn post_cmd_v_to_pid(pid: i32) {
         let down = CGEventCreateKeyboardEvent(std::ptr::null(), KEY_V, true);
         if !down.is_null() {
@@ -390,7 +390,7 @@ mod tests {
     }
 
     #[test]
-    fn ignores_thukis_own_activations() {
+    fn ignores_veiluras_own_activations() {
         assert!(!should_record_activation(7, 7));
     }
 

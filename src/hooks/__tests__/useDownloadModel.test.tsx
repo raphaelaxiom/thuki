@@ -926,7 +926,7 @@ describe('downloadFailureMessage', () => {
     );
     expect(downloadFailureMessage('disk_full')).toBe('Not enough disk space.');
     expect(downloadFailureMessage('engine')).toBe(
-      "Thuki's engine could not start.",
+      "Veilura's engine could not start.",
     );
     expect(downloadFailureMessage('other')).toBe('Model download failed.');
   });

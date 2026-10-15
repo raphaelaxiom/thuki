@@ -70,7 +70,7 @@ const TABS: ReadonlyArray<{
   {
     id: 'behavior',
     label: 'Behavior',
-    // Sliders — settings that change how Thuki acts (text replacement, etc.).
+    // Sliders — settings that change how Veilura acts (text replacement, etc.).
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -251,7 +251,7 @@ export function SettingsWindow() {
   // The overlay model picker's "Settings" link opens this window straight on
   // the Models tab's Discover download browser, not the default Providers view.
   useEffect(() => {
-    const unlistenPromise = listen('thuki://settings-show-discover', () => {
+    const unlistenPromise = listen('veilura://settings-show-discover', () => {
       setActiveTab('general');
       setPendingModelsView('discover');
     });
@@ -265,7 +265,7 @@ export function SettingsWindow() {
   // active provider back to the built-in engine. Forces the sub-view even if
   // the window was last left on Library/Discover.
   useEffect(() => {
-    const unlistenPromise = listen('thuki://settings-show-providers', () => {
+    const unlistenPromise = listen('veilura://settings-show-providers', () => {
       setActiveTab('general');
       setPendingModelsView('providers');
     });
@@ -277,7 +277,7 @@ export function SettingsWindow() {
   // Version announcement Settings CTA opens Behavior and restarts the Auto
   // search PointingWiggle (nonce bump forces a fresh animation every click).
   useEffect(() => {
-    const unlistenPromise = listen('thuki://settings-show-behavior', () => {
+    const unlistenPromise = listen('veilura://settings-show-behavior', () => {
       setActiveTab('behavior');
       setAutoSearchHighlightNonce((n) => n + 1);
     });
@@ -289,7 +289,7 @@ export function SettingsWindow() {
   // Auto-save chat notice Settings CTA opens Behavior and wiggles Auto-save.
   useEffect(() => {
     const unlistenPromise = listen(
-      'thuki://settings-show-behavior-auto-save',
+      'veilura://settings-show-behavior-auto-save',
       () => {
         setActiveTab('behavior');
         setAutoSaveHighlightNonce((n) => n + 1);

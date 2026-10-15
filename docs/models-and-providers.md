@@ -1,8 +1,8 @@
 # Models and Providers
 
-A deep dive into how Thuki runs AI on your Mac: the built-in engine, what powers it, what a model actually is, where models live, and exactly how the inference server starts, runs, and stops. If you just want to download a model and chat, the short version is "open Settings, pick a model in Discover, done." Everything below is for when you want to understand what is happening under the hood.
+A deep dive into how Veilura runs AI on your Mac: the built-in engine, what powers it, what a model actually is, where models live, and exactly how the inference server starts, runs, and stops. If you just want to download a model and chat, the short version is "open Settings, pick a model in Discover, done." Everything below is for when you want to understand what is happening under the hood.
 
-> macOS 13.4 (Ventura) or later, Apple Silicon (M1/M2/M3/M4/M5). See [thuki.app](https://www.thuki.app/) for downloads.
+> macOS 13.4 (Ventura) or later, Apple Silicon (M1/M2/M3/M4/M5). See [veilura.online](https://veilura.online/) for downloads.
 
 ## Contents
 
@@ -20,11 +20,11 @@ A deep dive into how Thuki runs AI on your Mac: the built-in engine, what powers
 
 ## The big picture
 
-Thuki ships its own inference engine and runs it entirely on your machine. Nothing about a chat leaves your Mac. The app you interact with (the overlay and the Settings window) talks to a small local server that loads a model and generates text. That local server is the **built-in engine**.
+Veilura ships its own inference engine and runs it entirely on your machine. Nothing about a chat leaves your Mac. The app you interact with (the overlay and the Settings window) talks to a small local server that loads a model and generates text. That local server is the **built-in engine**.
 
 ```mermaid
 flowchart LR
-  you([You]) --> overlay["Thuki overlay<br/>+ Settings window"]
+  you([You]) --> overlay["Veilura overlay<br/>+ Settings window"]
   overlay -->|"/v1 over loopback"| engine["Built-in engine<br/>(llama-server sidecar)"]
   engine -->|reads| model[("GGUF model file<br/>on disk")]
   overlay -. optional .-> ollama["Ollama<br/>(your own server)"]
@@ -36,16 +36,16 @@ flowchart LR
   end
 ```
 
-Thuki supports two **providers** (the thing that runs the model): the **built-in** engine (the default, fully managed by Thuki) and **Ollama** (your own install, optional). Both run llama.cpp under the hood; the difference is who manages it. The rest of this guide is mostly about the built-in engine.
+Veilura supports two **providers** (the thing that runs the model): the **built-in** engine (the default, fully managed by Veilura) and **Ollama** (your own install, optional). Both run llama.cpp under the hood; the difference is who manages it. The rest of this guide is mostly about the built-in engine.
 
 ## The built-in engine
 
 The built-in engine is a bundled copy of **llama.cpp's `llama-server`**.
 
 - **llama.cpp** is the widely used open-source C/C++ engine for running LLMs efficiently on consumer hardware, including Apple Silicon (it uses Metal for GPU acceleration). It is the same engine that powers Ollama, LM Studio, and most local-AI apps.
-- **`llama-server`** is the HTTP server binary that ships with llama.cpp. You give it a model file, and it exposes an **OpenAI-compatible `/v1` API** over a local port. Thuki sends it standard `/v1/chat/completions` requests and streams the response back token by token.
+- **`llama-server`** is the HTTP server binary that ships with llama.cpp. You give it a model file, and it exposes an **OpenAI-compatible `/v1` API** over a local port. Veilura sends it standard `/v1/chat/completions` requests and streams the response back token by token.
 
-Thuki bundles this binary so there is nothing for you to install: the engine is already inside the app. (Ollama is the same idea, just managed by Ollama instead of Thuki.)
+Veilura bundles this binary so there is nothing for you to install: the engine is already inside the app. (Ollama is the same idea, just managed by Ollama instead of Veilura.)
 
 ## What a model is (and the words around it)
 
@@ -63,11 +63,11 @@ A model is a large pile of numbers called **weights**, the trained "knowledge" l
 - the **tokenizer** (how text is split into tokens),
 - **metadata**: the model architecture, its trained context length, its **chat template**, and capability hints.
 
-Thuki reads that metadata directly from the file (with a bounded, panic-safe parser) to classify each model's capabilities, for example whether it reasons, before you ever run it.
+Veilura reads that metadata directly from the file (with a bounded, panic-safe parser) to classify each model's capabilities, for example whether it reasons, before you ever run it.
 
 ### Hugging Face
 
-**Hugging Face** is the public hub where the community publishes models. A model lives in a **repo** (for example `bartowski/Qwen3.5-9B-GGUF`), and a repo can hold several GGUF files (different quantizations of the same model). Thuki's curated picks each pin a repo at an **exact git revision**, so "the same model" always means the same bytes, not whatever the repo happens to contain today.
+**Hugging Face** is the public hub where the community publishes models. A model lives in a **repo** (for example `bartowski/Qwen3.5-9B-GGUF`), and a repo can hold several GGUF files (different quantizations of the same model). Veilura's curated picks each pin a repo at an **exact git revision**, so "the same model" always means the same bytes, not whatever the repo happens to contain today.
 
 ### Quantization
 
@@ -109,7 +109,7 @@ An 8B-parameter model is about 16 GB at full precision, and roughly:
 | `Q4_K_M` | ~4.9 GB    |
 | `Q3_K_M` | ~4.0 GB    |
 
-On top of the weights you also pay for the **KV cache** (which grows with the context window) and a couple of GB of runtime overhead. Thuki folds all of this into the **RAM-fit hint** on each model in Library and Discover, so you do not have to compute it. For the context side of memory, see [Tuning the Context Window](./tuning-context-window.md).
+On top of the weights you also pay for the **KV cache** (which grows with the context window) and a couple of GB of runtime overhead. Veilura folds all of this into the **RAM-fit hint** on each model in Library and Discover, so you do not have to compute it. For the context side of memory, see [Tuning the Context Window](./tuning-context-window.md).
 
 **Quality, concretely.** Quality is usually measured by **perplexity** (lower is better at predicting text), and it rises gently as bits fall. `Q8`, `Q6`, and `Q5` are effectively indistinguishable from full precision; `Q4_K_M` adds a small, rarely-noticed increase; `Q3` is visibly weaker; `Q2` degrades enough to be worth it only for very large models. A useful rule of thumb: **a bigger model at a lower quant usually beats a smaller model at a higher quant, down to about Q4.** Below roughly 3 bits, a model can start to feel unreliable.
 
@@ -128,13 +128,13 @@ In practice you rarely need to weigh any of this yourself: Discover's **Staff pi
 
 ### mmproj (vision)
 
-A vision model needs a second file, the **multimodal projector** (`mmproj`), that turns an image into something the model can read. Thuki downloads it alongside the main model and passes it to the engine with `--mmproj`. Models with this companion show a **Vision** badge. Projector files and other non-chat helpers (draft / MTP / dspark / LoRA / embedders) never appear as standalone chat downloads in Browse all: only primary text weights with complete LFS metadata are listed, and a matching projector is attached automatically when you install a brain from the same repo. When a repo ships several projectors, Thuki ranks them like llama.cpp (shared path with the brain, then closest quant bit-width).
+A vision model needs a second file, the **multimodal projector** (`mmproj`), that turns an image into something the model can read. Veilura downloads it alongside the main model and passes it to the engine with `--mmproj`. Models with this companion show a **Vision** badge. Projector files and other non-chat helpers (draft / MTP / dspark / LoRA / embedders) never appear as standalone chat downloads in Browse all: only primary text weights with complete LFS metadata are listed, and a matching projector is attached automatically when you install a brain from the same repo. When a repo ships several projectors, Veilura ranks them like llama.cpp (shared path with the brain, then closest quant bit-width).
 
-At install and load time Thuki also re-reads the GGUF header: CLIP/mmproj roles, embedding architectures (bert, t5, …), and other non-chat helpers are rejected as primary chat models so they never become Ready. Missing architecture stays soft (filename heuristics). The denylist is pin-scoped: an engine bump may need a list update when new non-chat families appear.
+At install and load time Veilura also re-reads the GGUF header: CLIP/mmproj roles, embedding architectures (bert, t5, …), and other non-chat helpers are rejected as primary chat models so they never become Ready. Missing architecture stays soft (filename heuristics). The denylist is pin-scoped: an engine bump may need a list update when new non-chat families appear.
 
 ### Capabilities
 
-Every model in Library and Discover carries up to three small badges. **Text** is always shown (everything Thuki lists is a chat model); **Vision** and **Reasoning** appear only when the model has them:
+Every model in Library and Discover carries up to three small badges. **Text** is always shown (everything Veilura lists is a chat model); **Vision** and **Reasoning** appear only when the model has them:
 
 - **Text**: chats in plain text. Always present.
 - **Reasoning**: thinks before answering, in a separate reasoning pass. Turn it on per message with `/think`; a few models always reason and cannot turn it off.
@@ -146,19 +146,19 @@ Each model also reports its trained **context window** (how many tokens it can s
 
 For a **Staff pick** the answer is baked in: the curated catalog records each model's capabilities by hand, so the badges are exactly what was verified.
 
-For **Browse all** there is no curated answer, so Thuki derives the badges live from what Hugging Face returns for each search result, the GGUF metadata block and the repo's file list, with no extra downloads:
+For **Browse all** there is no curated answer, so Veilura derives the badges live from what Hugging Face returns for each search result, the GGUF metadata block and the repo's file list, with no extra downloads:
 
 - **Text**: every row you see is already a chat model. Browse all only lists repos whose Hugging Face task tag is a chat-style one (`text-generation` or `image-text-to-text`); image generators, embedders, and the like are filtered out before they reach you. That filter is what makes the Text badge a safe constant.
-- **Vision**: Thuki scans the repo's file list for a multimodal projector (names like `mmproj-….gguf` or `…-mmproj-….gguf`). If one is present the model can read images, so it earns the Vision badge.
-- **Reasoning**: this is read from the model's **chat template** (the embedded recipe that formats your messages), the only reliable signal for _how_ a model reasons. Thuki runs the template through a small classifier that recognizes the reasoning families: a structural reasoning channel (gpt-oss / Harmony), an `enable_thinking` / `thinking` switch (Qwen3, GLM, Granite), or always-on `<think>` / `<thought>` tags with no off switch (DeepSeek-R1, QwQ, Phi-4-reasoning). Match any of those and the model gets the Reasoning badge.
+- **Vision**: Veilura scans the repo's file list for a multimodal projector (names like `mmproj-….gguf` or `…-mmproj-….gguf`). If one is present the model can read images, so it earns the Vision badge.
+- **Reasoning**: this is read from the model's **chat template** (the embedded recipe that formats your messages), the only reliable signal for _how_ a model reasons. Veilura runs the template through a small classifier that recognizes the reasoning families: a structural reasoning channel (gpt-oss / Harmony), an `enable_thinking` / `thinking` switch (Qwen3, GLM, Granite), or always-on `<think>` / `<thought>` tags with no off switch (DeepSeek-R1, QwQ, Phi-4-reasoning). Match any of those and the model gets the Reasoning badge.
 
-  A repo's **name** is deliberately not trusted on its own. Plenty of models put "Thinking" or "Reasoning" in their title as marketing while shipping an ordinary chat template with no reasoning machinery at all, and badging those off the name would be a false promise. The name is consulted only as a last-resort fallback for the rare repo that ships no chat template for Thuki to read.
+  A repo's **name** is deliberately not trusted on its own. Plenty of models put "Thinking" or "Reasoning" in their title as marketing while shipping an ordinary chat template with no reasoning machinery at all, and badging those off the name would be a false promise. The name is consulted only as a last-resort fallback for the rare repo that ships no chat template for Veilura to read.
 
-Once a model is **installed**, there is one more correction: if a model actually emits reasoning at run time but its template never advertised it, Thuki notices from the real output and heals the badge, so the Library row can end up more accurate than the pre-download Browse-all guess.
+Once a model is **installed**, there is one more correction: if a model actually emits reasoning at run time but its template never advertised it, Veilura notices from the real output and heals the badge, so the Library row can end up more accurate than the pre-download Browse-all guess.
 
 ## Will it fit? The RAM-fit hint
 
-Every model in Library and Discover shows a one-word verdict, **Comfortable**, **Tight**, or **Heavy**, so you never have to do the memory math yourself. Here is exactly how Thuki computes it.
+Every model in Library and Discover shows a one-word verdict, **Comfortable**, **Tight**, or **Heavy**, so you never have to do the memory math yourself. Here is exactly how Veilura computes it.
 
 First it estimates the model's **resident size** at runtime:
 
@@ -166,7 +166,7 @@ First it estimates the model's **resident size** at runtime:
 estimate = model file size + ~2 GB overhead
 ```
 
-The ~2 GB is a baseline for the engine's runtime buffers and KV cache. (The KV cache also grows with your context window, covered separately in the context-window guide.) For a vision model, Thuki folds the projector (`mmproj`) into the size when known: Staff picks use the curated projector size, and installed Library / load-gate paths use the on-disk projector blob (or the curated size when the blob length is not yet available).
+The ~2 GB is a baseline for the engine's runtime buffers and KV cache. (The KV cache also grows with your context window, covered separately in the context-window guide.) For a vision model, Veilura folds the projector (`mmproj`) into the size when known: Staff picks use the curated projector size, and installed Library / load-gate paths use the on-disk projector blob (or the curated size when the blob length is not yet available).
 
 Then it compares that estimate against your Mac's **total physical memory**, read straight from the system (`hw.memsize`). Apple Silicon uses unified memory shared between the CPU and GPU, so a model competes for RAM with everything else you are running:
 
@@ -185,7 +185,7 @@ You add models in **Settings → Models → Discover**, which has two sub-tabs:
 - **Staff picks**: a small, vetted catalog grouped by use case (everyday chat, compact and fast, deep reasoning). Each is pinned and size-checked.
 - **Browse all**: a live search of GGUF models on the Hugging Face Hub. Anything you find downloads straight in.
 
-When you start a download, Thuki streams the file from Hugging Face and verifies it before it ever counts as installed:
+When you start a download, Veilura streams the file from Hugging Face and verifies it before it ever counts as installed:
 
 ```mermaid
 flowchart TD
@@ -203,14 +203,14 @@ flowchart TD
 Key properties:
 
 - **Resumable.** Bytes land in a `tmp/<sha256>.partial` file. If the download is interrupted, it resumes with an HTTP `Range` request instead of starting over.
-- **Verified.** On completion, the file is streamed through SHA-256 and checked against the hash Thuki expects. A mismatch deletes the partial; you can re-download cleanly. This hash is an **integrity** check (it catches truncation, bit rot, a corrupt resume), not a provenance control. Trust in _what_ the file is comes from the **pinned repo revision**, not the hash.
+- **Verified.** On completion, the file is streamed through SHA-256 and checked against the hash Veilura expects. A mismatch deletes the partial; you can re-download cleanly. This hash is an **integrity** check (it catches truncation, bit rot, a corrupt resume), not a provenance control. Trust in _what_ the file is comes from the **pinned repo revision**, not the hash.
 - **Atomic install.** Only after verification does the partial get atomically renamed into the blob store, so a half-downloaded file can never be mistaken for an installed model.
 - **Parallel-safe.** You can download several models at once (a few Staff picks, say), and each runs on its own. A per-file claim guard means the same blob is never fetched twice at the same time, so the content-addressed store stays consistent no matter how many downloads are in flight.
-- **Disk-aware.** Thuki reports the free space on the models volume, so you can see whether a multi-gigabyte download will fit before you start it.
+- **Disk-aware.** Veilura reports the free space on the models volume, so you can see whether a multi-gigabyte download will fit before you start it.
 
 ## Where models live on disk
 
-Thuki stores models in a **content-addressed blob store** under its application-support directory (alongside `config.toml`, at `~/Library/Application Support/com.quietnode.thuki/`). "Content-addressed" means a file's name _is_ its SHA-256 hash:
+Veilura stores models in a **content-addressed blob store** under its application-support directory (alongside `config.toml`, at `~/Library/Application Support/com.veilura.app/`). "Content-addressed" means a file's name _is_ its SHA-256 hash:
 
 ```
 <app support>/…/
@@ -222,7 +222,7 @@ Thuki stores models in a **content-addressed blob store** under its application-
     └── <sha256>.partial           ← only while a download is in flight
 ```
 
-A separate SQLite table, `installed_models`, is the index that maps a human model id (`"<repo>:<file_name>"`) to the blob(s) it uses. Because blobs are addressed by content, two models that reference the **same** file (for example two vision models sharing one `mmproj`) point at one blob on disk instead of duplicating it. When you **delete** a model, Thuki drops its manifest row and removes only the blobs no other row still references, so a shared `mmproj` survives until the last vision model using it is gone.
+A separate SQLite table, `installed_models`, is the index that maps a human model id (`"<repo>:<file_name>"`) to the blob(s) it uses. Because blobs are addressed by content, two models that reference the **same** file (for example two vision models sharing one `mmproj`) point at one blob on disk instead of duplicating it. When you **delete** a model, Veilura drops its manifest row and removes only the blobs no other row still references, so a shared `mmproj` survives until the last vision model using it is gone.
 
 To open this folder yourself, use **Reveal** from a model's row in the Library.
 
@@ -230,11 +230,11 @@ To open this folder yourself, use **Reveal** from a model's row in the Library.
 
 ### What "sidecar" means
 
-The engine is a **separate process**, not code running inside the Thuki app. Thuki spawns `llama-server` as a child process and supervises it directly with `tokio::process` (it does not go through Tauri's shell plugin), so Thuki owns the process's start, stop, and kill.
+The engine is a **separate process**, not code running inside the Veilura app. Veilura spawns `llama-server` as a child process and supervises it directly with `tokio::process` (it does not go through Tauri's shell plugin), so Veilura owns the process's start, stop, and kill.
 
-### Is the server always running? No, Thuki turns it on and off
+### Is the server always running? No, Veilura turns it on and off
 
-Thuki manages the engine's lifecycle so it only uses memory when it needs to:
+Veilura manages the engine's lifecycle so it only uses memory when it needs to:
 
 - It starts the engine **on demand** (when you send a message and no engine is loaded for that model).
 - It keeps the model **warm** between messages according to **Keep Warm**, so follow-ups are instant.
@@ -262,7 +262,7 @@ A "target" is the tuple `{model_path, mmproj_path, num_ctx}`. The running engine
 
 If startup fails (a spawn error, or a model whose architecture the bundled engine does not support yet), the engine lands in **Failed** and surfaces the reason rather than hanging. See [Troubleshooting](./troubleshooting.md) for the common cases and how to recover.
 
-### How Thuki controls it (the runner)
+### How Veilura controls it (the runner)
 
 A single async actor, the **runner**, owns the live child process. The rest of the app sends it commands over a bounded queue:
 
@@ -272,11 +272,11 @@ A single async actor, the **runner**, owns the live child process. The rest of t
 - **Unload** (stop now and free memory),
 - **Shutdown** (on quit).
 
-Every state transition is published on a watch channel, which is how the Settings panel shows "Loading…", "warming…", or "<model> in memory" live. Startup readiness is a `/health` poll loop: Thuki spawns the process, then repeatedly GETs `http://127.0.0.1:<port>/health` until it returns `200` (a `503` means the model is still loading) or a deadline is hit.
+Every state transition is published on a watch channel, which is how the Settings panel shows "Loading…", "warming…", or "<model> in memory" live. Startup readiness is a `/health` poll loop: Veilura spawns the process, then repeatedly GETs `http://127.0.0.1:<port>/health` until it returns `200` (a `503` means the model is still loading) or a deadline is hit.
 
 ### The spawn line
 
-When Thuki starts the engine, the command line is:
+When Veilura starts the engine, the command line is:
 
 ```
 llama-server -m <model.gguf> [--mmproj <proj.gguf>] --ctx-size <n> \
@@ -287,7 +287,7 @@ llama-server -m <model.gguf> [--mmproj <proj.gguf>] --ctx-size <n> \
 - `--mmproj <proj.gguf>`: the vision projector, only for vision models.
 - `--ctx-size <n>`: the context window (`num_ctx`), fixed for the life of the process.
 - `--host 127.0.0.1`: **loopback only**. The server is bound to `127.0.0.1:0`, so the OS hands out a free port that only your machine can reach. Nothing on your network can connect.
-- `--no-webui`: llama-server's built-in web UI is disabled. The only thing talking to the engine is Thuki.
+- `--no-webui`: llama-server's built-in web UI is disabled. The only thing talking to the engine is Veilura.
 - `--parallel 1`: a single inference slot, so a model loads once and your chat always hits the same warm slot.
 
 ## A chat request, end to end
@@ -296,7 +296,7 @@ Putting it together, here is what happens when you send a message on the built-i
 
 ```mermaid
 sequenceDiagram
-  participant UI as Thuki UI
+  participant UI as Veilura UI
   participant Cmd as ask_model
   participant Run as Engine runner
   participant Srv as llama-server
@@ -321,16 +321,16 @@ The engine is **not** committed to the repo. A build script (`scripts/ensure-lla
 
 ### The pin: which engine, exactly
 
-Thuki uses one **exact** llama.cpp commit, named by two constants in the script:
+Veilura uses one **exact** llama.cpp commit, named by two constants in the script:
 
 - a **release tag** (the published llama.cpp version), and
 - the **commit SHA** that tag points to.
 
 This is a _release pin_, not "whatever is newest." Pinning the commit makes every build reproducible and is the supply-chain anchor: the script clones the tag and refuses to build unless `HEAD` matches the pinned commit, so a moved or forged tag is rejected. The pin moves only when a maintainer deliberately bumps it, and only after manual checks on real hardware (see [release-process.md](./release-process.md)).
 
-Thuki **builds** this commit from source rather than downloading llama.cpp's prebuilt macOS binary. The prebuilt is compiled for macOS 26+ and fails to load on older macOS (a missing Metal symbol); building it ourselves with a macOS 13.4 deployment target keeps the engine compatible with macOS 13.4+ while tracking the latest llama.cpp. Building from source is also the stronger supply chain: we compile a pinned, git-verified commit instead of trusting an opaque downloaded blob.
+Veilura **builds** this commit from source rather than downloading llama.cpp's prebuilt macOS binary. The prebuilt is compiled for macOS 26+ and fails to load on older macOS (a missing Metal symbol); building it ourselves with a macOS 13.4 deployment target keeps the engine compatible with macOS 13.4+ while tracking the latest llama.cpp. Building from source is also the stronger supply chain: we compile a pinned, git-verified commit instead of trusting an opaque downloaded blob.
 
-The engine version is **independent of Thuki's version.** Several Thuki releases can ship on one engine pin, and the engine can be bumped without bumping Thuki: the two are decoupled.
+The engine version is **independent of Veilura's version.** Several Veilura releases can ship on one engine pin, and the engine can be bumped without bumping Veilura: the two are decoupled.
 
 ### What the build script does
 
@@ -354,7 +354,7 @@ script runs
      → no:  build + verify + wire in         ← first checkout, or after a pin bump
 ```
 
-So the trigger is "engine missing or pin changed," not "Thuki shipped a new version." Cutting a new Thuki release on the same pin re-runs the script, sees the stamp match, and does nothing.
+So the trigger is "engine missing or pin changed," not "Veilura shipped a new version." Cutting a new Veilura release on the same pin re-runs the script, sees the stamp match, and does nothing.
 
 ### Where the files live: dev vs the shipped app
 
@@ -377,9 +377,9 @@ The binary itself is tiny; the real weight is in the dylibs. That is why the scr
 **In the shipped `.app`**, Tauri splits them into the standard macOS layout: the binary ships as a Tauri `externalBin`, and the pruned dylib closure ships via the `frameworks` list.
 
 ```
-Thuki.app/Contents/
+Veilura.app/Contents/
 ├── MacOS/
-│   ├── thuki              ← the main app
+│   ├── veilura              ← the main app
 │   └── llama-server       ← the engine binary
 └── Frameworks/
     └── lib*.dylib         ← the dylibs
@@ -393,14 +393,14 @@ The full journey of one engine version:
 GitHub release (.tar.gz)
    → download + SHA-256 verify
    → src-tauri/binaries/   (dev runs from here; gitignored)
-   → Thuki.app: binary → Contents/MacOS/, dylibs → Contents/Frameworks/   (ship)
+   → Veilura.app: binary → Contents/MacOS/, dylibs → Contents/Frameworks/   (ship)
 ```
 
 Security posture: the engine binds loopback only, the web UI is off, there is no `0.0.0.0` bind, and downloaded GGUF metadata is parsed with bounded, panic-safe code. See [SECURITY.md](../SECURITY.md).
 
 ## Settings → Models
 
-Day to day, you manage all of this from **Settings → Models** (open Settings from the Thuki menu-bar icon: right-click it and choose **Settings…**). Three tabs:
+Day to day, you manage all of this from **Settings → Models** (open Settings from the Veilura menu-bar icon: right-click it and choose **Settings…**). Three tabs:
 
 - **Library**: your installed models, with capability badges and a `size · context · maker · quant` line. Per row: set active, reveal the file on disk, or delete it.
 - **Discover**: **Staff picks** (the curated catalog) and **Browse all** (raw Hugging Face search).
@@ -410,10 +410,10 @@ Day to day, you manage all of this from **Settings → Models** (open Settings f
 
 |                   | **Built-in** (default)                | **Ollama** (optional)                 |
 | ----------------- | ------------------------------------- | ------------------------------------- |
-| Who runs it       | Thuki                                 | You (install Ollama yourself)         |
+| Who runs it       | Veilura                                 | You (install Ollama yourself)         |
 | Setup             | None, it is bundled                   | Install Ollama, `ollama pull <model>` |
 | Engine underneath | llama.cpp `llama-server`              | llama.cpp (Ollama's own build)        |
-| Models            | GGUF files Thuki downloads and stores | Whatever you pull in Ollama           |
-| Lifecycle         | Thuki starts/stops/kills the sidecar  | Ollama manages its own server         |
+| Models            | GGUF files Veilura downloads and stores | Whatever you pull in Ollama           |
+| Lifecycle         | Veilura starts/stops/kills the sidecar  | Ollama manages its own server         |
 
-Both are local and private; both are llama.cpp underneath. The built-in engine exists so Thuki works the moment you install it, with nothing to set up. If you already run Ollama and prefer it, switch to it in **Settings → Models → Providers**; switching frees the model the other provider was holding, so only one is resident at a time.
+Both are local and private; both are llama.cpp underneath. The built-in engine exists so Veilura works the moment you install it, with nothing to set up. If you already run Ollama and prefer it, switch to it in **Settings → Models → Providers**; switching frees the model the other provider was holding, so only one is resident at a time.

@@ -1,7 +1,7 @@
 /*!
- * Thuki Core Library
+ * Veilura Core Library
  *
- * Application bootstrap for the Thuki desktop agent. Configures the macOS
+ * Application bootstrap for the Veilura desktop agent. Configures the macOS
  * status bar presence, system tray menu, double-tap Option hotkey, and
  * window lifecycle (hide-on-close instead of quit).
  *
@@ -68,16 +68,16 @@ use tauri_nspanel::{CollectionBehavior, ManagerExt, PanelLevel, StyleMask, Webvi
 // prefix marks each module as an internal implementation detail; add
 // any future panel subclass the same way.
 //
-// ThukiPanel - overlay NSPanel: floating, keyboard input for chat.
-// ThukiSettingsPanel - settings NSPanel: floating + nonactivating so it
+// VeiluraPanel - overlay NSPanel: floating, keyboard input for chat.
+// VeiluraSettingsPanel - settings NSPanel: floating + nonactivating so it
 //   appears on the user's current Space; keyboard input; no
 //   ActivationPolicy switch so the Dock icon never appears.
 #[cfg(target_os = "macos")]
-mod _thuki_panel {
+mod _veilura_panel {
     use tauri::Manager;
     use tauri_nspanel::TrackingAreaOptions;
     tauri_nspanel::tauri_panel! {
-        panel!(ThukiPanel {
+        panel!(VeiluraPanel {
             config: {
                 can_become_main_window: false,
                 can_become_key_window: true,
@@ -106,13 +106,13 @@ mod _thuki_panel {
                 }
             }
         })
-        panel_event!(ThukiOverlayEventsInner {})
+        panel_event!(VeiluraOverlayEventsInner {})
     }
 
     /// Constructs the mouse-event handler and attaches it to `panel`.
     ///
     /// `panel_event!` emits a private handler struct, so the wiring lives here
-    /// where that type is in scope; callers only need the public `ThukiPanel`.
+    /// where that type is in scope; callers only need the public `VeiluraPanel`.
     /// The mouse-entered callback makes the overlay the key window the instant
     /// the cursor enters it, which is what restores clicks/drag after the
     /// overlay has been defocused (see the tracking-area comment on the panel).
@@ -122,7 +122,7 @@ mod _thuki_panel {
             return;
         };
         let cb_handle = app_handle.clone();
-        let events = ThukiOverlayEventsInner::new();
+        let events = VeiluraOverlayEventsInner::new();
         events.on_mouse_entered(move |_event| {
             if let Ok(p) = cb_handle.get_webview_panel("main") {
                 p.make_key_window();
@@ -132,20 +132,20 @@ mod _thuki_panel {
     }
 }
 #[cfg(target_os = "macos")]
-use _thuki_panel::ThukiPanel;
+use _veilura_panel::VeiluraPanel;
 
 #[cfg(target_os = "macos")]
 mod _settings_panel {
     use tauri::Manager;
     use tauri_nspanel::TrackingAreaOptions;
     tauri_nspanel::tauri_panel! {
-        panel!(ThukiSettingsPanel {
+        panel!(VeiluraSettingsPanel {
             config: {
                 can_become_key_window: true,
                 is_floating_panel: true
             }
             with: {
-                // Same hover-activate rationale as ThukiPanel. Settings is a
+                // Same hover-activate rationale as VeiluraPanel. Settings is a
                 // nonactivating panel with hides_on_deactivate(false), so once
                 // it is defocused (the user clicks another app) a plain click
                 // can never regain key on modern macOS and the webview drops
@@ -164,12 +164,12 @@ mod _settings_panel {
                 }
             }
         })
-        panel_event!(ThukiSettingsEventsInner {})
+        panel_event!(VeiluraSettingsEventsInner {})
     }
 
     /// Constructs the mouse-event handler and attaches it to the Settings panel.
     ///
-    /// Mirrors `attach_overlay_event_handler` for ThukiPanel: the mouse-entered
+    /// Mirrors `attach_overlay_event_handler` for VeiluraPanel: the mouse-entered
     /// callback makes the Settings overlay the key window the instant the cursor
     /// enters it, restoring clicks/drag/typing after the panel has been
     /// defocused (see the tracking-area comment on the panel).
@@ -179,7 +179,7 @@ mod _settings_panel {
             return;
         };
         let cb_handle = app_handle.clone();
-        let events = ThukiSettingsEventsInner::new();
+        let events = VeiluraSettingsEventsInner::new();
         events.on_mouse_entered(move |_event| {
             if let Ok(p) = cb_handle.get_webview_panel("settings") {
                 p.make_key_window();
@@ -189,10 +189,10 @@ mod _settings_panel {
     }
 }
 #[cfg(target_os = "macos")]
-use _settings_panel::ThukiSettingsPanel;
+use _settings_panel::VeiluraSettingsPanel;
 
-// ThukiUpdatePanel - "What's New" NSPanel. Modeled on the OVERLAY panel
-//   (ThukiPanel), not settings: floating + nonactivating so it can appear
+// VeiluraUpdatePanel - "What's New" NSPanel. Modeled on the OVERLAY panel
+//   (VeiluraPanel), not settings: floating + nonactivating so it can appear
 //   on whatever Space the user is on, including over another app's
 //   fullscreen Space (the footer that opens it can be summoned there).
 //   `can_become_key_window` stays true so the four action buttons still
@@ -203,13 +203,13 @@ mod _update_panel {
     use tauri::Manager;
     use tauri_nspanel::TrackingAreaOptions;
     tauri_nspanel::tauri_panel! {
-        panel!(ThukiUpdatePanel {
+        panel!(VeiluraUpdatePanel {
             config: {
                 can_become_key_window: true,
                 is_floating_panel: true
             }
             with: {
-                // Same hover-activate rationale as ThukiPanel. The update panel
+                // Same hover-activate rationale as VeiluraPanel. The update panel
                 // is nonactivating with hides_on_deactivate(false), so after it
                 // is defocused a plain click can never regain key on modern
                 // macOS and the webview drops clicks, drag, and hover - the four
@@ -228,12 +228,12 @@ mod _update_panel {
                 }
             }
         })
-        panel_event!(ThukiUpdateEventsInner {})
+        panel_event!(VeiluraUpdateEventsInner {})
     }
 
     /// Constructs the mouse-event handler and attaches it to the update panel.
     ///
-    /// Mirrors `attach_overlay_event_handler` for ThukiPanel: the mouse-entered
+    /// Mirrors `attach_overlay_event_handler` for VeiluraPanel: the mouse-entered
     /// callback makes the update overlay the key window the instant the cursor
     /// enters it, restoring clicks after the panel has been defocused (see the
     /// tracking-area comment on the panel).
@@ -243,7 +243,7 @@ mod _update_panel {
             return;
         };
         let cb_handle = app_handle.clone();
-        let events = ThukiUpdateEventsInner::new();
+        let events = VeiluraUpdateEventsInner::new();
         events.on_mouse_entered(move |_event| {
             if let Ok(p) = cb_handle.get_webview_panel("update") {
                 p.make_key_window();
@@ -253,7 +253,7 @@ mod _update_panel {
     }
 }
 #[cfg(target_os = "macos")]
-use _update_panel::ThukiUpdatePanel;
+use _update_panel::VeiluraUpdatePanel;
 
 // ─── Window helpers ─────────────────────────────────────────────────────────
 
@@ -264,7 +264,7 @@ const OVERLAY_LOGICAL_WIDTH: f64 = 600.0;
 const OVERLAY_LOGICAL_HEIGHT_COLLAPSED: f64 = 80.0;
 
 /// Frontend event used to synchronize show/hide animations with native window visibility.
-const OVERLAY_VISIBILITY_EVENT: &str = "thuki://visibility";
+const OVERLAY_VISIBILITY_EVENT: &str = "veilura://visibility";
 const OVERLAY_VISIBILITY_SHOW: &str = "show";
 const OVERLAY_VISIBILITY_HIDE_REQUEST: &str = "hide-request";
 /// Emitted while the overlay is parked in the minimized icon and an
@@ -274,30 +274,30 @@ const OVERLAY_VISIBILITY_RESTORE: &str = "restore";
 
 /// Frontend event that triggers the onboarding screen when one or more
 /// required permissions have not yet been granted.
-const ONBOARDING_EVENT: &str = "thuki://onboarding";
+const ONBOARDING_EVENT: &str = "veilura://onboarding";
 
 /// Frontend event that asks the Settings window to jump to the Models tab's
 /// Discover pane (the download picker). Emitted by `open_settings_window`, which
 /// the in-overlay model picker calls from its "no model yet" empty state, so the
 /// user lands on the model browser rather than the default Providers view.
-const SETTINGS_SHOW_DISCOVER_EVENT: &str = "thuki://settings-show-discover";
+const SETTINGS_SHOW_DISCOVER_EVENT: &str = "veilura://settings-show-discover";
 
 /// Frontend event that asks the Settings window to jump to the Models tab's
 /// Providers pane. Emitted by `open_settings_to_providers`, which the ask-bar
 /// "Ollama isn't running" strip calls from its "switch to Built-in" link, so a
 /// user who switched to Ollama without it running lands where they can flip the
 /// active provider back to the built-in engine.
-const SETTINGS_SHOW_PROVIDERS_EVENT: &str = "thuki://settings-show-providers";
+const SETTINGS_SHOW_PROVIDERS_EVENT: &str = "veilura://settings-show-providers";
 
 /// Frontend event that asks the Settings window to jump to the Behavior tab
 /// and briefly highlight the Auto search row. Emitted by
 /// `open_settings_to_behavior` from the first-use web-search notice.
-const SETTINGS_SHOW_BEHAVIOR_EVENT: &str = "thuki://settings-show-behavior";
+const SETTINGS_SHOW_BEHAVIOR_EVENT: &str = "veilura://settings-show-behavior";
 
 /// Frontend event that asks the Settings window to jump to the Behavior tab
 /// and briefly highlight the Auto-save conversations row. Emitted by
 /// `open_settings_to_behavior_auto_save` from the one-shot auto-save notice.
-const SETTINGS_SHOW_BEHAVIOR_AUTO_SAVE_EVENT: &str = "thuki://settings-show-behavior-auto-save";
+const SETTINGS_SHOW_BEHAVIOR_AUTO_SAVE_EVENT: &str = "veilura://settings-show-behavior-auto-save";
 
 /// Logical dimensions of the onboarding window (centered). The permission
 /// and intro steps use the compact base size; the model-picker step widens
@@ -347,7 +347,7 @@ static LAUNCH_SHOW_PENDING: AtomicBool = AtomicBool::new(true);
 /// permissions, model_check, intro). Set when `show_onboarding_window` puts
 /// the window into its fixed 460x640 centered onboarding appearance, cleared
 /// by `finish_onboarding` just before the first real overlay show. Read at the
-/// top of `show_overlay` so an activation (tray "Open Thuki" / double-tap
+/// top of `show_overlay` so an activation (tray "Open Veilura" / double-tap
 /// Control) does not run the ask-bar show path while onboarding is up: doing so
 /// would reposition the window and emit a `show` visibility event, and the
 /// frontend's width/height sync would then collapse the still-onboarding window
@@ -360,7 +360,7 @@ fn set_onboarding_active_impl(active: bool) {
 
 /// True while the Settings window is open (shown, not yet closed/hidden). Set
 /// in `show_settings_window`, cleared in the `settings` close handler. Combined
-/// with `ONBOARDING_ACTIVE` to decide the app's activation policy: Thuki is a
+/// with `ONBOARDING_ACTIVE` to decide the app's activation policy: Veilura is a
 /// menu-bar app and stays `Accessory` (no Dock icon, floating overlay) by
 /// default, but flips to `Regular` while a real window (Settings or onboarding)
 /// is open. Regular makes that window order and layer like a normal app window
@@ -431,7 +431,7 @@ fn mark_session_clean_exit(app: &tauri::AppHandle) {
     if let Some(guard) = app.try_state::<startup_guard::SessionGuard>() {
         if let Some(writer) = guard.writer() {
             if let Err(e) = writer.mark_clean_exit() {
-                eprintln!("thuki: [startup_guard] failed to mark clean exit: {e}");
+                eprintln!("veilura: [startup_guard] failed to mark clean exit: {e}");
             }
         }
     }
@@ -496,7 +496,7 @@ fn show_quit_dialog(app: &tauri::AppHandle) {
     let handle = app.clone();
     app.dialog()
         .message(
-            "Quitting stops the model download and you'll have to start it over.\n\nTo keep it downloading in the background, just close Thuki instead (double-tap Control to reopen).",
+            "Quitting stops the model download and you'll have to start it over.\n\nTo keep it downloading in the background, just close Veilura instead (double-tap Control to reopen).",
         )
         .title("Quit while a model is downloading?")
         .kind(MessageDialogKind::Warning)
@@ -604,7 +604,7 @@ fn show_overlay(app_handle: &tauri::AppHandle, ctx: crate::context::ActivationCo
     // ask-bar show path here would reposition the window and emit a `show`
     // visibility event, and the frontend would then collapse the still-
     // onboarding window to the ask-bar size. Bring the onboarding window
-    // forward instead so "Open Thuki" / the hotkey still surface it.
+    // forward instead so "Open Veilura" / the hotkey still surface it.
     if ONBOARDING_ACTIVE.load(Ordering::SeqCst) {
         if let Ok(panel) = app_handle.get_webview_panel("main") {
             panel.show_and_make_key();
@@ -803,7 +803,7 @@ fn show_overlay(app_handle: &tauri::AppHandle, ctx: crate::context::ActivationCo
             );
         }
         Err(e) => {
-            eprintln!("thuki: [show_overlay] get_webview_panel FAILED: {e:?}");
+            eprintln!("veilura: [show_overlay] get_webview_panel FAILED: {e:?}");
             // Reset the flag so future activation attempts are not permanently blocked.
             OVERLAY_INTENDED_VISIBLE.store(false, Ordering::SeqCst);
         }
@@ -886,7 +886,7 @@ fn sync_activation_policy(app_handle: &tauri::AppHandle) {
 
 /// Activates (foregrounds) the app so a newly opened Settings/onboarding window
 /// orders front. `activateIgnoringOtherApps` is deprecated on macOS 14+ but
-/// still functional and is the broadest-compatible call (Thuki supports macOS
+/// still functional and is the broadest-compatible call (Veilura supports macOS
 /// 13.4+). Must be called on the macOS main thread.
 ///
 /// Thin AppKit wrapper, excluded from coverage.
@@ -905,7 +905,7 @@ fn activate_app() {
 
 /// Shows (or focuses, if already visible) the Settings window.
 ///
-/// The settings window is converted to a ThukiSettingsPanel NSPanel subclass
+/// The settings window is converted to a VeiluraSettingsPanel NSPanel subclass
 /// (done once in `init_settings_panel` during setup). While it is open the app
 /// switches to `Regular` activation (`sync_activation_policy`): the panel sits
 /// at normal window level so it opens on top yet lets another app clicked
@@ -942,12 +942,12 @@ fn show_settings_window(app_handle: &tauri::AppHandle) {
                 return;
             }
             Err(e) => {
-                eprintln!("thuki: [settings] get_webview_panel failed: {e:?}");
+                eprintln!("veilura: [settings] get_webview_panel failed: {e:?}");
             }
         }
     }
     let Some(window) = app_handle.get_webview_window("settings") else {
-        eprintln!("thuki: [settings] window 'settings' not found in app config");
+        eprintln!("veilura: [settings] window 'settings' not found in app config");
         return;
     };
     position_settings_window(&window);
@@ -1050,7 +1050,7 @@ fn position_update_window(window: &tauri::WebviewWindow) {
 /// Shows (or focuses, if already visible) the "What's New" update window.
 ///
 /// Mirrors `show_settings_window`: the window is converted to a
-/// `ThukiUpdatePanel` NSPanel subclass once during setup (`init_update_panel`),
+/// `VeiluraUpdatePanel` NSPanel subclass once during setup (`init_update_panel`),
 /// and while it is open the app flips to `Regular` activation
 /// (`sync_activation_policy`, gated on `UPDATE_OPEN`) so it behaves like a
 /// standard app window. The activation also pulls the user to the window's Space
@@ -1083,12 +1083,12 @@ fn show_update_window(app_handle: &tauri::AppHandle) {
                 return;
             }
             Err(e) => {
-                eprintln!("thuki: [update] get_webview_panel failed: {e:?}");
+                eprintln!("veilura: [update] get_webview_panel failed: {e:?}");
             }
         }
     }
     let Some(window) = app_handle.get_webview_window("update") else {
-        eprintln!("thuki: [update] window 'update' not found in app config");
+        eprintln!("veilura: [update] window 'update' not found in app config");
         return;
     };
     position_update_window(&window);
@@ -1346,14 +1346,14 @@ fn animate_overlay_frame(app_handle: tauri::AppHandle, width: f64, height: f64, 
 
 /// Sets the alpha (opacity) of the main overlay NSPanel.
 ///
-/// Used to temporarily hide Thuki while a foreign system dialog (the
+/// Used to temporarily hide Veilura while a foreign system dialog (the
 /// `NSSavePanel` invoked by the export flow) is on screen. That dialog
 /// ships with its own drop-shadow and `NSVisualEffectView` vibrancy
-/// backdrop, both of which bleed onto anything behind them. Thuki's
+/// backdrop, both of which bleed onto anything behind them. Veilura's
 /// transparent CSS shadow margin would otherwise show through as a
 /// dark "ghost" rectangle around the card.
 ///
-/// Driving alpha to 0 removes Thuki from the compositor for the
+/// Driving alpha to 0 removes Veilura from the compositor for the
 /// duration of the dialog without disturbing the NSPanel's state
 /// machine, the activator, the trace recorder, or the React tree.
 /// Restoring alpha to 1.0 paints the window again with the exact
@@ -1365,7 +1365,7 @@ fn animate_overlay_frame(app_handle: tauri::AppHandle, width: f64, height: f64, 
 /// own fade-in / fade-out. With `duration_ms = 0` the alpha is set
 /// instantly. Hiding the panel usually wants `0` (snap out so the
 /// dialog's appearance is the only motion the user reads); restoring
-/// usually wants a small duration so Thuki gracefully fades back in
+/// usually wants a small duration so Veilura gracefully fades back in
 /// instead of popping over the dialog dismiss animation.
 ///
 /// Non-finite values are silently dropped and the magnitude is clamped
@@ -1500,7 +1500,7 @@ fn arm_onboarding_reveal_backstop(app_handle: &tauri::AppHandle) {
 /// the `NSNavPanelExpandedStateForSaveMode` key in `NSUserDefaults`.
 /// On a fresh launch the panel inherits the system default, which is
 /// the wide expanded layout most apps want. For a Spotlight-style
-/// overlay like Thuki where export is a quick action invoked from a
+/// overlay like Veilura where export is a quick action invoked from a
 /// floating bar, the compact layout reads as the right shape: the
 /// user already picked the file in their head, they just need to
 /// confirm the name and location.
@@ -1859,7 +1859,7 @@ fn init_panel(app_handle: &tauri::AppHandle) {
         .expect("main window must exist at setup time");
 
     let panel = window
-        .to_panel::<ThukiPanel>()
+        .to_panel::<VeiluraPanel>()
         .expect("NSPanel conversion must succeed on macOS");
 
     panel.set_level(PanelLevel::Floating.value());
@@ -1883,7 +1883,7 @@ fn init_panel(app_handle: &tauri::AppHandle) {
     panel.set_has_shadow(false);
 
     // Hover-activate: take key focus the moment the cursor enters the overlay.
-    // Pairs with the `active_always` tracking area declared on `ThukiPanel`.
+    // Pairs with the `active_always` tracking area declared on `VeiluraPanel`.
     // A nonactivating panel cannot self-activate on modern macOS, so after the
     // overlay loses focus a click alone cannot regain key/active and the webview
     // drops clicks, drag, and hover. Making the panel key on mouse-enter (no app
@@ -1891,13 +1891,13 @@ fn init_panel(app_handle: &tauri::AppHandle) {
     // Space. The handler is retained by `set_event_handler`, and the macro
     // forwards window-delegate events to wry's original delegate so window
     // resize/focus/close behavior is preserved.
-    _thuki_panel::attach_overlay_event_handler(app_handle.clone());
+    _veilura_panel::attach_overlay_event_handler(app_handle.clone());
 
     // Three NSPanel-layer assertions to keep the overlay visually clean
     // through the save-dialog flow, only one of which is strictly novel:
     //
     // 1. `setBackgroundColor: NSColor.clearColor` + `setOpaque: NO` -
-    //    re-asserted because `to_panel::<ThukiPanel>()` plus the
+    //    re-asserted because `to_panel::<VeiluraPanel>()` plus the
     //    subsequent `set_style_mask` rewrite can leave the panel with
     //    `NSColor.windowBackgroundColor` painted into the backing layer.
     //
@@ -1910,7 +1910,7 @@ fn init_panel(app_handle: &tauri::AppHandle) {
     //    interactive across the modal.
     //
     // 3. `contentView.layer.cornerRadius` + `masksToBounds` - the
-    //    load-bearing fix for the visible halo around Thuki when the
+    //    load-bearing fix for the visible halo around Veilura when the
     //    save dialog is up. AppKit's modal dim fills the entire NSPanel
     //    bounds, but the CSS chrome inside the WebView only paints a
     //    smaller rounded-rect (Tailwind `rounded-lg`, 8 px). The dim
@@ -1960,7 +1960,7 @@ fn init_panel(app_handle: &tauri::AppHandle) {
 
 // ─── Settings panel initialisation ──────────────────────────────────────────
 
-/// Converts the settings Tauri window into a ThukiSettingsPanel NSPanel subclass.
+/// Converts the settings Tauri window into a VeiluraSettingsPanel NSPanel subclass.
 ///
 /// Called once during app setup. The resulting panel handle is stored in the
 /// tauri-nspanel WebviewPanelManager, so subsequent calls to
@@ -1990,10 +1990,10 @@ fn init_panel(app_handle: &tauri::AppHandle) {
 #[cfg_attr(coverage_nightly, coverage(off))]
 fn init_settings_panel(app_handle: &tauri::AppHandle) {
     let Some(window) = app_handle.get_webview_window("settings") else {
-        eprintln!("thuki: [settings] window not found during init_settings_panel");
+        eprintln!("veilura: [settings] window not found during init_settings_panel");
         return;
     };
-    match window.to_panel::<ThukiSettingsPanel>() {
+    match window.to_panel::<VeiluraSettingsPanel>() {
         Ok(panel) => {
             panel.set_floating_panel(true);
             // Normal window level (0), not Floating: while Settings is open the
@@ -2012,17 +2012,17 @@ fn init_settings_panel(app_handle: &tauri::AppHandle) {
             panel.set_collection_behavior(CollectionBehavior::new().managed().into());
             // Hover-activate: take key focus the moment the cursor enters the
             // Settings overlay, mirroring init_panel. Pairs with the
-            // `active_always` tracking area on ThukiSettingsPanel so a defocused
+            // `active_always` tracking area on VeiluraSettingsPanel so a defocused
             // nonactivating panel regains key without activating the app.
             _settings_panel::attach_settings_event_handler(app_handle.clone());
         }
         Err(e) => {
-            eprintln!("thuki: [settings] NSPanel conversion failed: {e:?}");
+            eprintln!("veilura: [settings] NSPanel conversion failed: {e:?}");
         }
     }
 }
 
-/// Converts the update Tauri window into a ThukiUpdatePanel NSPanel
+/// Converts the update Tauri window into a VeiluraUpdatePanel NSPanel
 /// subclass. Called once during app setup.
 ///
 /// Mirrors `init_settings_panel`, NOT `init_panel` (the overlay). The "What's
@@ -2043,10 +2043,10 @@ fn init_settings_panel(app_handle: &tauri::AppHandle) {
 #[cfg_attr(coverage_nightly, coverage(off))]
 fn init_update_panel(app_handle: &tauri::AppHandle) {
     let Some(window) = app_handle.get_webview_window("update") else {
-        eprintln!("thuki: [update] window not found during init_update_panel");
+        eprintln!("veilura: [update] window not found during init_update_panel");
         return;
     };
-    match window.to_panel::<ThukiUpdatePanel>() {
+    match window.to_panel::<VeiluraUpdatePanel>() {
         Ok(panel) => {
             panel.set_floating_panel(true);
             // Normal window level (0), not Floating: while the window is open the
@@ -2064,12 +2064,12 @@ fn init_update_panel(app_handle: &tauri::AppHandle) {
             panel.set_collection_behavior(CollectionBehavior::new().managed().into());
             // Hover-activate: take key focus the moment the cursor enters the
             // update overlay, mirroring init_panel. Pairs with the
-            // `active_always` tracking area on ThukiUpdatePanel so a defocused
+            // `active_always` tracking area on VeiluraUpdatePanel so a defocused
             // nonactivating panel regains key without activating the app.
             _update_panel::attach_update_event_handler(app_handle.clone());
         }
         Err(e) => {
-            eprintln!("thuki: [update] NSPanel conversion failed: {e:?}");
+            eprintln!("veilura: [update] NSPanel conversion failed: {e:?}");
         }
     }
 }
@@ -2193,7 +2193,7 @@ fn position_overlay_ask_bar(app_handle: tauri::AppHandle) {
 }
 
 /// Sizes the main window for the onboarding screen, centers it, makes it
-/// visible, and emits `thuki://onboarding` so the frontend switches to
+/// visible, and emits `veilura://onboarding` so the frontend switches to
 /// `OnboardingView`.
 ///
 /// All window mutations run on the macOS main thread via `run_on_main_thread`;
@@ -2313,11 +2313,11 @@ pub fn build_trace_inner(
     }
     let traces_root = settings_commands::traces_root(app_handle);
     eprintln!(
-        "thuki: [trace] trace_enabled = ON. Writing forensic JSONL to {}.",
+        "veilura: [trace] trace_enabled = ON. Writing forensic JSONL to {}.",
         traces_root.display()
     );
     eprintln!(
-        "thuki: [trace] Files may contain sensitive text. Disable in config.toml when not actively debugging."
+        "veilura: [trace] Files may contain sensitive text. Disable in config.toml when not actively debugging."
     );
     Arc::new(trace::RegistryRecorder::new(traces_root))
 }
@@ -2335,13 +2335,13 @@ fn build_app_menu<R: tauri::Runtime>(
 ) -> tauri::Result<tauri::menu::Menu<R>> {
     use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 
-    let quit = MenuItem::with_id(app, "quit", "Quit Thuki", true, Some("Cmd+Q"))?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Veilura", true, Some("Cmd+Q"))?;
     let app_menu = Submenu::with_items(
         app,
-        "Thuki",
+        "Veilura",
         true,
         &[
-            &PredefinedMenuItem::about(app, Some("About Thuki"), None)?,
+            &PredefinedMenuItem::about(app, Some("About Veilura"), None)?,
             &PredefinedMenuItem::separator(app)?,
             &quit,
         ],
@@ -2376,10 +2376,10 @@ fn build_tray_menu<R: tauri::Runtime>(
 ) -> tauri::Result<tauri::menu::Menu<R>> {
     use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 
-    let show = MenuItem::with_id(app, "show", "Open Thuki", true, None::<&str>)?;
+    let show = MenuItem::with_id(app, "show", "Open Veilura", true, None::<&str>)?;
     let settings = MenuItem::with_id(app, "settings", "Settings…", true, Some("Cmd+,"))?;
     let sep1 = PredefinedMenuItem::separator(app)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit Thuki", true, Some("Cmd+Q"))?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Veilura", true, Some("Cmd+Q"))?;
 
     if let Some(version) = update_version {
         let label = format!("What's New in v{version}");
@@ -2403,11 +2403,13 @@ fn refresh_tray(app: &tauri::AppHandle) {
         return;
     };
 
-    // Swap icon
+    // Swap icon. The tray assets are monochrome template images
+    // (white mark + dark outline, so they stay legible even if the
+    // template flag is ever dropped by a set_icon call).
     let bytes: &[u8] = if version.is_some() {
         include_bytes!("../icons/tray-update.png")
     } else {
-        include_bytes!("../icons/128x128.png")
+        include_bytes!("../icons/tray.png")
     };
     if let Ok(img) = tauri::image::Image::from_bytes(bytes) {
         let _ = tray.set_icon(Some(img));
@@ -2426,7 +2428,7 @@ fn refresh_tray(app: &tauri::AppHandle) {
 /// Setup order:
 /// 1. `ActivationPolicy::Accessory` suppresses the Dock icon.
 /// 2. The main window is converted to an NSPanel for fullscreen overlay.
-/// 3. The settings window is converted to a ThukiSettingsPanel NSPanel subclass.
+/// 3. The settings window is converted to a VeiluraSettingsPanel NSPanel subclass.
 /// 4. System tray is registered; double-tap Option listener starts.
 /// 5. `CloseRequested` is intercepted to hide instead of destroy.
 ///
@@ -2534,13 +2536,14 @@ pub fn run() {
             // stays focused on session-level actions.
             let tray_menu = build_tray_menu(app.handle(), None)?;
 
-            let tray_icon = tauri::image::Image::from_bytes(include_bytes!("../icons/128x128.png"))
+            let tray_icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))
                 .expect("Failed to load tray icon");
 
             let _tray = TrayIconBuilder::with_id("main")
                 .icon(tray_icon)
-                .icon_as_template(false)
-                .tooltip("Thuki")
+                // Monochrome template icon: macOS tints it for light/dark menu bars.
+                .icon_as_template(true)
+                .tooltip("Veilura")
                 .menu(&tray_menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
@@ -2594,7 +2597,7 @@ pub fn run() {
                 if permissions::is_accessibility_granted() {
                     activator.start(move || {
                         // Skip AX + clipboard when hiding - no context needed and
-                        // simulating Cmd+C against Thuki's own WebView would produce
+                        // simulating Cmd+C against Veilura's own WebView would produce
                         // a macOS alert sound.
                         let is_visible = OVERLAY_INTENDED_VISIBLE.load(Ordering::SeqCst);
                         let handle = app_handle.clone();
@@ -2621,7 +2624,7 @@ pub fn run() {
             app.manage(reqwest::Client::new());
 
             // ── Replace-target tracking ───────────────────────────────
-            // Tracks the last-active non-Thuki app via an NSWorkspace
+            // Tracks the last-active non-Veilura app via an NSWorkspace
             // observer; this is the app the /rewrite & /refine Replace action
             // writes into. Managed so `replace_selection` can read the target,
             // and the observer is installed on the main thread here at setup.
@@ -2636,6 +2639,40 @@ pub fn run() {
             )));
             // Port-keyed dedup + cue state for the built-in engine warm-up.
             app.manage(warmup::BuiltinWarmState::default());
+
+            // ── Thuki → Veilura Application Support migration ─────
+            // First launch after the rebrand: the bundle id changed, so
+            // Tauri resolves a NEW app dir (com.veilura.app). Copy the old
+            // Thuki dir's config + database (+ models, traces) into it so
+            // the upgrade is not a fresh install. COPY, never move: the
+            // old dir stays untouched. Runs before config load and before
+            // anything else reads the new dir. Best-effort: a failure is
+            // logged and startup continues with fresh state.
+            // On macOS app_config_dir == app_data_dir, so one copy covers
+            // both config.toml and veilura.db.
+            {
+                use tauri::Manager;
+                if let Ok(new_dir) = app.handle().path().app_config_dir() {
+                    if let Some(parent) = new_dir.parent().map(|p| p.to_path_buf()) {
+                        let old_dir =
+                            parent.join(crate::config::migrate::LEGACY_BUNDLE_ID);
+                        match crate::config::migrate::migrate_legacy_app_support_dir(
+                            &new_dir, &old_dir,
+                        ) {
+                            Ok(outcome) => {
+                                eprintln!(
+                                    "veilura: [migration] legacy app-support migration: {outcome:?}"
+                                );
+                            }
+                            Err(e) => {
+                                eprintln!(
+                                    "veilura: [migration] legacy app-support migration failed ({e}); continuing with fresh state"
+                                );
+                            }
+                        }
+                    }
+                }
+            }
 
             // ── Configuration (TOML file at app_config_dir) ─────────
             // Loaded once at startup. Missing file -> seed defaults.
@@ -2655,7 +2692,7 @@ pub fn run() {
 
             // ── Launch circuit breaker (issue #296) ───────────────────
             // Detect a previous session that died abnormally: the crash-loop
-            // signature where Thuki froze the machine while auto-loading a
+            // signature where Veilura froze the machine while auto-loading a
             // large model, macOS reopened the app after the forced power-off,
             // and it re-froze before the user could act. Runs BEFORE any
             // dangerous auto-op: it takes a process-lifetime advisory lock and
@@ -2724,13 +2761,13 @@ pub fn run() {
             startup_guard::disable_quit_keeps_windows();
 
             // ── Orphaned sidecar reaper (issue #296) ──────────────────
-            // SIGKILL, a kernel panic, or a machine freeze kills Thuki without
+            // SIGKILL, a kernel panic, or a machine freeze kills Veilura without
             // running any shutdown path, so a sidecar it spawned can reparent to
             // launchd (ppid 1) and linger holding ~2 GB. The next launch is the
             // only place to reap it. Runs on a detached thread so the (rare)
             // SIGTERM grace on an actual orphan never delays startup; it can
-            // never touch a live Thuki's sidecar because that child's ppid is its
-            // own Thuki's pid, not 1 (the load-bearing clause in the predicate).
+            // never touch a live Veilura's sidecar because that child's ppid is its
+            // own Veilura's pid, not 1 (the load-bearing clause in the predicate).
             {
                 let our_sidecar = engine_sidecar_path();
                 std::thread::spawn(move || {
@@ -2805,15 +2842,15 @@ pub fn run() {
                 sidecar.last_launched_version = Some(running_version);
                 if let Some(path) = sidecar_path.as_ref() {
                     if let Err(e) = sidecar.save(path) {
-                        eprintln!("thuki: [updater] failed to persist sidecar: {e}");
+                        eprintln!("veilura: [updater] failed to persist sidecar: {e}");
                     }
                 }
 
-                // After `tccutil reset` clears the TCC.db entry for Thuki,
+                // After `tccutil reset` clears the TCC.db entry for Veilura,
                 // the running process retains stale per-PID tracking inside
                 // macOS's `tccd` daemon. Subsequent `AXIsProcessTrusted`
                 // calls from THIS process do not register the new csreq, so
-                // Thuki is missing from System Settings → Privacy &
+                // Veilura is missing from System Settings → Privacy &
                 // Security → Accessibility and the user has no in-app path
                 // to grant. Empirically (user-reproduced) the only fix is
                 // a fresh process: `tccd` sees a brand new PID and
@@ -2825,7 +2862,7 @@ pub fn run() {
                     tauri::async_runtime::spawn(async move {
                         tokio::time::sleep(std::time::Duration::from_millis(150)).await;
                         eprintln!(
-                            "thuki: [updater] relaunching after TCC reset \
+                            "veilura: [updater] relaunching after TCC reset \
                              to refresh tccd PID tracking"
                         );
                         app_handle.restart();
@@ -2920,7 +2957,7 @@ pub fn run() {
                 );
                 if pre_providers || attached {
                     if let Err(e) = crate::config::writer::atomic_write(&config_file_path, &cfg) {
-                        eprintln!("thuki: [config] active-model migration write failed: {e}");
+                        eprintln!("veilura: [config] active-model migration write failed: {e}");
                     }
                 }
                 models::resolve_seed_active_model(Some(cfg.inference.active_provider_model()))
@@ -2954,7 +2991,7 @@ pub fn run() {
 
             // ── Keychain secret store ──────────────────────────────
             // Service name is derived from the bundle identifier so nightly
-            // (com.quietnode.thuki.nightly) cannot share stable API keys.
+            // (com.veilura.app.nightly) cannot share stable API keys.
             let keychain_bundle_id = app.config().identifier.clone();
             app.manage(keychain::Secrets(std::sync::Arc::new(
                 keychain::KeyringStore::new(&keychain_bundle_id),
@@ -3015,7 +3052,7 @@ pub fn run() {
 
             // ── VRAM sentinel poll ─────────────────────────────────
             // Detects external VRAM changes (ollama stop, TTL expiry,
-            // daemon restart) that Thuki did not initiate. Polls
+            // daemon restart) that Veilura did not initiate. Polls
             // /api/ps every VRAM_POLL_INTERVAL_SECS seconds and emits
             // warmup:model-loaded or warmup:model-evicted as needed.
             warmup::spawn_vram_poller(app.handle().clone());
@@ -3473,7 +3510,7 @@ mod tests {
 
     #[test]
     fn overlay_visibility_event_constant_matches() {
-        assert_eq!(OVERLAY_VISIBILITY_EVENT, "thuki://visibility");
+        assert_eq!(OVERLAY_VISIBILITY_EVENT, "veilura://visibility");
         assert_eq!(OVERLAY_VISIBILITY_SHOW, "show");
         assert_eq!(OVERLAY_VISIBILITY_HIDE_REQUEST, "hide-request");
     }
@@ -3487,7 +3524,7 @@ mod tests {
 
     #[test]
     fn onboarding_event_constant_matches() {
-        assert_eq!(ONBOARDING_EVENT, "thuki://onboarding");
+        assert_eq!(ONBOARDING_EVENT, "veilura://onboarding");
     }
 
     #[test]

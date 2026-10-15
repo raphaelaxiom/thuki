@@ -68,7 +68,7 @@ describe('splitHonestFailureNote', () => {
   });
 
   const LEGACY_NOTE_BODY =
-    "Thuki found sources but could not verify the answer's citations against the page text. Treat specific claims carefully, or try rephrasing or a larger model in Settings.";
+    "Veilura found sources but could not verify the answer's citations against the page text. Treat specific claims carefully, or try rephrasing or a larger model in Settings.";
 
   it('accepts the pre-shortening legacy body, restyled with the current note', () => {
     const content = `Fake number 999.\n\n${LEGACY_NOTE_BODY}`;

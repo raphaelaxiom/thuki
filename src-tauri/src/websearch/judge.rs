@@ -645,7 +645,7 @@ mod tests {
     #[test]
     fn build_messages_strips_literal_nonce_token_from_sources() {
         // A page carrying the exact nonce token cannot plant a matching token
-        // inside the quoted region: the nonce only ever appears in Thuki-authored
+        // inside the quoted region: the nonce only ever appears in Veilura-authored
         // delimiters. The clause names both markers (2 occurrences) and the
         // region re-opens and closes them (2 more) for 4 total; the two copies
         // the source text carried are stripped by sanitize_source_text.

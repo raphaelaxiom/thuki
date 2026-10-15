@@ -1,6 +1,6 @@
 //! Compiled default values for the application configuration.
 //!
-//! This is the ONE place where Thuki's default configuration lives. Every
+//! This is the ONE place where Veilura's default configuration lives. Every
 //! other subsystem reads the resolved values from `AppConfig` via Tauri state.
 //! Changing a default here propagates to a fresh first-run config file and to
 //! any field a user has left unset or left empty in their existing file.
@@ -35,18 +35,18 @@ pub const DEFAULT_OLLAMA_LABEL: &str = "Ollama";
 /// Fallback label for an OpenAI-compatible provider added with no label.
 pub const DEFAULT_OPENAI_LABEL: &str = "OpenAI-compatible";
 
-/// Provider Thuki sends inference to on a fresh install.
+/// Provider Veilura sends inference to on a fresh install.
 ///
-/// Thuki bundles the llama.cpp engine, so a new install starts on the
+/// Veilura bundles the llama.cpp engine, so a new install starts on the
 /// built-in provider and onboarding offers a starter model download. Configs
 /// that already persisted an `active_provider` (including the older
 /// Ollama-only default) are never rewritten; only fresh or dangling pointers
 /// land here.
 pub const DEFAULT_ACTIVE_PROVIDER: &str = PROVIDER_ID_BUILTIN;
 
-/// Default inactivity window before Thuki releases the active model from local
+/// Default inactivity window before Veilura releases the active model from local
 /// memory. Unified across both local providers (built-in engine and Ollama);
-/// not applicable to a remote OpenAI-compatible server, whose residency Thuki
+/// not applicable to a remote OpenAI-compatible server, whose residency Veilura
 /// does not manage.
 /// 0 means use the provider's natural short default (~5 min): Ollama defers to
 /// its own 5-minute timer, the built-in engine applies its own ~5-minute timer
@@ -69,7 +69,7 @@ pub const DEFAULT_NUM_CTX: u32 = 16384;
 /// current consumer model including the largest 1 M-context variants.
 pub const BOUNDS_NUM_CTX: (u32, u32) = (2048, 1_048_576);
 
-/// Upper bound on a model's context window that Thuki will trust and display
+/// Upper bound on a model's context window that Veilura will trust and display
 /// from external GGUF metadata (the `context_length` field of an arbitrary
 /// Hugging Face repo, shown in the Browse-all listing). Defense-in-depth: the
 /// field is attacker-controllable and editable (`gguf_set_metadata.py`), so a
@@ -137,7 +137,7 @@ pub const SHUTDOWN_SIGNAL_ENGINE_KILL_TIMEOUT_SECS: u64 = 3;
 
 /// Grace period (milliseconds) between the polite `SIGTERM` and the escalating
 /// `SIGKILL` the startup reaper sends an orphaned `llama-server` left behind by
-/// a previous Thuki (issue #296). `llama-server` exits promptly on `SIGTERM`, so
+/// a previous Veilura (issue #296). `llama-server` exits promptly on `SIGTERM`, so
 /// this is only the window a survivor gets before it is force-killed; the full
 /// orphan predicate is re-checked after the wait so a recycled pid is never
 /// killed. Not user-tunable: an internal shutdown-hygiene timing constant.
@@ -170,7 +170,7 @@ pub const ENGINE_STDERR_TAIL_LINES: usize = 20;
 pub const LLAMA_SERVER_CACHE_RAM_MIB: u32 = 512;
 
 /// Decode slot count for the bundled llama-server (`--parallel`). Always 1:
-/// Thuki is single-user, multi-slot splits ctx and historically caused cold
+/// Veilura is single-user, multi-slot splits ctx and historically caused cold
 /// first-turn prefill when warm-up and the user message landed on different
 /// slots. Do not raise without a new latency package and memory budget.
 ///
@@ -263,7 +263,7 @@ pub const DEFAULT_MAX_CHAT_HEIGHT: f64 = 648.0;
 /// per message; lower to keep prompts compact.
 pub const DEFAULT_MAX_IMAGES: u32 = 3;
 /// Base font size (in CSS pixels) for chat text and the AskBar input.
-/// Drives the `--thuki-text-base` CSS variable on `<html>`, which the AI
+/// Drives the `--veilura-text-base` CSS variable on `<html>`, which the AI
 /// markdown body, the user chat bubble text, and the AskBar textarea +
 /// caret-tracking mirror all read. Other surfaces (Settings panel,
 /// onboarding) keep fixed sizes. Raise for easier-to-read conversation
@@ -271,18 +271,18 @@ pub const DEFAULT_MAX_IMAGES: u32 = 3;
 pub const DEFAULT_TEXT_BASE_PX: f64 = 15.0;
 
 /// Line-height multiplier applied to chat + AskBar text. Drives the
-/// `--thuki-text-line-height` CSS variable. 1.5 sits between the AskBar
+/// `--veilura-text-line-height` CSS variable. 1.5 sits between the AskBar
 /// default (~1.25) and the previous AI-prose default (1.6); users can dial
 /// up for airier prose or down for denser screens.
 pub const DEFAULT_TEXT_LINE_HEIGHT: f64 = 1.5;
 
 /// Letter spacing applied to chat + AskBar text, in CSS pixels. Drives the
-/// `--thuki-text-letter-spacing` CSS variable. 0 keeps Nunito's native
+/// `--veilura-text-letter-spacing` CSS variable. 0 keeps Nunito's native
 /// tracking; raise for airier characters, drop below zero to tighten.
 pub const DEFAULT_TEXT_LETTER_SPACING_PX: f64 = 0.0;
 
 /// Numeric CSS `font-weight` applied to chat + AskBar text. Drives the
-/// `--thuki-text-font-weight` CSS variable. Only the four loaded Nunito
+/// `--veilura-text-font-weight` CSS variable. Only the four loaded Nunito
 /// weights are accepted; intermediate values would silently fall back to
 /// the nearest loaded glyph set, making the slider misleading.
 pub const DEFAULT_TEXT_FONT_WEIGHT: u32 = 500;
@@ -333,7 +333,7 @@ pub const VRAM_POLL_INTERVAL_SECS: u64 = 5;
 /// tokens + final answer body, screen captures, conversation lifecycle, and
 /// the search skip/decision/retrieval/escalation/requery/citation-audit
 /// records the built-in search emits) to JSON-Lines files under
-/// `~/Library/Application Support/com.quietnode.thuki/traces/chat/<conversation_id>.jsonl`.
+/// `~/Library/Application Support/com.veilura.app/traces/chat/<conversation_id>.jsonl`.
 /// Toggleable from the Settings panel (Diagnostics). Off by default.
 pub const DEFAULT_DEBUG_TRACE_ENABLED: bool = false;
 
@@ -369,7 +369,7 @@ pub const TRACE_RETENTION_FOREVER: i64 = -1;
 /// panel (Behavior tab).
 pub const DEFAULT_AUTO_REPLACE: bool = false;
 
-/// When `true`, the Thuki overlay dismisses itself immediately after a
+/// When `true`, the Veilura overlay dismisses itself immediately after a
 /// `/rewrite` or `/refine` result is replaced back into the source app, whether
 /// the replace was automatic (see [`DEFAULT_AUTO_REPLACE`]) or a manual Replace
 /// click. Only closes on a *successful* replace; a skipped write (no target /
@@ -665,16 +665,22 @@ pub const ALLOWED_SECTIONS: &[&str] = &[
 ];
 
 // Updater
-/// Whether Thuki polls for new releases automatically at startup and periodically.
+/// Whether Veilura polls for new releases automatically at startup and periodically.
 pub const DEFAULT_UPDATER_AUTO_CHECK: bool = true;
 /// Hours between automatic background update checks. Bound to 1..168 (one week).
 pub const DEFAULT_UPDATER_CHECK_INTERVAL_HOURS: u64 = 24;
 /// Accepted range for `check_interval_hours`. 1 h minimum keeps checks meaningful;
 /// 168 h (one week) is the practical ceiling for a desktop update poller.
 pub const BOUNDS_UPDATER_CHECK_INTERVAL_HOURS: (u64, u64) = (1, 168);
-/// URL of the Tauri updater JSON manifest. Points to the latest GitHub release asset.
+/// URL of the Tauri updater JSON manifest.
+///
+/// PLACEHOLDER: points at veilura.online, but no live update server exists
+/// yet — nothing serves `updates/latest.json` today, so automatic update
+/// checks fail closed (see the updater poller) until a real manifest +
+/// a fresh signing keypair are published. Do NOT treat this URL as a
+/// working endpoint. See REBRAND.md.
 pub const DEFAULT_UPDATER_MANIFEST_URL: &str =
-    "https://github.com/quiet-node/thuki/releases/latest/download/latest.json";
+    "https://veilura.online/updates/latest.json";
 
 /// Filename of the JSON sidecar that persists snooze deadlines across restarts.
 /// Lives next to `config.toml` in `app_config_dir`. Single source of truth so
@@ -749,7 +755,7 @@ pub const STRIP_PATTERNS: &[&str] = &[
 
 // ─── SSRF-safe HTTP transport ────────────────────────────────────────────────
 
-/// Hard cap on the decompressed body Thuki reads from any single outbound
+/// Hard cap on the decompressed body Veilura reads from any single outbound
 /// request in the web-search stack (bytes). The transport streams the response
 /// and aborts once this many bytes have accumulated, so a hostile server (or a
 /// gzip bomb, since the cap counts post-decompression bytes) cannot exhaust

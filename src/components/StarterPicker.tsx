@@ -38,6 +38,7 @@ export const FIT_COPY: Record<RamFit, string> = {
 
 const FIT_COLORS: Record<RamFit, { color: string; background: string }> = {
   fits: { color: '#22c55e', background: 'rgba(34,197,94,0.1)' },
+  // Intentional warning amber for 'tight' (semantic, not brand).
   tight: { color: '#ff8d5c', background: 'rgba(255,141,92,0.1)' },
   too_big: { color: '#ef4444', background: 'rgba(239,68,68,0.1)' },
 };
@@ -170,7 +171,7 @@ export function StarterPicker({
             fontFamily: 'inherit',
             fontSize: 11,
             fontWeight: 500,
-            color: 'rgba(255,141,92,0.7)',
+            color: 'rgba(124,108,240,0.7)',
             cursor: 'pointer',
             textAlign: 'center',
           }}
@@ -212,13 +213,13 @@ function StarterCard({
         padding: '12px 14px',
         borderRadius: 14,
         border: `1px solid ${
-          selected ? 'rgba(255,141,92,0.4)' : 'rgba(255,255,255,0.06)'
+          selected ? 'rgba(124,108,240,0.4)' : 'rgba(255,255,255,0.06)'
         }`,
         background: selected
-          ? 'rgba(255,141,92,0.07)'
+          ? 'rgba(124,108,240,0.07)'
           : 'rgba(255,255,255,0.03)',
         boxShadow: selected
-          ? '0 0 20px rgba(255,141,92,0.08), inset 0 1px 0 rgba(255,141,92,0.1)'
+          ? '0 0 20px rgba(124,108,240,0.08), inset 0 1px 0 rgba(124,108,240,0.1)'
           : 'none',
         cursor: 'pointer',
       }}
@@ -255,9 +256,9 @@ function StarterCard({
               fontWeight: 600,
               padding: '2px 8px',
               borderRadius: 20,
-              color: selected ? '#ff8d5c' : 'rgba(255,255,255,0.55)',
+              color: selected ? '#7c6cf0' : 'rgba(255,255,255,0.55)',
               background: selected
-                ? 'rgba(255,141,92,0.1)'
+                ? 'rgba(124,108,240,0.1)'
                 : 'rgba(255,255,255,0.05)',
             }}
           >
@@ -420,11 +421,11 @@ function ActionButton({ label, onClick, muted = false }: ActionButtonProps) {
       style={{
         padding: '5px 10px',
         borderRadius: 8,
-        background: muted ? 'rgba(255,255,255,0.04)' : 'rgba(255,141,92,0.1)',
+        background: muted ? 'rgba(255,255,255,0.04)' : 'rgba(124,108,240,0.1)',
         border: `1px solid ${
-          muted ? 'rgba(255,255,255,0.1)' : 'rgba(255,141,92,0.28)'
+          muted ? 'rgba(255,255,255,0.1)' : 'rgba(124,108,240,0.28)'
         }`,
-        color: muted ? 'rgba(255,255,255,0.55)' : '#ff8d5c',
+        color: muted ? 'rgba(255,255,255,0.55)' : '#7c6cf0',
         fontSize: 11,
         fontWeight: 600,
         fontFamily: 'inherit',

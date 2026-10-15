@@ -17,7 +17,7 @@ use crate::config::defaults::MAX_SSE_LINE_BYTES;
 /// Which flavor of `/v1` server a request targets. Decided at the route
 /// dispatch (where the provider kind is known) and carried into the error
 /// classifiers so user-facing copy matches the provider: the bundled engine
-/// speaks about "Thuki's engine" and points at Settings, while any other
+/// speaks about "Veilura's engine" and points at Settings, while any other
 /// OpenAI-compatible server keeps provider-neutral wording.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum V1Flavor {
@@ -138,7 +138,7 @@ pub(crate) fn to_openai_message(msg: &ChatMessage) -> serde_json::Value {
 /// mirroring `classify_stream_error` on the native path:
 /// connect/timeout failures are `EngineUnreachable`, everything else
 /// (e.g. a connection reset mid-stream) is `Other`. The unreachable copy
-/// branches on `flavor`: the bundled engine is Thuki's own process (the
+/// branches on `flavor`: the bundled engine is Veilura's own process (the
 /// next message re-ensures it), while a remote server keeps neutral wording.
 fn classify_v1_transport_error(e: &reqwest::Error, flavor: V1Flavor) -> EngineError {
     if e.is_connect() || e.is_timeout() {
@@ -156,7 +156,7 @@ fn classify_v1_transport_error(e: &reqwest::Error, flavor: V1Flavor) -> EngineEr
 /// Copy for an unreachable `/v1` server, keyed by flavor. Shared by the
 /// streaming classifier above and the search pipeline's structured-output
 /// error mapping so each flavor's unreachable copy lives in exactly one
-/// place. The bundled engine is Thuki's own process (the next message
+/// place. The bundled engine is Veilura's own process (the next message
 /// re-ensures it); a remote server keeps neutral wording plus the transport
 /// detail.
 pub(crate) fn v1_unreachable_error(detail: &str, flavor: V1Flavor) -> EngineError {
@@ -164,7 +164,7 @@ pub(crate) fn v1_unreachable_error(detail: &str, flavor: V1Flavor) -> EngineErro
         kind: EngineErrorKind::EngineUnreachable,
         message: match flavor {
             V1Flavor::Builtin => {
-                "Thuki's engine isn't running\nSend your message again to restart it.".to_string()
+                "Veilura's engine isn't running\nSend your message again to restart it.".to_string()
             }
             V1Flavor::Remote => format!("The inference server could not be reached.\n{detail}"),
         },
@@ -853,11 +853,11 @@ mod tests {
         assert_eq!(accumulated, "");
     }
 
-    /// Builtin flavor: an unreachable sidecar reads as Thuki's own engine
+    /// Builtin flavor: an unreachable sidecar reads as Veilura's own engine
     /// being down, not as a generic "inference server". The full string is
     /// pinned: it is rendered verbatim by ErrorCard.
     #[tokio::test]
-    async fn connect_refused_builtin_names_thukis_engine() {
+    async fn connect_refused_builtin_names_veiluras_engine() {
         // Bind then drop a listener so the port is closed.
         let port = {
             let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
@@ -882,7 +882,7 @@ mod tests {
         assert!(matches!(
             &chunks[0],
             StreamChunk::Error(e) if e.kind == EngineErrorKind::EngineUnreachable
-                && e.message == "Thuki's engine isn't running\nSend your message again to restart it."
+                && e.message == "Veilura's engine isn't running\nSend your message again to restart it."
         ));
         assert_eq!(accumulated, "");
     }

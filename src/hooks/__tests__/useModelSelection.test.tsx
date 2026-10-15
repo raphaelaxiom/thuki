@@ -421,7 +421,7 @@ describe('useModelSelection', () => {
     });
   });
 
-  it('refreshes the picker when thuki://config-updated fires', async () => {
+  it('refreshes the picker when veilura://config-updated fires', async () => {
     // A model change made from the other window (the Settings panel) writes
     // config and broadcasts config-updated; the picker must re-pull so its
     // active model and list match the new backend truth without a remount.
@@ -442,7 +442,7 @@ describe('useModelSelection', () => {
     expect(result.current.activeModel).toBe('gemma4:e2b');
 
     await act(async () => {
-      emitTauriEvent('thuki://config-updated', null);
+      emitTauriEvent('veilura://config-updated', null);
     });
 
     expect(result.current.activeModel).toBe('qwen2.5:7b');
@@ -461,7 +461,7 @@ describe('useModelSelection', () => {
 
     unmount();
     await act(async () => {
-      emitTauriEvent('thuki://config-updated', null);
+      emitTauriEvent('veilura://config-updated', null);
     });
 
     expect(invoke.mock.calls.length).toBe(callsBeforeUnmount);

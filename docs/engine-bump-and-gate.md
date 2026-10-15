@@ -1,6 +1,6 @@
 # Keeping the bundled engine current
 
-Two pieces keep Thuki's bundled llama.cpp engine fresh without shipping a regression, and both follow how the field actually does it (Ollama gates a `LLAMA_CPP_VERSION` change with a build; Jan/cortex gate a submodule bump with a build + real-model E2E smoke):
+Two pieces keep Veilura's bundled llama.cpp engine fresh without shipping a regression, and both follow how the field actually does it (Ollama gates a `LLAMA_CPP_VERSION` change with a build; Jan/cortex gate a submodule bump with a build + real-model E2E smoke):
 
 1. **Engine Regression Gate** — builds the engine and proves it loads a real model and runs real inference correctly. Runs on every PR; the hard gate on bump PRs.
 2. **Renovate** — opens scheduled, review-gated PRs that advance the pin. Never auto-merged.
@@ -13,7 +13,7 @@ The pin is two constants in `scripts/ensure-llama-server.ts`: `LLAMA_CPP_TAG` an
 
 1. Builds the shipped engine through the real `bun run engine:ensure` — so a changed dylib closure, a broken macOS-floor audit, or a signing failure trips here, not in a user's hands.
 2. Verifies `codesign -vv` on the `llama-server` binary and every bundled dylib.
-3. Downloads the pinned gate model (verified by sha256, cached) and drives it through `llama-server`'s `/v1/chat/completions` endpoint — Thuki's real runtime path, so a broken chat template is caught — with greedy decoding (per-request `samplers: ["top_k"]`, `top_k: 1`, `seed: 0`, penalties off).
+3. Downloads the pinned gate model (verified by sha256, cached) and drives it through `llama-server`'s `/v1/chat/completions` endpoint — Veilura's real runtime path, so a broken chat template is caught — with greedy decoding (per-request `samplers: ["top_k"]`, `top_k: 1`, `seed: 0`, penalties off).
 4. Asserts the answers are **semantically** correct, not byte-identical to a frozen golden (greedy output is only reproducible on the same build + hardware, so a golden would false-fail across a bump while real breakage — crash, garbage, broken template, unsupported architecture — still trips).
 5. Reads the generation throughput from llama-server's own timings and prints the tok/s in the job summary as an **informational** signal. It does not gate. The hosted macOS runner's throughput for this model swings across a wide band, so a floor set anywhere useful fired on runner noise instead of on breakage, and it never once caught a CPU fallback (Metal was live in every failing run). Performance is judged by the human review on the (rare) bump PR: a deliberate choice not to chase a noisy absolute perf baseline on shared CI runners.
 
@@ -34,7 +34,7 @@ The one place the field is demonstrably weak is performance: Ollama shipped a [~
 `.github/renovate.json` defines a scoped custom manager that tracks `ggml-org/llama.cpp` tags and bumps `LLAMA_CPP_TAG` (+ the pinned `LLAMA_CPP_COMMIT` digest) in `scripts/ensure-llama-server.ts`:
 
 - **Scoped**: `enabledManagers: ["custom.regex"]` so Renovate only manages this one pin and does not fight the repo's existing Dependabot config.
-- **Cadence + cooldown**: `schedule` is weekly; `minimumReleaseAge: "3 days"` is the cooldown that lets a broken same-day upstream build surface before Thuki rolls to it.
+- **Cadence + cooldown**: `schedule` is weekly; `minimumReleaseAge: "3 days"` is the cooldown that lets a broken same-day upstream build surface before Veilura rolls to it.
 - **Versioning**: `regex:^b(?<major>\\d+)$` orders llama.cpp's `bNNNN` tags correctly.
 - **Never auto-merged**: the PR is human-reviewed, and the Engine Regression Gate is the hard check on it.
 

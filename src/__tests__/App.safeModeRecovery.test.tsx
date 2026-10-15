@@ -110,10 +110,10 @@ describe('App - safe-mode recovery (issue #296)', () => {
     await act(async () => {});
 
     await act(async () => {
-      emitTauriEvent('thuki://onboarding', { stage: 'permissions' });
+      emitTauriEvent('veilura://onboarding', { stage: 'permissions' });
     });
 
-    expect(screen.getByText("Let's get Thuki set up")).toBeInTheDocument();
+    expect(screen.getByText("Let's get Veilura set up")).toBeInTheDocument();
     expect(screen.queryByText(RECOVERY_HEADLINE)).not.toBeInTheDocument();
   });
 
@@ -297,7 +297,7 @@ describe('App - safe-mode recovery (issue #296)', () => {
     // overlay having been shown at least once - unlike the recovery screen
     // itself, which renders unconditionally as an early return.
     await act(async () => {
-      emitTauriEvent('thuki://visibility', {
+      emitTauriEvent('veilura://visibility', {
         state: 'show',
         selected_text: null,
         window_x: null,
@@ -403,7 +403,7 @@ describe('App - safe-mode recovery (issue #296)', () => {
     });
 
     await act(async () => {
-      emitTauriEvent('thuki://config-updated', {});
+      emitTauriEvent('veilura://config-updated', {});
     });
 
     expect(screen.queryByText(RECOVERY_HEADLINE)).not.toBeInTheDocument();

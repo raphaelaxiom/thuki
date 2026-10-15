@@ -3,7 +3,7 @@
  * global Tauri events the Settings Providers pane uses for its status line
  * (`engine:status`, `warmup:builtin-warming` / `warmup:builtin-warmed`, all
  * emitted app-wide so any window can subscribe). Ollama has no equivalent
- * signal for either, since Thuki does not manage its process, so `warming`
+ * signal for either, since Veilura does not manage its process, so `warming`
  * never flips true and `engineState` stays at its initial value while
  * Ollama is the active provider.
  *

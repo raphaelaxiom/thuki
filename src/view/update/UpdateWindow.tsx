@@ -150,7 +150,7 @@ export function UpdateWindow() {
 
   return (
     <div
-      className="update-window-shell font-sans flex h-screen w-screen flex-col overflow-hidden rounded-[10px] border border-[rgba(255,141,92,0.12)] border-t-[rgba(255,141,92,0.2)] text-text-primary"
+      className="update-window-shell font-sans flex h-screen w-screen flex-col overflow-hidden rounded-[10px] border border-[rgba(124,108,240,0.12)] border-t-[rgba(124,108,240,0.2)] text-text-primary"
       onMouseDown={handleDragStart}
     >
       <WindowControls onClose={close} />
@@ -159,12 +159,12 @@ export function UpdateWindow() {
         <>
           <header className="flex flex-col items-center px-12 pt-7 pb-6 text-center">
             <img
-              src="/thuki-logo.png"
-              alt="Thuki"
+              src="/veilura-logo.png"
+              alt="Veilura"
               className="h-[76px] w-[76px] object-contain"
             />
             <h1 className="mt-4 text-[18px] font-bold tracking-[-0.2px] text-text-primary">
-              A new version of Thuki is available!
+              A new version of Veilura is available!
             </h1>
             <p className="mt-2 text-[13px] leading-[1.5] whitespace-nowrap text-text-secondary">
               {`Version ${update.version}`}
@@ -214,7 +214,7 @@ export function UpdateWindow() {
             <button
               type="button"
               onClick={handleInstall}
-              className="ml-2 shrink-0 rounded-lg border border-[rgba(255,141,92,0.3)] bg-[rgba(255,141,92,0.12)] px-[14px] py-[7px] text-[12px] font-medium whitespace-nowrap text-primary transition-colors duration-150 hover:bg-[rgba(255,141,92,0.18)] hover:border-[rgba(255,141,92,0.42)] cursor-pointer"
+              className="ml-2 shrink-0 rounded-lg border border-[rgba(124,108,240,0.3)] bg-[rgba(124,108,240,0.12)] px-[14px] py-[7px] text-[12px] font-medium whitespace-nowrap text-primary transition-colors duration-150 hover:bg-[rgba(124,108,240,0.18)] hover:border-[rgba(124,108,240,0.42)] cursor-pointer"
             >
               Install Update
             </button>
@@ -225,7 +225,7 @@ export function UpdateWindow() {
           className="flex flex-1 items-center justify-center px-6 text-[13px] text-text-secondary"
           data-testid="update-empty"
         >
-          Thuki is up to date.
+          Veilura is up to date.
         </div>
       )}
     </div>

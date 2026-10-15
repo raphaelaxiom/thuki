@@ -134,7 +134,7 @@ export function downloadFailureMessage(kind: DownloadUiFailKind): string {
     case 'disk_full':
       return 'Not enough disk space.';
     case 'engine':
-      return "Thuki's engine could not start.";
+      return "Veilura's engine could not start.";
     case 'other':
       return 'Model download failed.';
   }

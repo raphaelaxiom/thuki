@@ -317,7 +317,7 @@ fn mark_crashed_sets_state() {
 }
 
 /// The lock fd is opened CLOEXEC, so it cannot leak into the spawned
-/// `llama-server` child and outlive Thuki. Asserted directly rather than
+/// `llama-server` child and outlive Veilura. Asserted directly rather than
 /// trusting Rust's default.
 #[test]
 fn session_lock_fd_is_cloexec() {

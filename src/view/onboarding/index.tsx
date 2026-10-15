@@ -7,7 +7,7 @@ import type { DownloadStripStatus } from '../../components/DownloadStatusStrip';
 /**
  * Stage values mirror the Rust `OnboardingStage` enum exactly. The
  * backend emits these strings as the `stage` field on the
- * `thuki://onboarding` event; any drift here breaks the dispatch.
+ * `veilura://onboarding` event; any drift here breaks the dispatch.
  */
 export type OnboardingStage =
   | 'permissions'

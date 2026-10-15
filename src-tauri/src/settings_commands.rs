@@ -63,7 +63,7 @@ use crate::config::{
 /// backend-side consumers (e.g. `ask_model` reading `State<RwLock<AppConfig>>` per
 /// invocation) see config edits; frontend-driven values like window dims
 /// stay frozen at the mount-time snapshot.
-pub const CONFIG_UPDATED_EVENT: &str = "thuki://config-updated";
+pub const CONFIG_UPDATED_EVENT: &str = "veilura://config-updated";
 
 /// Emits `CONFIG_UPDATED_EVENT` to every webview. Errors are intentionally
 /// swallowed: an emit failure must not break a successful disk write.
@@ -215,10 +215,10 @@ fn unload_engine_if_builtin_deactivated(app: &AppHandle, prior_kind: &str, resol
 
 /// Fires a best-effort Ollama eviction when a config write switched the active
 /// provider away from Ollama (ollama -> builtin/openai). The mirror of
-/// [`unload_engine_if_builtin_deactivated`]: without it the model Thuki loaded
+/// [`unload_engine_if_builtin_deactivated`]: without it the model Veilura loaded
 /// into Ollama's VRAM lingers for its `keep_alive` TTL after the user has moved
 /// on, holding memory for a provider that is no longer active. Only the model
-/// Thuki was chatting with (the Ollama provider's configured `model`) is
+/// Veilura was chatting with (the Ollama provider's configured `model`) is
 /// evicted; models other apps loaded are left alone. Spawned so the switch
 /// never blocks on, nor can fail because of, Ollama being unreachable.
 #[cfg_attr(coverage_nightly, coverage(off))]
@@ -227,7 +227,7 @@ fn evict_ollama_if_deactivated(app: &AppHandle, prior_kind: &str, resolved: &App
         return;
     }
     // The provider switch moves only the active_provider pointer; the Ollama
-    // provider entry still carries the model + endpoint Thuki was using.
+    // provider entry still carries the model + endpoint Veilura was using.
     let Some(ollama) = resolved
         .inference
         .providers
@@ -296,7 +296,7 @@ pub fn set_config_field(
         resolved
     };
     // Hot-swap the live trace recorder on `[debug] trace_enabled` flips
-    // so the user does not need to restart Thuki for the toggle to
+    // so the user does not need to restart Veilura for the toggle to
     // take effect. Off → On installs a fresh `RegistryRecorder` rooted
     // at `app_data_dir()/traces/`; On → Off installs a `NoopRecorder`,
     // which lets in-flight streaming tasks finish writing through their
@@ -308,7 +308,7 @@ pub fn set_config_field(
     }
     // Forward an `[inference] keep_warm_inactivity_minutes` change to the
     // engine runner so the new residency policy applies without restarting
-    // Thuki.
+    // Veilura.
     forward_keep_warm_idle_minutes(&app, prior_keep_warm_minutes, &resolved);
     // Enforce a changed `[debug] trace_retention_days` immediately so a
     // shortened window reclaims disk without waiting for the next launch.
@@ -1184,7 +1184,7 @@ pub(crate) fn traces_root(app: &AppHandle) -> PathBuf {
     app.path()
         .app_data_dir()
         .map(|d| d.join("traces"))
-        .unwrap_or_else(|_| std::env::temp_dir().join("thuki").join("traces"))
+        .unwrap_or_else(|_| std::env::temp_dir().join("veilura").join("traces"))
 }
 
 /// Deletes every recorded trace under `root`, leaving an empty root in place.

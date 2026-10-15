@@ -22,7 +22,7 @@ body:
       label: Steps to Reproduce
       description: Exact steps to reproduce the behavior.
       placeholder: |
-        1. Open Thuki with ...
+        1. Open Veilura with ...
         2. Type ...
         3. See error
     validations:
@@ -53,10 +53,10 @@ body:
       required: true
 
   - type: input
-    id: thuki-version
+    id: veilura-version
     attributes:
-      label: Thuki Version
-      placeholder: e.g. v0.1.0 (from the tray menu or GitHub Releases)
+      label: Veilura Version
+      placeholder: e.g. v1.0.0 (from the tray menu or GitHub Releases)
     validations:
       required: true
 

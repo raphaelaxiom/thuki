@@ -26,7 +26,7 @@ const HOUSE_EASE = [0.16, 1, 0.3, 1] as const;
 
 /** Scope description shown in the section heading's `?` tooltip. */
 const SECTION_HELP =
-  'Models you chose to load past the "may not fit in memory" warning. Thuki will not warn you about these again, except when a model is at serious risk of freezing your Mac.';
+  'Models you chose to load past the "may not fit in memory" warning. Veilura will not warn you about these again, except when a model is at serious risk of freezing your Mac.';
 
 interface DismissedMemoryFitSectionProps {
   /** Current resolved config; its `behavior.dismissed_memory_fit_models` drives

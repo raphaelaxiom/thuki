@@ -243,7 +243,7 @@
 }
 .disclose:hover:not(:disabled) {
   color: var(--t1);
-  border-color: rgba(255, 141, 92, 0.4);
+  border-color: rgba(124, 108, 240, 0.4);
 }
 .disclose:disabled {
   color: var(--t3);
@@ -272,7 +272,7 @@
 }
 .loadMore:hover {
   color: var(--accent);
-  border-color: rgba(255, 141, 92, 0.4);
+  border-color: rgba(124, 108, 240, 0.4);
 }
 
 /* ── Accordion: per-repo quant choices ────────────────────────────────── */
@@ -313,7 +313,7 @@
   display: grid;
   place-items: center;
   color: var(--accent);
-  border: 1px solid rgba(255, 141, 92, 0.4);
+  border: 1px solid rgba(124, 108, 240, 0.4);
   border-radius: var(--radius-control);
   background: transparent;
   cursor: pointer;
@@ -331,7 +331,7 @@
   stroke-linejoin: round;
 }
 .quantGet:hover {
-  border-color: rgba(255, 141, 92, 0.6);
+  border-color: rgba(124, 108, 240, 0.6);
   background: var(--accent-soft);
 }
 

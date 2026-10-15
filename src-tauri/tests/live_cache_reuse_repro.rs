@@ -33,25 +33,25 @@ use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
 use tokio_util::sync::CancellationToken;
 
-use thuki_agent_lib::commands::ChatMessage;
-use thuki_agent_lib::net::reachability::DnsReachability;
-use thuki_agent_lib::net::transport::ReqwestTransport;
-use thuki_agent_lib::trace::{BoundRecorder, ConversationId};
-use thuki_agent_lib::websearch::assemble::{assemble_context, SourceBlock};
-use thuki_agent_lib::websearch::cache::{CachedSearch, SourceCache, TtlSourceCache};
-use thuki_agent_lib::websearch::engine::EngineHealth;
-use thuki_agent_lib::websearch::fetch::FetchedPage;
-use thuki_agent_lib::websearch::judge::{
+use veilura_agent_lib::commands::ChatMessage;
+use veilura_agent_lib::net::reachability::DnsReachability;
+use veilura_agent_lib::net::transport::ReqwestTransport;
+use veilura_agent_lib::trace::{BoundRecorder, ConversationId};
+use veilura_agent_lib::websearch::assemble::{assemble_context, SourceBlock};
+use veilura_agent_lib::websearch::cache::{CachedSearch, SourceCache, TtlSourceCache};
+use veilura_agent_lib::websearch::engine::EngineHealth;
+use veilura_agent_lib::websearch::fetch::FetchedPage;
+use veilura_agent_lib::websearch::judge::{
     InsufficiencyReason, SufficiencyJudge, SufficiencyVerdict,
 };
-use thuki_agent_lib::websearch::orchestrator::{
+use veilura_agent_lib::websearch::orchestrator::{
     run_search, SearchDeps, SearchOutcome, Synthesizer,
 };
-use thuki_agent_lib::websearch::prepass::{
+use veilura_agent_lib::websearch::prepass::{
     InferenceError, PrePass, PrePassDecision, SearchDecision, SearchRoute,
 };
-use thuki_agent_lib::websearch::rank::{select_chunks, Bm25Scorer};
-use thuki_agent_lib::websearch::serp_cache::WebCache;
+use veilura_agent_lib::websearch::rank::{select_chunks, Bm25Scorer};
+use veilura_agent_lib::websearch::serp_cache::WebCache;
 
 /// The classifier stand-in: a fixed `cached` / `web`-route decision for the
 /// follow-up, exactly what the live trace showed the model return on turn 2.
@@ -240,7 +240,7 @@ fn elon_pages() -> Vec<FetchedPage> {
 async fn cache_reuse_repro_delivers_birthdate_to_the_reuse_gate() {
     let cache = TtlSourceCache::new(
         std::time::Duration::from_secs(600),
-        thuki_agent_lib::config::defaults::SEARCH_CACHE_MAX_ENTRIES,
+        veilura_agent_lib::config::defaults::SEARCH_CACHE_MAX_ENTRIES,
     );
     // Store EXACTLY as production's `run_engine_tier` does: the real byte caps
     // run inside `store` (`bound_pages`).
@@ -315,7 +315,7 @@ async fn cache_reuse_repro_delivers_birthdate_to_the_reuse_gate() {
         64,
         128,
     );
-    let timings = thuki_agent_lib::websearch::stage_timing::TimingBag::new();
+    let timings = veilura_agent_lib::websearch::stage_timing::TimingBag::new();
     let deps = SearchDeps {
         prepass: &prepass,
         judge: &judge,

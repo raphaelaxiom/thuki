@@ -1,7 +1,7 @@
 /**
  * Built-in-only gate for the Library and Discover panes.
  *
- * Library and Discover manage models for Thuki's bundled engine. While another
+ * Library and Discover manage models for Veilura's bundled engine. While another
  * provider (Ollama, OpenAI) is active they do not apply, but hiding them would
  * bury the built-in engine and leave on-device models undiscoverable. Instead
  * the real pane stays mounted behind a dimmed, inert layer (so the user sees

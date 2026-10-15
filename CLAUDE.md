@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Rebrand note:** Veilura 1.0.0 is a rebrand of Thuki (name, logo, bundle ID `com.veilura.app`, config dir, version). See [REBRAND.md](REBRAND.md) for the rename map, the domain/updater placeholders, and the full list of intentional `Thuki` remnants (frozen workflows, historical changelog/evidence, third-party names). Do not "fix" those remnants back.
+
 ## Commands
 
 All commands use **Bun** as the package manager.
@@ -46,9 +48,9 @@ Tests use **Vitest** for the frontend (React/TypeScript with React Testing Libra
 
 ## Since v0.15
 
-Since v0.15, Thuki ships its own inference engine and is local-first out of the box. This is the headline shift: where earlier versions talked only to a separately installed Ollama, Thuki now runs models itself with nothing to set up. This is the at-a-glance map of what changed; the engine and model-library internals are detailed in `docs/models-and-providers.md`.
+Since v0.15, Veilura ships its own inference engine and is local-first out of the box. This is the headline shift: where earlier versions talked only to a separately installed Ollama, Veilura now runs models itself with nothing to set up. This is the at-a-glance map of what changed; the engine and model-library internals are detailed in `docs/models-and-providers.md`.
 
-- **Built-in engine is the default provider**: a bundled llama.cpp `llama-server` sidecar, fully managed by Thuki (spawned, health-checked, kept warm, and killed on quit). See `src-tauri/src/engine/` and `docs/models-and-providers.md`.
+- **Built-in engine is the default provider**: a bundled llama.cpp `llama-server` sidecar, fully managed by Veilura (spawned, health-checked, kept warm, and killed on quit). See `src-tauri/src/engine/` and `docs/models-and-providers.md`.
 - **In-app model library**: download GGUF models from Hugging Face (curated Staff picks + raw Browse all) without a terminal, into a content-addressed blob store, resumable and SHA-256 verified. See `src-tauri/src/models/`.
 - **Providers**: built-in (default) and Ollama for end users; an OpenAI-compatible `openai` kind exists in code but stays gated and is not exposed to end users. Switching providers frees the deactivated one's memory, so only one is resident at a time. See `src-tauri/src/config/` and `src-tauri/src/commands.rs`.
 - **Keep Warm, RAM-fit hint, and reasoning via `/think`**: a residency knob that holds the model in memory between messages, a Comfortable/Tight/Heavy memory-fit verdict per model, and opt-in per-message reasoning.
@@ -57,7 +59,7 @@ Since v0.15, Thuki ships its own inference engine and is local-first out of the 
 
 ## Architecture
 
-Thuki is a macOS-only desktop app, a floating AI secretary activated by double-tapping the Control key. Project homepage: [thuki.app](https://www.thuki.app/). It is a **Tauri v2** app (Rust backend + React/TypeScript frontend) that ships its own inference engine: a bundled **llama.cpp** `llama-server` sidecar spawned and supervised by the backend (the default provider on fresh installs). It can instead talk to a locally running **Ollama** instance (default `http://127.0.0.1:11434`) or any OpenAI-compatible `/v1` server.
+Veilura is a macOS-only desktop app, a floating AI secretary activated by double-tapping the Control key. Project homepage: [veilura.online](https://veilura.online/). It is a **Tauri v2** app (Rust backend + React/TypeScript frontend) that ships its own inference engine: a bundled **llama.cpp** `llama-server` sidecar spawned and supervised by the backend (the default provider on fresh installs). It can instead talk to a locally running **Ollama** instance (default `http://127.0.0.1:11434`) or any OpenAI-compatible `/v1` server.
 
 ### Frontend (`src/`)
 
@@ -80,12 +82,12 @@ User-facing reference for all commands lives in `docs/commands.md`. **Any new sl
 ### Backend (`src-tauri/src/`)
 
 - **`lib.rs`**: app setup: loads `AppConfig` via `config::load`, converts window to NSPanel (fullscreen overlay), registers tray, spawns hotkey listener, spawns the engine runner actor, intercepts close events (hides instead of quits), and on `RunEvent::Exit` kills the engine sidecar and awaits its confirmed exit so no orphan `llama-server` survives quit
-- **`config/`**: typed TOML-backed configuration, loaded once at startup from `~/Library/Application Support/com.quietnode.thuki/config.toml` (seeded with defaults on first run), installed as Tauri managed state, and exposed to the frontend via `get_config`. Subsystems read model, prompt, window, activation, and quote values from `State<AppConfig>`. The `[inference]` section holds `active_provider` (defaults to `builtin`), `num_ctx`, `keep_warm_inactivity_minutes` (the unified residency knob for both local providers), and the typed providers list (`[[inference.providers]]`, each `{id, kind, label, base_url, model, vision}`; `kind` is `builtin`, `ollama`, or `openai`, anything else is dropped on load). The loader heals the built-in label to the current default and migrates older configs in place (a legacy `ollama_url` becomes an Ollama provider; `config/migrate.rs` folds a legacy SQLite `active_model` onto an Ollama-kind active provider). See `docs/configurations.md` for the user-facing schema.
+- **`config/`**: typed TOML-backed configuration, loaded once at startup from `~/Library/Application Support/com.veilura.app/config.toml` (seeded with defaults on first run), installed as Tauri managed state, and exposed to the frontend via `get_config`. Subsystems read model, prompt, window, activation, and quote values from `State<AppConfig>`. The `[inference]` section holds `active_provider` (defaults to `builtin`), `num_ctx`, `keep_warm_inactivity_minutes` (the unified residency knob for both local providers), and the typed providers list (`[[inference.providers]]`, each `{id, kind, label, base_url, model, vision}`; `kind` is `builtin`, `ollama`, or `openai`, anything else is dropped on load). The loader heals the built-in label to the current default and migrates older configs in place (a legacy `ollama_url` becomes an Ollama provider; `config/migrate.rs` folds a legacy SQLite `active_model` onto an Ollama-kind active provider). See `docs/configurations.md` for the user-facing schema.
 - **`commands.rs`**: `ask_model` Tauri command: routes by the active provider's kind. `builtin` resolves the installed model from the manifest, ensures the sidecar is loaded via the engine runner, and streams OpenAI-compatible `/v1/chat/completions` SSE through `openai.rs` (`V1Flavor::Builtin`); on the builtin path it may run `run_builtin_search` (Auto search gate or `/search` `force_search`) before the writer chat stream, emitting `StreamChunk::SearchStatus` / `SearchSources`. `ollama` streams the native `/api/chat` newline-delimited JSON; `openai` streams `/v1` SSE against the provider's `base_url` (`V1Flavor::Remote`). All paths emit the same `StreamChunk` contract via Tauri Channel and read the active provider, the resolved system prompt, and the in-memory `ActiveModelState` from managed state. Built-in web search does not run on Ollama/OpenAI providers.
 - **`websearch/`**: keyless search pipeline (builtin provider only). Stages: `prefilter` → `prepass` (classifier) → optional `clock` / conversation page `cache` (gated reuse) / `serp_cache` → verticals (`weather`, `news`, `encyclopedia`, `sports`) + `judge` → `engine` (DDG/Mojeek + RRF + `credibility`) → `fetch` → `rank` / `recency` / `evidence` → `assemble` → `writer` → `cite_check`, orchestrated by `orchestrator` (`run_search` / `run_search_forced`). Constants live in `config/defaults.rs`. Design handbook: `docs/built-in-web-search.md`. Config tables: `docs/configurations.md`. Eval: `docs/search-eval.md`.
 - **`net/`**: SSRF-safe outbound HTTP shared by search (`ssrf` default-deny private IPs; `transport::HttpTransport` with pinned DNS, redirect re-check, size caps). Every keyless engine, vertical API, and page fetch must go through this transport; do not add ad-hoc `reqwest` clients for search egress.
 - **`keychain.rs`**: write-only storage for `openai`-provider API keys in the macOS Keychain via the `keyring` crate. The Keychain is the only place keys ever live: they are never written to the TOML config and never returned to the frontend (only existence is queryable via `has_provider_api_key`); the `SecretStore` trait decouples callers from the real Keychain for tests.
-- **`screenshot.rs`** — `capture_full_screen_command` Tauri command: uses CoreGraphics FFI (`CGWindowListCreateImage`) to capture all displays excluding Thuki's own windows, writes a JPEG to a temp dir, and returns the path
+- **`screenshot.rs`** — `capture_full_screen_command` Tauri command: uses CoreGraphics FFI (`CGWindowListCreateImage`) to capture all displays excluding Veilura's own windows, writes a JPEG to a temp dir, and returns the path
 - **`activator.rs`** — Core Graphics event tap watching for double-tap Control key (400 ms window, 600 ms cooldown; timing is a compiled constant, not yet exposed through `AppConfig` because the event-tap callback runs in a thread that cannot trivially read Tauri managed state). The tap MUST use `CGEventTapLocation::HID` and `CGEventTapOptions::Default` — see the critical constraint note in "Key Design Constraints" below.
 
 ### IPC Pattern
@@ -101,7 +103,7 @@ Frontend calls Tauri commands via `@tauri-apps/api/core`. Streaming uses Tauri's
 
 ## Configuration System
 
-Thuki has a single, typed configuration system rooted in `src-tauri/src/config/`. Read `docs/configurations.md` for the user-facing schema. The rules below tell you how the pieces fit so you can extend it without drift.
+Veilura has a single, typed configuration system rooted in `src-tauri/src/config/`. Read `docs/configurations.md` for the user-facing schema. The rules below tell you how the pieces fit so you can extend it without drift.
 
 ### Single source of truth
 
@@ -109,7 +111,7 @@ Every default value and every numeric bound lives in **`config/defaults.rs`** as
 
 ### Layered structure
 
-- **`config/defaults.rs`** — every constant Thuki uses. Tunable defaults, hard bounds, and baked-in pipeline constants all live here.
+- **`config/defaults.rs`** — every constant Veilura uses. Tunable defaults, hard bounds, and baked-in pipeline constants all live here.
 - **`config/schema.rs`** — typed TOML shape (`AppConfig` + per-section structs like `WindowSection`). Each section has a manual `Default` impl that pulls from `defaults.rs`. Use `#[serde(default)]` on every section so partial files load cleanly.
 - **`config/loader.rs`** — read → parse → resolve. `resolve` empties strings to defaults, clamps numerics via `clamp_u32`/`clamp_u64`/`clamp_f64`, composes the prompt appendix, and applies any cross-field corrections a section needs. Unknown keys and whole unknown sections are silently ignored (no `deny_unknown_fields`), so a config written by an older build still loads clean.
 - **`config/writer.rs`** — atomic write used to seed the file on first run.
@@ -194,7 +196,7 @@ Never commit files generated by superpowers skills (design specs, implementation
 
 ## GStack Design Tooling Fallback
 
-When a GStack design skill (`/design-shotgun`, `/design-html`, etc.) fails because no OpenAI API key is configured, do not block on a setup prompt. Fall back to hand-crafted HTML wireframes built from the real Thuki design tokens read directly from source (`src/view/onboarding/*`, `src/components/`); these beat image generation because they use the exact CSS values. Write them under `~/.gstack/projects/quiet-node-thuki/designs/<screen>-<date>/`, open with `open file://...`, and mention the missing key only as a one-line aside.
+When a GStack design skill (`/design-shotgun`, `/design-html`, etc.) fails because no OpenAI API key is configured, do not block on a setup prompt. Fall back to hand-crafted HTML wireframes built from the real Veilura design tokens read directly from source (`src/view/onboarding/*`, `src/components/`); these beat image generation because they use the exact CSS values. Write them under `~/.gstack/projects/veilura-veilura/designs/<screen>-<date>/`, open with `open file://...`, and mention the missing key only as a one-line aside.
 
 ## Key Design Constraints
 
@@ -205,7 +207,7 @@ When a GStack design skill (`/design-shotgun`, `/design-html`, etc.) fails becau
 
 ### Motion and animation
 
-Any UI that transitions (expand/collapse, show/hide, morph, enter/exit, size change) **must** use a smooth, premium animation that matches Thuki's existing motion language. Instant pop-in/pop-out is a bug, not a default.
+Any UI that transitions (expand/collapse, show/hide, morph, enter/exit, size change) **must** use a smooth, premium animation that matches Veilura's existing motion language. Instant pop-in/pop-out is a bug, not a default.
 
 **Rules:**
 

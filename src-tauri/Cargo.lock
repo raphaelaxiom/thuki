@@ -4582,8 +4582,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "thuki"
-version = "0.16.3"
+name = "veilura"
+version = "1.0.0"
 dependencies = [
  "async-trait",
  "base64 0.23.0",

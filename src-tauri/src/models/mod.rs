@@ -743,11 +743,11 @@ pub async fn check_model_setup(
 /// `/api/show` `capabilities` array; unknown strings are ignored so future
 /// Ollama additions cannot break the schema.
 ///
-/// Thuki surfaces exactly two capability flags. `completion` is implicit
+/// Veilura surfaces exactly two capability flags. `completion` is implicit
 /// (every chat model supports it; absence is rendered as the "text" tag
 /// on the frontend). `tools`, embedding, and any future Ollama additions
 /// are intentionally dropped so the picker stays focused on the
-/// distinctions Thuki actually drives behavior off of.
+/// distinctions Veilura actually drives behavior off of.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Capabilities {
@@ -755,18 +755,18 @@ pub struct Capabilities {
     /// submit-time vision gate.
     #[serde(default)]
     pub vision: bool,
-    /// Model emits explicit reasoning tokens that Thuki renders in the
+    /// Model emits explicit reasoning tokens that Veilura renders in the
     /// ThinkingBlock UI.
     #[serde(default)]
     pub thinking: bool,
     /// Reasoning is structural and cannot be turned off (gpt-oss/Harmony,
-    /// DeepSeek-R1, QwQ, ...). Thuki still shows such a model's reasoning
+    /// DeepSeek-R1, QwQ, ...). Veilura still shows such a model's reasoning
     /// cleanly and marks it in the picker so the user is not surprised by the
     /// latency. `false` when reasoning is optional (off by default) or absent.
     #[serde(default)]
     pub reasoning_always: bool,
     /// Maximum number of images the model accepts in a single request, when
-    /// known. `None` means "unknown / unbounded by Thuki" and the gate lets
+    /// known. `None` means "unknown / unbounded by Veilura" and the gate lets
     /// the request through. Today this is keyed off the model architecture
     /// reported by `/api/show` (e.g. `mllama` → 1) because Ollama does not
     /// surface a declarative max-image count anywhere in its metadata.
@@ -780,7 +780,7 @@ pub struct Capabilities {
 /// the submit before the round-trip.
 ///
 /// Unknown architectures fall through to `None`, which the gate interprets
-/// as "no Thuki-side cap", trusting Ollama's runner as the final authority.
+/// as "no Veilura-side cap", trusting Ollama's runner as the final authority.
 /// New architectures only need to be added when we observe a hard,
 /// model-specific limit (today: `mllama`, used by llama3.2-vision).
 pub fn max_images_for_architecture(arch: &str) -> Option<u32> {
@@ -790,7 +790,7 @@ pub fn max_images_for_architecture(arch: &str) -> Option<u32> {
     }
 }
 
-/// Subset of the `/api/show` response that Thuki consumes. All other fields
+/// Subset of the `/api/show` response that Veilura consumes. All other fields
 /// (modelfile, parameters, template, etc.) are ignored.
 #[derive(Deserialize)]
 struct ShowResponse {
@@ -1228,14 +1228,14 @@ impl DownloadState {
 /// onboarding downloads) renders its live progress. Mirrors the cross-window
 /// [`crate::settings_commands::CONFIG_UPDATED_EVENT`] pattern; the payload is an
 /// [`ActiveDownload`] with a present `event`.
-pub const DOWNLOAD_PROGRESS_EVENT: &str = "thuki://download-progress";
+pub const DOWNLOAD_PROGRESS_EVENT: &str = "veilura://download-progress";
 
 /// Tauri event broadcast to every webview after the on-disk model set changes
 /// (currently: a partial download was discarded, deleting its file). A window
 /// that did not perform the discard re-reads its curated model list so the
 /// now-deleted partial stops showing as a "Paused / Resume / Discard" row.
 /// Mirrors the cross-window [`DOWNLOAD_PROGRESS_EVENT`] pattern; payloadless.
-pub const MODELS_CHANGED_EVENT: &str = "thuki://models-changed";
+pub const MODELS_CHANGED_EVENT: &str = "veilura://models-changed";
 
 /// A snapshot of one in-flight download for a window that did not start it: the
 /// slot `key`, the blob `shas` it writes (the cross-window match discriminator),
@@ -1614,7 +1614,7 @@ pub struct HfGgufPart {
     pub size_bytes: u64,
 }
 
-/// Subset of the HF `/api/models/<repo>?blobs=true` response Thuki consumes.
+/// Subset of the HF `/api/models/<repo>?blobs=true` response Veilura consumes.
 #[derive(Deserialize)]
 struct HfRepoInfo {
     /// Current commit SHA of the repo's default branch; pinned as the
@@ -1625,7 +1625,7 @@ struct HfRepoInfo {
     siblings: Vec<HfSibling>,
 }
 
-/// The slice of HF's parsed `gguf` metadata block Thuki reads. Present on a
+/// The slice of HF's parsed `gguf` metadata block Veilura reads. Present on a
 /// search row when the query requests `expand[]=gguf`. Untrusted external input:
 /// the context window is sanitized before use, and the chat template is only fed
 /// to the never-panicking [`reasoning::classify_reasoning`] classifier.
@@ -1711,7 +1711,7 @@ pub struct MmprojCompanion {
 ///
 /// Delegates to [`gguf_role::is_projector_companion_name`]: matches `mmproj*.gguf`
 /// and mid-name forms like `Bonsai-27B-mmproj-Q8_0.gguf`. Presence of such a
-/// sibling is Thuki's ground-truth vision signal for browse installs.
+/// sibling is Veilura's ground-truth vision signal for browse installs.
 fn is_mmproj(name: &str) -> bool {
     gguf_role::is_projector_companion_name(name)
 }
@@ -2086,7 +2086,7 @@ pub struct HfSearchPage {
     pub has_more: bool,
 }
 
-/// HF `pipeline_tag`s Thuki surfaces in Browse-all: plain text chat and
+/// HF `pipeline_tag`s Veilura surfaces in Browse-all: plain text chat and
 /// multimodal (image+text) chat. Every other tag (embeddings, translation,
 /// text-to-video, ...) is not a usable chat model and is dropped. This is an
 /// allowlist applied per row, replacing a single server-side `pipeline_tag`
@@ -2456,7 +2456,7 @@ async fn fetch_hf_search_inner(
 
 // ─── OpenAI-compatible model listing ─────────────────────────────────────────
 
-/// Subset of an OpenAI-compatible `/v1/models` response Thuki consumes.
+/// Subset of an OpenAI-compatible `/v1/models` response Veilura consumes.
 #[derive(Deserialize)]
 struct OpenAiModelsResponse {
     #[serde(default)]
@@ -2729,7 +2729,7 @@ pub fn heal_unclassified_reasoning(conn: &rusqlite::Connection, store: &storage:
     let pending = match manifest::list_unclassified(conn) {
         Ok(rows) => rows,
         Err(e) => {
-            eprintln!("thuki: [models] reasoning heal: failed to list rows: {e}");
+            eprintln!("veilura: [models] reasoning heal: failed to list rows: {e}");
             return;
         }
     };
@@ -2738,7 +2738,7 @@ pub fn heal_unclassified_reasoning(conn: &rusqlite::Connection, store: &storage:
             resolve_reasoning_flags(store, &row.repo, &row.file_name, &row.sha256);
         if let Err(e) = manifest::update_classification(conn, &row.id, thinking, reasoning_always) {
             eprintln!(
-                "thuki: [models] reasoning heal: failed to persist {}: {e}",
+                "veilura: [models] reasoning heal: failed to persist {}: {e}",
                 row.id
             );
         }
@@ -3234,7 +3234,7 @@ fn spawn_model_download(
         if result.is_ok() {
             let finalized = finalize_install(&app, &model);
             if let Err(e) = &finalized {
-                eprintln!("thuki: [models] failed to record installed model: {e}");
+                eprintln!("veilura: [models] failed to record installed model: {e}");
             }
             // Broadcast the terminal event too (AllDone / Failed) so observing
             // windows settle their cross-window rows; do it before releasing the
@@ -3303,7 +3303,7 @@ fn finalize_install(
     // Best-effort: the install itself succeeded, so a failure to reclaim the
     // superseded blobs must not fail the download; it only leaks disk space.
     if let Err(e) = store.remove_blobs(&orphans) {
-        eprintln!("thuki: [models] failed to remove superseded blobs: {e}");
+        eprintln!("veilura: [models] failed to remove superseded blobs: {e}");
     }
     let config = app.state::<parking_lot::RwLock<AppConfig>>();
     // Auto-select only the first model: adopt this download as the built-in

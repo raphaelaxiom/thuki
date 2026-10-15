@@ -22,7 +22,7 @@ describe('PermissionsStep', () => {
     render(<PermissionsStep />);
     await act(async () => {});
 
-    expect(screen.getByText("Let's get Thuki set up")).toBeInTheDocument();
+    expect(screen.getByText("Let's get Veilura set up")).toBeInTheDocument();
     expect(screen.getByText('Accessibility')).toBeInTheDocument();
     expect(
       screen.getByText('Needed for /screen to capture your entire screen'),
@@ -285,7 +285,7 @@ describe('PermissionsStep', () => {
       ).toBeInTheDocument();
 
       const quitButton = screen.getByRole('button', {
-        name: 'Quit and Reopen Thuki',
+        name: 'Quit and Reopen Veilura',
       });
       await act(async () => {
         fireEvent.click(quitButton);

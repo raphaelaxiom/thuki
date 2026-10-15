@@ -34,7 +34,7 @@ pub fn sanitize_assistant_content(input: &str) -> String {
 }
 
 /// True for ASCII control characters in `0x00..=0x1F` except the three
-/// whitespace controls Thuki actively renders (`\n`, `\t`, `\r`).
+/// whitespace controls Veilura actively renders (`\n`, `\t`, `\r`).
 fn is_unsafe_control_char(c: char) -> bool {
     let code = c as u32;
     code <= 0x1F && c != '\n' && c != '\t' && c != '\r'
@@ -486,13 +486,13 @@ pub fn engine_start_error(detail: &str) -> EngineError {
     {
         EngineError {
             kind: EngineErrorKind::ModelUnsupported,
-            message: "This file is a vision projector, not a chat model.\nDownload a text model GGUF; Thuki attaches the projector automatically when the repo includes one.".to_string(),
+            message: "This file is a vision projector, not a chat model.\nDownload a text model GGUF; Veilura attaches the projector automatically when the repo includes one.".to_string(),
         }
     } else if is_mmproj_mismatch(&lower) {
         // Wrong projector paired with text weights (n_embd / dim mismatch).
         EngineError {
             kind: EngineErrorKind::EngineStartFailed,
-            message: "Vision projector mismatch\nThis model's projector does not match the text weights. Re-download the model so Thuki can pick a matching mmproj, or choose another vision model.".to_string(),
+            message: "Vision projector mismatch\nThis model's projector does not match the text weights. Re-download the model so Veilura can pick a matching mmproj, or choose another vision model.".to_string(),
         }
     } else if lower.contains("unknown model architecture")
         || lower.contains("unknown architecture")
@@ -501,12 +501,12 @@ pub fn engine_start_error(detail: &str) -> EngineError {
     {
         EngineError {
             kind: EngineErrorKind::ModelUnsupported,
-            message: "Unsupported model\nThuki's engine doesn't support this model's architecture yet. Try another model; support expands as the engine updates.".to_string(),
+            message: "Unsupported model\nVeilura's engine doesn't support this model's architecture yet. Try another model; support expands as the engine updates.".to_string(),
         }
     } else if is_os_incompatible(&lower) {
         EngineError {
             kind: EngineErrorKind::EngineStartFailed,
-            message: "Thuki's engine could not start.\nYour version of macOS is too old for the built-in engine. Update macOS to use it.".to_string(),
+            message: "Veilura's engine could not start.\nYour version of macOS is too old for the built-in engine. Update macOS to use it.".to_string(),
         }
     } else {
         EngineError {
@@ -608,7 +608,7 @@ pub(crate) async fn stream_builtin_chat(
                 let stats = apply_capability_filter(&mut messages, &Capabilities::default());
                 if stats.stripped_images > 0 {
                     eprintln!(
-                        "thuki: [capability filter] model={} stripped_images={}",
+                        "veilura: [capability filter] model={} stripped_images={}",
                         model_id, stats.stripped_images
                     );
                 }
@@ -1504,10 +1504,10 @@ fn backstop_mark_reasoning_always(
     if should_backstop_mark(think, reasoning_seen, row.reasoning_always, is_curated) {
         match crate::models::manifest::mark_reasoning_always(&conn, model_id) {
             Ok(()) => {
-                eprintln!("thuki: [models] reasoning backstop: marked {model_id} always-reasoning")
+                eprintln!("veilura: [models] reasoning backstop: marked {model_id} always-reasoning")
             }
             Err(e) => {
-                eprintln!("thuki: [models] reasoning backstop: failed to mark {model_id}: {e}")
+                eprintln!("veilura: [models] reasoning backstop: failed to mark {model_id}: {e}")
             }
         }
     }
@@ -1524,7 +1524,7 @@ pub(crate) fn resolve_provider_api_key(
     match store.get(id) {
         Ok(key) => key,
         Err(e) => {
-            eprintln!("thuki: [keychain] failed to read the api key for provider '{id}': {e}");
+            eprintln!("veilura: [keychain] failed to read the api key for provider '{id}': {e}");
             None
         }
     }
@@ -2517,13 +2517,13 @@ pub async fn ask_model(
         let stats = apply_capability_filter(&mut messages, &caps);
         if stats.stripped_images > 0 {
             eprintln!(
-                "thuki: [capability filter] model={} stripped_images={}",
+                "veilura: [capability filter] model={} stripped_images={}",
                 model_name, stats.stripped_images
             );
         }
     } else {
         eprintln!(
-            "thuki: [capability filter] cache miss for model={}, sending payload as-is",
+            "veilura: [capability filter] cache miss for model={}, sending payload as-is",
             model_name
         );
     }
@@ -2935,7 +2935,7 @@ pub fn reset_conversation(history: State<'_, ConversationHistory>) {
 /// Frontend-driven `ConversationEnd` emission.
 ///
 /// The chat-domain trace lifecycle is owned by the frontend because
-/// Thuki's window-close intercept hides instead of quits, and the same
+/// Veilura's window-close intercept hides instead of quits, and the same
 /// conversation can resume on the next hotkey activation. Emitting
 /// `ConversationEnd` from the backend on window-hide would falsely mark
 /// every still-open conversation ended on every dismiss. The frontend
@@ -3200,10 +3200,10 @@ mod tests {
     #[test]
     fn system_prompt_with_datetime_appends_context_line() {
         let got =
-            system_prompt_with_datetime("You are Thuki.", "Friday, 2026-07-10, 01:15 (UTC)", None);
+            system_prompt_with_datetime("You are Veilura.", "Friday, 2026-07-10, 01:15 (UTC)", None);
         assert_eq!(
             got,
-            "You are Thuki.\n\nCurrent local date and time: Friday, 2026-07-10, 01:15 (UTC).\n\
+            "You are Veilura.\n\nCurrent local date and time: Friday, 2026-07-10, 01:15 (UTC).\n\
              When asked what time it is somewhere else, use a resolved time line above \
              verbatim if one is present and never compute the timezone conversion yourself; \
              if none is present, you can only share the local time above, so say that rather \
@@ -3216,13 +3216,13 @@ mod tests {
         let place_line =
             "Current time in San Francisco (America/Los_Angeles): 06:42, Friday, 2026-07-10.";
         let got = system_prompt_with_datetime(
-            "You are Thuki.",
+            "You are Veilura.",
             "Friday, 2026-07-10, 08:42 (America/Chicago)",
             Some(place_line),
         );
         assert_eq!(
             got,
-            "You are Thuki.\n\nCurrent local date and time: Friday, 2026-07-10, 08:42 (America/Chicago).\n\
+            "You are Veilura.\n\nCurrent local date and time: Friday, 2026-07-10, 08:42 (America/Chicago).\n\
              Current time in San Francisco (America/Los_Angeles): 06:42, Friday, 2026-07-10.\n\
              When asked what time it is somewhere else, use a resolved time line above \
              verbatim if one is present and never compute the timezone conversion yourself; \
@@ -3382,7 +3382,7 @@ mod tests {
         assert_eq!(err.kind, EngineErrorKind::ModelUnsupported);
         assert_eq!(
             err.message,
-            "Unsupported model\nThuki's engine doesn't support this model's architecture yet. Try another model; support expands as the engine updates."
+            "Unsupported model\nVeilura's engine doesn't support this model's architecture yet. Try another model; support expands as the engine updates."
         );
     }
 
@@ -3396,12 +3396,12 @@ mod tests {
 
     #[test]
     fn engine_start_error_metal_symbol_failure_is_os_incompatible() {
-        let detail = "dyld[123]: Symbol not found: _OBJC_CLASS_$_MTLResidencySetDescriptor\n  Referenced from: <UUID> /Applications/Thuki.app/Contents/Frameworks/libggml-metal.0.dylib\n  Expected in: <UUID> /System/Library/Frameworks/Metal.framework/Versions/A/Metal";
+        let detail = "dyld[123]: Symbol not found: _OBJC_CLASS_$_MTLResidencySetDescriptor\n  Referenced from: <UUID> /Applications/Veilura.app/Contents/Frameworks/libggml-metal.0.dylib\n  Expected in: <UUID> /System/Library/Frameworks/Metal.framework/Versions/A/Metal";
         let err = engine_start_error(detail);
         assert_eq!(err.kind, EngineErrorKind::EngineStartFailed);
         assert_eq!(
             err.message,
-            "Thuki's engine could not start.\nYour version of macOS is too old for the built-in engine. Update macOS to use it."
+            "Veilura's engine could not start.\nYour version of macOS is too old for the built-in engine. Update macOS to use it."
         );
     }
 
@@ -4232,7 +4232,7 @@ mod tests {
         assert!(second_clone.is_cancelled());
     }
 
-    // Note: CSV/whitespace/empty parsing of the previous THUKI_SUPPORTED_AI_MODELS
+    // Note: CSV/whitespace/empty parsing of the previous VEILURA_SUPPORTED_AI_MODELS
     // env var was covered by 7 env-mutating tests here. Those assertions now live
     // in src/config/tests.rs expressed as TOML input fixtures (resolve_empty_*,
     // resolve_whitespace_only_entries_are_filtered, resolve_entry_whitespace_is_trimmed).
@@ -4308,7 +4308,7 @@ mod tests {
         mock.assert_async().await;
     }
 
-    // Note: THUKI_SYSTEM_PROMPT env-var handling was covered by 3 tests here
+    // Note: VEILURA_SYSTEM_PROMPT env-var handling was covered by 3 tests here
     // and compose_system_prompt by 2. Those assertions now live in
     // src/config/tests.rs (resolve_empty_system_prompt_uses_built_in_base_plus_appendix,
     // resolve_custom_system_prompt_flows_through_with_appendix,
@@ -5643,7 +5643,7 @@ mod tests {
     /// Locks the native `/api/chat` wire contract across the routing change:
     /// the exact request body (model, messages, stream, think, options
     /// {temperature, top_p, top_k, num_ctx}, keep_alive) must be identical
-    /// to the payload Thuki sent before provider routing was introduced.
+    /// to the payload Veilura sent before provider routing was introduced.
     #[tokio::test]
     async fn ollama_request_body_unchanged() {
         use crate::config::defaults::PROVIDER_KIND_OLLAMA;

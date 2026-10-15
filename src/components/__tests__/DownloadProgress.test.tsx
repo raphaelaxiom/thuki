@@ -368,7 +368,7 @@ describe('DownloadProgress', () => {
         message: 'spawn failed',
       });
       expect(
-        screen.getByText("Thuki's engine could not start."),
+        screen.getByText("Veilura's engine could not start."),
       ).toBeInTheDocument();
     });
 

@@ -25,8 +25,9 @@ import type { RawAppConfig, RawProvider } from '../types';
 function NonLocalWarning() {
   return (
     <p className={styles.providerWarning} role="alert">
-      This points Thuki at a non-local server. You are responsible for securing
-      it: prefer a VPN/Tailscale or SSH tunnel over exposing the port directly.
+      This points Veilura at a non-local server. You are responsible for
+      securing it: prefer a VPN/Tailscale or SSH tunnel over exposing the port
+      directly.
     </p>
   );
 }

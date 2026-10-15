@@ -51,7 +51,7 @@ pub fn load_from_path(path: &Path) -> Result<AppConfig, ConfigError> {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => seed_defaults(path),
         Err(source) => {
             eprintln!(
-                "thuki: [config] cannot read {}: {source}. using in-memory defaults",
+                "veilura: [config] cannot read {}: {source}. using in-memory defaults",
                 path.display()
             );
             let mut config = AppConfig::default();
@@ -69,7 +69,7 @@ fn load_from_contents(path: &Path, contents: &str) -> Result<AppConfig, ConfigEr
         }
         Err(parse_err) => {
             eprintln!(
-                "thuki: [config] parse error at {}: {parse_err}. renaming and reseeding defaults",
+                "veilura: [config] parse error at {}: {parse_err}. renaming and reseeding defaults",
                 path.display()
             );
             rename_corrupt(path);
@@ -109,7 +109,7 @@ fn rename_corrupt(path: &Path) {
     let target: PathBuf = target.into();
     if let Err(e) = std::fs::rename(path, &target) {
         eprintln!(
-            "thuki: [config] could not rename corrupt file {}: {e}",
+            "veilura: [config] could not rename corrupt file {}: {e}",
             path.display()
         );
         return;
@@ -123,7 +123,7 @@ fn rename_corrupt(path: &Path) {
     let payload = format!("{}\n{ts}\n", target.display());
     if let Err(e) = std::fs::write(&marker_path, payload) {
         eprintln!(
-            "thuki: [config] could not write corrupt marker at {}: {e}",
+            "veilura: [config] could not write corrupt marker at {}: {e}",
             marker_path.display()
         );
     }
@@ -310,7 +310,7 @@ fn resolve_inference(inf: &mut crate::config::schema::InferenceSection) {
             && !is_http_url(&p.base_url)
         {
             eprintln!(
-                "thuki: [config] provider '{}' base_url is not an http(s) URL; using default '{DEFAULT_OLLAMA_URL}'",
+                "veilura: [config] provider '{}' base_url is not an http(s) URL; using default '{DEFAULT_OLLAMA_URL}'",
                 p.id
             );
             p.base_url = DEFAULT_OLLAMA_URL.to_string();
@@ -332,14 +332,14 @@ fn resolve_inference(inf: &mut crate::config::schema::InferenceSection) {
             let ok = is_http_url(&p.base_url);
             if !ok {
                 eprintln!(
-                    "thuki: [config] dropping openai provider '{}': base_url must be a non-empty http(s) URL",
+                    "veilura: [config] dropping openai provider '{}': base_url must be a non-empty http(s) URL",
                     p.id
                 );
             }
             ok
         }
         other => {
-            eprintln!("thuki: [config] dropping provider with unknown kind '{other}'");
+            eprintln!("veilura: [config] dropping provider with unknown kind '{other}'");
             false
         }
     });
@@ -371,7 +371,7 @@ fn resolve_inference(inf: &mut crate::config::schema::InferenceSection) {
     if !inf.providers.iter().any(|p| p.id == inf.active_provider) {
         if !inf.active_provider.trim().is_empty() {
             eprintln!(
-                "thuki: [config] active_provider '{}' not found; using default '{DEFAULT_ACTIVE_PROVIDER}'",
+                "veilura: [config] active_provider '{}' not found; using default '{DEFAULT_ACTIVE_PROVIDER}'",
                 inf.active_provider
             );
         }
@@ -427,7 +427,7 @@ fn clamp_keep_warm_inactivity(value: &mut i32, default: i32, field: &str) {
     let (lo, hi) = BOUNDS_KEEP_WARM_INACTIVITY_MINUTES;
     if !(lo..=hi).contains(value) {
         eprintln!(
-            "thuki: [config] {field}={value} out of bounds (must be {lo}..={hi}); using default {default}",
+            "veilura: [config] {field}={value} out of bounds (must be {lo}..={hi}); using default {default}",
             value = *value
         );
         *value = default;
@@ -453,7 +453,7 @@ fn clamp_retention_days(
     let (lo, hi) = bounds;
     if *value != forever && !(lo..=hi).contains(value) {
         eprintln!(
-            "thuki: [config] {field}={value} out of bounds (must be {forever} or {lo}..={hi}); using default {default}",
+            "veilura: [config] {field}={value} out of bounds (must be {forever} or {lo}..={hi}); using default {default}",
             value = *value,
         );
         *value = default;
@@ -463,7 +463,7 @@ fn clamp_retention_days(
 fn clamp_f64(value: &mut f64, bounds: (f64, f64), default: f64, field: &str) {
     if !value.is_finite() || !(bounds.0..=bounds.1).contains(value) {
         eprintln!(
-            "thuki: [config] {field}={value} out of bounds [{min}, {max}]; using default {default}",
+            "veilura: [config] {field}={value} out of bounds [{min}, {max}]; using default {default}",
             min = bounds.0,
             max = bounds.1,
             value = *value
@@ -475,7 +475,7 @@ fn clamp_f64(value: &mut f64, bounds: (f64, f64), default: f64, field: &str) {
 fn clamp_u64(value: &mut u64, bounds: (u64, u64), default: u64, field: &str) {
     if !(bounds.0..=bounds.1).contains(value) {
         eprintln!(
-            "thuki: [config] {field}={value} out of bounds [{min}, {max}]; using default {default}",
+            "veilura: [config] {field}={value} out of bounds [{min}, {max}]; using default {default}",
             min = bounds.0,
             max = bounds.1,
             value = *value
@@ -487,7 +487,7 @@ fn clamp_u64(value: &mut u64, bounds: (u64, u64), default: u64, field: &str) {
 fn clamp_font_weight(value: &mut u32, default: u32, field: &str) {
     if !ALLOWED_FONT_WEIGHTS.contains(value) {
         eprintln!(
-            "thuki: [config] {field}={value} not in {ALLOWED_FONT_WEIGHTS:?}; using default {default}",
+            "veilura: [config] {field}={value} not in {ALLOWED_FONT_WEIGHTS:?}; using default {default}",
             value = *value
         );
         *value = default;
@@ -563,7 +563,7 @@ pub(crate) fn with_dismissed_model_removed(existing: Vec<String>, sha: &str) -> 
 fn clamp_u32(value: &mut u32, bounds: (u32, u32), default: u32, field: &str) {
     if !(bounds.0..=bounds.1).contains(value) {
         eprintln!(
-            "thuki: [config] {field}={value} out of bounds [{min}, {max}]; using default {default}",
+            "veilura: [config] {field}={value} out of bounds [{min}, {max}]; using default {default}",
             min = bounds.0,
             max = bounds.1,
             value = *value

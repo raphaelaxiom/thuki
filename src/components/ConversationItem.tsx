@@ -55,7 +55,7 @@ export const ConversationItem = memo(function ConversationItem({
         aria-current={isActive ? 'true' : undefined}
         className={`relative w-full flex flex-col gap-0.5 text-left pl-3 pr-9 py-2 rounded-lg transition-colors duration-150 cursor-pointer hover:bg-white/5 ${
           isActive
-            ? "before:absolute before:content-[''] before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-r before:bg-primary before:shadow-[0_0_10px_rgba(255,141,92,0.5)]"
+            ? "before:absolute before:content-[''] before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-r before:bg-primary before:shadow-[0_0_10px_rgba(124,108,240,0.5)]"
             : ''
         }`}
       >

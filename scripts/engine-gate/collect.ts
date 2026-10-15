@@ -1,6 +1,6 @@
 // Starts the freshly built llama-server on the pinned gate model, sends each
 // correctness prompt through the OpenAI-compatible /v1/chat/completions endpoint
-// (Thuki's real runtime path, so a broken chat template is exercised), and writes
+// (Veilura's real runtime path, so a broken chat template is exercised), and writes
 // the responses plus the observed generation throughput to GATE_RESULT for
 // decide.ts to judge. Pure I/O; the judging lives in the unit-tested core.
 

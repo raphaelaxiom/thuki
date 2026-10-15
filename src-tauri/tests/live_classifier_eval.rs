@@ -10,11 +10,11 @@
 //! an already-running engine (the app's own sidecar works):
 //!
 //! ```sh
-//! THUKI_EVAL_PORT=<port> cargo test --test live_classifier_eval -- --ignored --nocapture
+//! VEILURA_EVAL_PORT=<port> cargo test --test live_classifier_eval -- --ignored --nocapture
 //! ```
 
-use thuki_agent_lib::websearch::prefilter::{prefilter, PreFilterVerdict};
-use thuki_agent_lib::websearch::prepass::{BuiltinPrePass, PrePass, SearchDecision, SearchRoute};
+use veilura_agent_lib::websearch::prefilter::{prefilter, PreFilterVerdict};
+use veilura_agent_lib::websearch::prepass::{BuiltinPrePass, PrePass, SearchDecision, SearchRoute};
 
 use tokio_util::sync::CancellationToken;
 
@@ -74,15 +74,15 @@ async fn would_search(
 }
 
 #[tokio::test]
-#[ignore = "needs a live llama-server; set THUKI_EVAL_PORT"]
+#[ignore = "needs a live llama-server; set VEILURA_EVAL_PORT"]
 async fn live_two_stage_decision_quality_on_eval_corpus() {
-    let port = std::env::var("THUKI_EVAL_PORT")
-        .expect("set THUKI_EVAL_PORT to a running llama-server port");
+    let port = std::env::var("VEILURA_EVAL_PORT")
+        .expect("set VEILURA_EVAL_PORT to a running llama-server port");
     let prepass = BuiltinPrePass::new(
         reqwest::Client::new(),
         format!("http://127.0.0.1:{port}"),
         "eval".to_string(),
-        thuki_agent_lib::config::defaults::PREPASS_TIMEOUT_S,
+        veilura_agent_lib::config::defaults::PREPASS_TIMEOUT_S,
     );
     let today = "2026-07-08";
 

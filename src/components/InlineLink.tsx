@@ -36,7 +36,7 @@ const LINK_BASE_STYLE: React.CSSProperties = {
 const ACCENT_STYLE: React.CSSProperties = {
   color: '#ffb892',
   textDecoration: 'underline',
-  textDecorationColor: 'rgba(255, 141, 92, 0.5)',
+  textDecorationColor: 'rgba(124, 108, 240, 0.5)',
   textUnderlineOffset: 2,
 };
 

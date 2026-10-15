@@ -21,7 +21,7 @@ import {
 import { Section } from '../components';
 
 /** GitHub releases index used when the bundled changelog parses empty. */
-const GITHUB_RELEASES_URL = 'https://github.com/quiet-node/thuki/releases';
+const GITHUB_RELEASES_URL = 'https://github.com/veilura/veilura/releases';
 
 export interface ChangelogTabProps {
   /**

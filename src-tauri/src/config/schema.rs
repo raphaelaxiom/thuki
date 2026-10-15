@@ -1,4 +1,4 @@
-//! Typed shape of the Thuki configuration file.
+//! Typed shape of the Veilura configuration file.
 //!
 //! Serde derives the TOML mapping automatically. Each section struct carries
 //! `#[serde(default)]` so a partial file (missing whole sections or fields)
@@ -56,7 +56,7 @@ pub struct Provider {
     pub vision: bool,
 }
 
-/// The built-in provider record (Thuki's own engine; no URL).
+/// The built-in provider record (Veilura's own engine; no URL).
 pub fn builtin_provider() -> Provider {
     Provider {
         id: PROVIDER_ID_BUILTIN.to_string(),
@@ -109,7 +109,7 @@ pub fn default_providers() -> Vec<Provider> {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
 pub struct InferenceSection {
-    /// Id of the provider Thuki currently sends inference to. The loader
+    /// Id of the provider Veilura currently sends inference to. The loader
     /// repairs an empty or dangling pointer to `DEFAULT_ACTIVE_PROVIDER`.
     pub active_provider: String,
     /// Context window size (in tokens) sent to the active provider with every
@@ -118,10 +118,10 @@ pub struct InferenceSection {
     /// fit longer conversations in a single context; lower to use less VRAM.
     /// Valid range: 2048..=1048576.
     pub num_ctx: u32,
-    /// Minutes of inactivity before Thuki releases the active model from local
+    /// Minutes of inactivity before Veilura releases the active model from local
     /// memory. Governs both local providers: the built-in engine stops its
     /// sidecar, and Ollama is told to release the model. Not applicable to a
-    /// remote OpenAI-compatible server, whose residency Thuki does not manage.
+    /// remote OpenAI-compatible server, whose residency Veilura does not manage.
     /// 0 uses the provider's natural short default (~5 min): Ollama defers to
     /// its own timer, the built-in engine applies its own ~5-minute timer.
     /// -1 keeps the model resident indefinitely. Valid range: -1 or 0..=1440.
@@ -235,21 +235,21 @@ pub struct WindowSection {
     /// max_images + 1 per message.
     pub max_images: u32,
     /// Base font size (in CSS pixels) for chat text and the AskBar input.
-    /// Drives the `--thuki-text-base` CSS variable consumed by the AI
+    /// Drives the `--veilura-text-base` CSS variable consumed by the AI
     /// markdown body, the user chat bubble text, and the AskBar textarea
     /// (plus its caret-tracking mirror). Other UI surfaces keep fixed sizes.
     /// Valid range: 11.0..=22.0.
     pub text_base_px: f64,
     /// Line-height multiplier applied to chat + AskBar text. Drives the
-    /// `--thuki-text-line-height` CSS variable. Valid range: 1.0..=2.5.
+    /// `--veilura-text-line-height` CSS variable. Valid range: 1.0..=2.5.
     pub text_line_height: f64,
     /// Letter spacing (in CSS pixels) applied to chat + AskBar text.
-    /// Drives the `--thuki-text-letter-spacing` CSS variable. Negative
+    /// Drives the `--veilura-text-letter-spacing` CSS variable. Negative
     /// values tighten the typography; positive values airy it out.
     /// Valid range: -0.5..=2.0.
     pub text_letter_spacing_px: f64,
     /// CSS `font-weight` applied to chat + AskBar text. Drives the
-    /// `--thuki-text-font-weight` CSS variable. Restricted to the four
+    /// `--veilura-text-font-weight` CSS variable. Restricted to the four
     /// loaded Nunito weights (400, 500, 600, 700); values outside this
     /// set reset to the compiled default.
     pub text_font_weight: u32,
@@ -371,7 +371,7 @@ impl Default for DebugSection {
     }
 }
 
-/// Auto-update configuration. Determines whether and how often Thuki polls
+/// Auto-update configuration. Determines whether and how often Veilura polls
 /// for new releases via the bundled tauri-plugin-updater.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]

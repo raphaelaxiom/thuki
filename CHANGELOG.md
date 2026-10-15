@@ -1,5 +1,7 @@
 # Changelog
 
+> **Rebrand note (1.0.0):** Veilura is a fork/rebrand of Thuki by Logan Nguyen (Apache-2.0). Everything at and below `## [0.16.3]` is upstream Thuki history — its `Thuki` names, `quiet-node/thuki` links, and `0.x` versions are preserved verbatim and refer to the upstream project, not Veilura. The rebrand (name, logo, bundle ID `com.veilura.app`, version 1.0.0, config-dir migration) is documented in [REBRAND.md](REBRAND.md).
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
@@ -8,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+
+- **Rebrand: Thuki → Veilura (1.0.0).** New name (Veilura, pronounced VAY-loo-rah), original logo (layered veil / aurora arcs + spark), bundle ID `com.veilura.app`, binary/app `Veilura` / `veilura`, config dir `~/Library/Application Support/com.veilura.app` with a first-launch copy-migration from the old Thuki dir (old dir untouched), database renamed to `veilura.db`, and a new indigo/violet + aurora teal/mint palette. Updater endpoint is a placeholder (`https://veilura.online/updates/latest.json` — no live server yet); the Intel DMG build keeps the updater disabled. See [REBRAND.md](REBRAND.md).
 
 - **Built-in web search design handbook.** Technical guide for the in-app search pipeline: decision stages, engines, language parity, conversation page reuse, security, and UI. See [docs/built-in-web-search.md](docs/built-in-web-search.md). User-facing egress copy: [docs/search-privacy.md](docs/search-privacy.md) (renamed from `search-disclosure.md`).
 - **Built-in web search.** Keyless search on the bundled engine: Auto search (Settings → Behavior, default on) may open the web when a plain turn needs live facts; `/search` forces a look-up. Pipeline includes intent verticals, scraped engines, citation audit, progressive search status in chat, and SSRF-safe outbound HTTP. See [docs/built-in-web-search.md](docs/built-in-web-search.md), [docs/configurations.md](docs/configurations.md), and [docs/search-eval.md](docs/search-eval.md). ([#312](https://github.com/quiet-node/thuki/pull/312))

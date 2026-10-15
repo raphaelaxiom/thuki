@@ -93,7 +93,7 @@ export function TipBar({
           addTimer(
             () => {
               /* v8 ignore next -- flicker color is visual-only */
-              el.style.color = '#ff8d5c';
+              el.style.color = '#7c6cf0';
               el.textContent =
                 NOISE_CHARS[Math.floor(Math.random() * NOISE_CHARS.length)];
             },
@@ -150,12 +150,12 @@ export function TipBar({
         data-testid="tip-bar"
         aria-label={`Open tip link: ${url}`}
       >
-        <span className="text-[9px] font-bold tracking-widest uppercase text-[#ff8d5c] bg-[#ff8d5c]/10 rounded px-1.5 py-0.5 flex-shrink-0">
+        <span className="text-[9px] font-bold tracking-widest uppercase text-[#7c6cf0] bg-[#7c6cf0]/10 rounded px-1.5 py-0.5 flex-shrink-0">
           TIP
         </span>
         <span
           ref={spanRef}
-          className="text-[10px] underline decoration-dotted underline-offset-2 decoration-[#ff8d5c]/40 min-w-0 overflow-hidden"
+          className="text-[10px] underline decoration-dotted underline-offset-2 decoration-[#7c6cf0]/40 min-w-0 overflow-hidden"
           style={{ color: '#8a8a8e' }}
           data-testid="tip-text"
         />
@@ -168,7 +168,7 @@ export function TipBar({
       className="flex items-center justify-center gap-1.5 border-t border-white/5 px-4 py-[5px]"
       data-testid="tip-bar"
     >
-      <span className="text-[9px] font-bold tracking-widest uppercase text-[#ff8d5c] bg-[#ff8d5c]/10 rounded px-1.5 py-0.5 flex-shrink-0">
+      <span className="text-[9px] font-bold tracking-widest uppercase text-[#7c6cf0] bg-[#7c6cf0]/10 rounded px-1.5 py-0.5 flex-shrink-0">
         TIP
       </span>
       <span

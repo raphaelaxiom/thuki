@@ -4,7 +4,7 @@ import type { FocusEvent } from 'react';
  * `onFocus` guard that drops focus when an element is focused programmatically
  * rather than by the user.
  *
- * When a Thuki panel (Settings or the overlay) is hidden and shown again,
+ * When a Veilura panel (Settings or the overlay) is hidden and shown again,
  * `show_and_make_key()` calls AppKit's `makeFirstResponder:`, and WebKit
  * restores focus to the last-focused element. That programmatic refocus carries
  * no `relatedTarget`, whereas a real keyboard Tab always does. Without this

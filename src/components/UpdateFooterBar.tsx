@@ -29,7 +29,7 @@ export function UpdateFooterBar({
         <button
           type="button"
           onClick={openNotes}
-          className="text-[#f0f0f2] underline decoration-dotted underline-offset-2 decoration-[#ff8d5c]/40 cursor-pointer bg-transparent border-0 p-0 font-inherit"
+          className="text-[#f0f0f2] underline decoration-dotted underline-offset-2 decoration-[#7c6cf0]/40 cursor-pointer bg-transparent border-0 p-0 font-inherit"
         >
           {`v${version}`}
         </button>
@@ -37,7 +37,7 @@ export function UpdateFooterBar({
         <button
           type="button"
           onClick={onInstall}
-          className="text-[#ff8d5c] underline decoration-dotted underline-offset-2 decoration-[#ff8d5c]/50 cursor-pointer bg-transparent border-0 p-0 font-inherit"
+          className="text-[#7c6cf0] underline decoration-dotted underline-offset-2 decoration-[#7c6cf0]/50 cursor-pointer bg-transparent border-0 p-0 font-inherit"
         >
           {"what's new"}
         </button>

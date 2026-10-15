@@ -34,7 +34,7 @@ function withFallbackNotes(s: UpdaterState): UpdaterState {
     ...s,
     update: {
       ...s.update,
-      notes_url: `https://github.com/quiet-node/thuki/releases/tag/v${s.update.version}`,
+      notes_url: `https://github.com/veilura/veilura/releases/tag/v${s.update.version}`,
     },
   };
 }

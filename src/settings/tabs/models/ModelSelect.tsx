@@ -1,5 +1,5 @@
 /**
- * Thuki-styled model picker popover for the Providers pane.
+ * Veilura-styled model picker popover for the Providers pane.
  *
  * Replaces the native `<select>` whose open list macOS renders with its own
  * chrome (system font, blue highlight, no filter). The closed trigger reuses
@@ -127,7 +127,7 @@ const SEARCH_ICON = (
   </svg>
 );
 
-const LISTBOX_ID = 'thuki-model-select-listbox';
+const LISTBOX_ID = 'veilura-model-select-listbox';
 
 /**
  * Controlled model picker: a trigger button that toggles a filterable popover.

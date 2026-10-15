@@ -19,7 +19,7 @@
 use crate::net::transport::{send_with_retry, HttpMethod, HttpRequest, HttpTransport};
 use crate::websearch::assemble::SourceBlock;
 use crate::websearch::lang::geocode_language;
-use crate::websearch::{OPEN_METEO_ATTRIBUTION, THUKI_USER_AGENT};
+use crate::websearch::{OPEN_METEO_ATTRIBUTION, VEILURA_USER_AGENT};
 
 /// Words that signal a weather question. Matched on whole tokens of the
 /// lowercased standalone question (English and common single-token forms).
@@ -298,7 +298,7 @@ pub(crate) fn geocode_request(location: &str, lang: &str) -> HttpRequest {
     HttpRequest {
         method: HttpMethod::Get,
         url: url.to_string(),
-        headers: vec![("User-Agent".to_string(), THUKI_USER_AGENT.to_string())],
+        headers: vec![("User-Agent".to_string(), VEILURA_USER_AGENT.to_string())],
         form: Vec::new(),
     }
 }
@@ -346,7 +346,7 @@ pub(crate) fn forecast_request(place: &GeoPlace) -> HttpRequest {
     HttpRequest {
         method: HttpMethod::Get,
         url: url.to_string(),
-        headers: vec![("User-Agent".to_string(), THUKI_USER_AGENT.to_string())],
+        headers: vec![("User-Agent".to_string(), VEILURA_USER_AGENT.to_string())],
         form: Vec::new(),
     }
 }
@@ -556,7 +556,7 @@ mod tests {
         assert!(req
             .headers
             .iter()
-            .any(|(k, v)| k == "User-Agent" && v == THUKI_USER_AGENT));
+            .any(|(k, v)| k == "User-Agent" && v == VEILURA_USER_AGENT));
     }
 
     #[test]
@@ -586,7 +586,7 @@ mod tests {
         assert!(req
             .headers
             .iter()
-            .any(|(k, v)| k == "User-Agent" && v == THUKI_USER_AGENT));
+            .any(|(k, v)| k == "User-Agent" && v == VEILURA_USER_AGENT));
     }
 
     // ── parsers / formatting ─────────────────────────────────────────────────

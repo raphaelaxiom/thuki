@@ -1219,9 +1219,9 @@ mod tests {
         assert_eq!(req.url, DDG_HTML_ENDPOINT);
         assert!(req.form.iter().any(|(k, v)| k == "q" && v == "rust bm25"));
         // SERP deliberately keeps a browser UA (honest bot UA is blocked on
-        // DDG /html). Must not be the product THUKI_USER_AGENT used on API verticals.
+        // DDG /html). Must not be the product VEILURA_USER_AGENT used on API verticals.
         assert!(req.headers.iter().any(|(k, v)| {
-            k == "User-Agent" && v == BROWSER_USER_AGENT && !v.starts_with("Thuki/")
+            k == "User-Agent" && v == BROWSER_USER_AGENT && !v.starts_with("Veilura/")
         }));
     }
 
@@ -1233,7 +1233,7 @@ mod tests {
         assert!(req.url.contains("q=rust+version") || req.url.contains("q=rust%20version"));
         assert!(req.form.is_empty());
         assert!(req.headers.iter().any(|(k, v)| {
-            k == "User-Agent" && v == BROWSER_USER_AGENT && !v.starts_with("Thuki/")
+            k == "User-Agent" && v == BROWSER_USER_AGENT && !v.starts_with("Veilura/")
         }));
     }
 

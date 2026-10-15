@@ -229,7 +229,7 @@ impl ModelStore {
     /// blob.
     ///
     /// The shim lives under a directory keyed by the first shard's content sha
-    /// (`root/shims/<first-sha>/`), an address Thuki owns: two repos whose first
+    /// (`root/shims/<first-sha>/`), an address Veilura owns: two repos whose first
     /// shard happens to share a filename can never collide, and re-loading the
     /// same model reuses the same directory.
     ///

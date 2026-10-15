@@ -3,7 +3,7 @@
  *
  * A tab control switches between the curated front door and the advanced
  * browser:
- * - "Staff picks" ({@link StaffPicksPane}) is the default: a short catalog Thuki
+ * - "Staff picks" ({@link StaffPicksPane}) is the default: a short catalog Veilura
  *   hand-picks and groups by family, one chosen quant per model.
  * - "Browse all" ({@link BrowseAllPane}) is the full Hugging Face GGUF browser,
  *   the escape hatch for users who want anything beyond the curated set.

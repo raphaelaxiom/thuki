@@ -93,7 +93,7 @@ const FREE_CHATS_HELP =
   'Permanently delete every chat stored in local history. This cannot be undone.';
 
 /** Broadcast after Free chats succeeds so the overlay drops its saved identity. */
-export const HISTORY_CLEARED_EVENT = 'thuki://history-cleared';
+export const HISTORY_CLEARED_EVENT = 'veilura://history-cleared';
 
 /**
  * Inline helper when the history retention field holds invalid `0` (backend
@@ -523,7 +523,7 @@ export function BehaviorTab({
             <Toggle
               checked={value}
               onChange={setValue}
-              ariaLabel="Close Thuki after replacing selected text"
+              ariaLabel="Close Veilura after replacing selected text"
             />
           )}
         />

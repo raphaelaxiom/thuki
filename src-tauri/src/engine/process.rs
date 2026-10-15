@@ -146,7 +146,7 @@ fn llama_server_args(args: &SpawnArgs) -> Vec<std::ffi::OsString> {
     argv.push("--port".into());
     argv.push(args.port.to_string().into());
     argv.push("--no-webui".into());
-    // Single decode slot. Thuki is single-user, so it never needs parallel
+    // Single decode slot. Veilura is single-user, so it never needs parallel
     // slots, and multi-slot actively hurts: the summon-time warm-up prime and
     // the user's first message can land on different KV slots, so the first
     // message re-does the full system-prompt prefill cold instead of reusing
@@ -157,7 +157,7 @@ fn llama_server_args(args: &SpawnArgs) -> Vec<std::ffi::OsString> {
     // Host-memory prompt cache (llama.cpp #16391): idle-slot KV spills to host
     // RAM and hot-swaps back on prefix similarity. Defaults are "enabled", but
     // we pin the flags so a future upstream flip cannot silently disable the
-    // feature under Thuki. Sized via LLAMA_SERVER_CACHE_RAM_MIB (not the 8GB
+    // feature under Veilura. Sized via LLAMA_SERVER_CACHE_RAM_MIB (not the 8GB
     // upstream default) for the 24GB unified-memory envelope.
     argv.push("--cache-prompt".into());
     argv.push("--cache-idle-slots".into());
@@ -279,7 +279,7 @@ impl EngineChild for TokioChild {
 /// `crate::startup_guard::block_shutdown_signals`) so a dedicated `sigwait`
 /// thread can durably mark a clean exit. POSIX preserves the thread signal mask
 /// across `fork` and `exec`, so without this reset the sidecar would inherit
-/// that block: an orphaned `llama-server` (left behind if Thuki is `SIGKILL`ed)
+/// that block: an orphaned `llama-server` (left behind if Veilura is `SIGKILL`ed)
 /// would then ignore `SIGTERM`, so a plain `kill`/`pkill` silently does nothing
 /// and only `kill -9` reaps it. That shutdown-signal policy is the parent's
 /// alone and must not leak into the child.

@@ -12,7 +12,7 @@
  *   "permissions" -> "builtin_announcement" -> "model_check" -> "intro" -> ...
  *
  * "permissions" is the implicit default when no value has been written yet.
- * "builtin_announcement" tells a grandfathered Ollama user that Thuki now
+ * "builtin_announcement" tells a grandfathered Ollama user that Veilura now
  * ships its own engine; it is shown at most once, gated by the
  * `builtin_engine_announced` flag (see [`is_builtin_announced`]). "model_check"
  * gates the user on a usable model for the active provider. All pre-complete

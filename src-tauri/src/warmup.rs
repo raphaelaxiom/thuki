@@ -617,7 +617,7 @@ pub(crate) fn spawn_gated_builtin_warmup(
                     let ceiling_bytes =
                         (available_bytes as f64 * MODEL_FIT_CEILING_FRACTION) as u64;
                     eprintln!(
-                        "thuki: [memory gate] skipping auto-prime of {model_id}: needs ~{} MB, usable ceiling ~{} MB ({:.0}% of ~{} MB available)",
+                        "veilura: [memory gate] skipping auto-prime of {model_id}: needs ~{} MB, usable ceiling ~{} MB ({:.0}% of ~{} MB available)",
                         required_bytes / (1024 * 1024),
                         ceiling_bytes / (1024 * 1024),
                         MODEL_FIT_CEILING_FRACTION * 100.0,
@@ -908,7 +908,7 @@ pub async fn evict_model(
 /// Spawns a background Tokio task that polls Ollama's `/api/ps` every
 /// `VRAM_POLL_INTERVAL_SECS` seconds and emits `warmup:model-loaded` or
 /// `warmup:model-evicted` when external VRAM changes are detected. Catches
-/// changes Thuki did not initiate: `ollama stop`, TTL expiry, daemon restart.
+/// changes Veilura did not initiate: `ollama stop`, TTL expiry, daemon restart.
 /// The first tick is skipped to avoid a spurious `Evicted` event at startup
 /// before the model has had a chance to warm up.
 #[cfg_attr(coverage_nightly, coverage(off))]

@@ -16,13 +16,13 @@ const SAMPLE = `# Changelog
 
 - not shipped yet
 
-## [0.14.0](https://github.com/quiet-node/thuki/compare/v0.13.1...v0.14.0) (2026-06-07)
+## [0.14.0](https://github.com/veilura/veilura/compare/v0.13.1...v0.14.0) (2026-06-07)
 
 ### Features
 
 * allow drafting messages while streaming
 
-## [0.13.1](https://github.com/quiet-node/thuki/compare/v0.13.0...v0.13.1) (2026-05-26)
+## [0.13.1](https://github.com/veilura/veilura/compare/v0.13.0...v0.13.1) (2026-05-26)
 
 ### Bug Fixes
 

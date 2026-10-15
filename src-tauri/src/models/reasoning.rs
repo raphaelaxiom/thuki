@@ -1,7 +1,7 @@
 /*!
  * Dynamic reasoning-capability classifier for locally-run GGUF models.
  *
- * Thuki must behave correctly for ANY model a user downloads, not just the
+ * Veilura must behave correctly for ANY model a user downloads, not just the
  * three curated starters whose class is baked into the registry. The single
  * authoritative signal a GGUF carries about whether (and how) it reasons is
  * its embedded chat template ([`tokenizer.chat_template`]); the template's
@@ -18,11 +18,11 @@
  *
  * - [`ReasoningClass::None`] — not a reasoning model. `/think` is a no-op, no
  *   thinking block, no badge.
- * - [`ReasoningClass::Optional`] — reasoning can be turned off. Thuki defaults
+ * - [`ReasoningClass::Optional`] — reasoning can be turned off. Veilura defaults
  *   it OFF (the OFF blast in [`crate::openai`] suppresses it) and `/think`
  *   turns it on per-message. No badge.
  * - [`ReasoningClass::Always`] — reasoning is structural and cannot be turned
- *   off. Thuki shows it cleanly and badges the model so the latency is not a
+ *   off. Veilura shows it cleanly and badges the model so the latency is not a
  *   surprise; `/think` is a harmless no-op.
  */
 
@@ -45,7 +45,7 @@ const ARCH_GPT_OSS: &str = "gpt-oss";
 const MARKER_THINKING_KWARG: &str = "thinking";
 
 /// Mistral Magistral / Ministral reasoning tags. Reasoning is driven by a
-/// system-prompt instruction rather than a template kwarg, so without Thuki's
+/// system-prompt instruction rather than a template kwarg, so without Veilura's
 /// (absent) reasoning system prompt these models stay quiet: treated as
 /// `Optional` (default off), not `Always`.
 const MARKER_MISTRAL_THINK_OPEN: &str = "[THINK]";
@@ -71,14 +71,14 @@ const ALWAYS_TAGS: &[&str] = &[
 pub enum ReasoningClass {
     /// Not a reasoning model.
     None,
-    /// Reasoning can be turned off; Thuki defaults it off.
+    /// Reasoning can be turned off; Veilura defaults it off.
     Optional,
     /// Reasoning is structural and cannot be turned off.
     Always,
 }
 
 impl ReasoningClass {
-    /// Projects the class onto the two manifest capability flags Thuki
+    /// Projects the class onto the two manifest capability flags Veilura
     /// persists and surfaces: `(thinking, reasoning_always)`.
     ///
     /// - `None`     -> `(false, false)`: no thinking block, no badge.
@@ -101,7 +101,7 @@ impl ReasoningClass {
 /// 2. An off-switch word (`enable_thinking` / `thinking` / `thinking_budget`)
 ///    anywhere in the template -> `Optional` (the OFF blast controls it).
 /// 3. Mistral `[THINK]` / `[/THINK]` tags -> `Optional` (system-prompt
-///    driven; quiet without Thuki's reasoning prompt).
+///    driven; quiet without Veilura's reasoning prompt).
 /// 4. An always-on reasoning tag (`<think>` / `<thought>` / `<seed:think>`)
 ///    with no off switch -> `Always`.
 /// 5. No reasoning markers at all -> `None`.
@@ -133,7 +133,7 @@ pub fn classify_reasoning(chat_template: &str, architecture: Option<&str>) -> Re
     }
 
     // 3. Mistral reasoning is system-prompt driven, not template-gated, so it
-    //    is quiet by default under Thuki and treated as optional.
+    //    is quiet by default under Veilura and treated as optional.
     if chat_template.contains(MARKER_MISTRAL_THINK_OPEN)
         || chat_template.contains(MARKER_MISTRAL_THINK_CLOSE)
     {

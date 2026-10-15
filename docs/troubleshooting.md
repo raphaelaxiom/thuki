@@ -1,8 +1,8 @@
 # Troubleshooting
 
-Common issues and how to fix them. If none of these match, open an issue at [github.com/quiet-node/thuki](https://github.com/quiet-node/thuki/issues).
+Common issues and how to fix them. If none of these match, open an issue at [github.com/veilura/veilura](https://github.com/veilura/veilura/issues).
 
-> macOS only. See [thuki.app](https://www.thuki.app/) for project info and downloads.
+> macOS only. See [veilura.online](https://veilura.online/) for project info and downloads.
 
 ## Models and the engine
 
@@ -14,20 +14,20 @@ Common issues and how to fix them. If none of these match, open an issue at [git
 
 **"No model downloaded yet" / no model to chat with.** Open **Settings → Models → Discover** and download one. The Staff picks are sized for different Macs and show an approximate RAM-fit hint.
 
-**A download failed or stalled.** Downloads resume where they left off, so try again; Thuki picks up the partial file. A failed checksum means the file arrived corrupted, in which case Thuki discards it and you can re-download cleanly.
+**A download failed or stalled.** Downloads resume where they left off, so try again; Veilura picks up the partial file. A failed checksum means the file arrived corrupted, in which case Veilura discards it and you can re-download cleanly.
 
 ## Using Ollama (optional)
 
 **"Ollama isn't running."** You have the Ollama provider selected but the Ollama app or server is not running. Start Ollama and try again, or switch back to the built-in engine in Settings → Models → Providers.
 
-**A model you pulled in Ollama is not in the picker.** Thuki reads Ollama's installed models live. If a model is missing, confirm it finished pulling (`ollama list` in a terminal), then reopen the picker.
+**A model you pulled in Ollama is not in the picker.** Veilura reads Ollama's installed models live. If a model is missing, confirm it finished pulling (`ollama list` in a terminal), then reopen the picker.
 
 ## Activation and capture
 
-**Double-tap Control does not open Thuki.** Thuki needs the **Accessibility** permission to detect the shortcut. Open System Settings → Privacy & Security → Accessibility, make sure Thuki is enabled, and toggle it off and on if it was already listed.
+**Double-tap Control does not open Veilura.** Veilura needs the **Accessibility** permission to detect the shortcut. Open System Settings → Privacy & Security → Accessibility, make sure Veilura is enabled, and toggle it off and on if it was already listed.
 
-**`/screen` or the screenshot button does nothing.** Thuki needs the **Screen Recording** permission. Enable Thuki under System Settings → Privacy & Security → Screen Recording, then relaunch the app.
+**`/screen` or the screenshot button does nothing.** Veilura needs the **Screen Recording** permission. Enable Veilura under System Settings → Privacy & Security → Screen Recording, then relaunch the app.
 
 ## Network
 
-**Thuki works offline, except downloads and optional web search.** Once a model is installed, chatting needs no internet. Network use beyond that is: downloading a model from Hugging Face; Auto search (Settings → Behavior, on by default) when a plain turn needs live facts; and any `/search` look-up. Turn Auto search off to keep plain chat local and use `/search` only on demand. Details: [privacy.md](./privacy.md), [commands.md](./commands.md). If a download will not start, check your connection and that you can reach the Hugging Face Hub.
+**Veilura works offline, except downloads and optional web search.** Once a model is installed, chatting needs no internet. Network use beyond that is: downloading a model from Hugging Face; Auto search (Settings → Behavior, on by default) when a plain turn needs live facts; and any `/search` look-up. Turn Auto search off to keep plain chat local and use `/search` only on demand. Details: [privacy.md](./privacy.md), [commands.md](./commands.md). If a download will not start, check your connection and that you can reach the Hugging Face Hub.

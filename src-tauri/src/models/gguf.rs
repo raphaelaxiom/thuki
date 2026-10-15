@@ -11,7 +11,7 @@
  * skipped by computing its on-disk size and seeking past it (the giant
  * tokenizer arrays are never materialized). It is deliberately forgiving: any
  * malformed, truncated, or hostile input resolves to "what was found so far"
- * (often `None`) rather than panicking, matching Thuki's never-panic-on-input
+ * (often `None`) rather than panicking, matching Veilura's never-panic-on-input
  * contract. A miss is harmless because the runtime behavioral backstop
  * self-corrects an `Always` model from its real output.
  *
@@ -570,7 +570,7 @@ mod tests {
 
     #[test]
     fn file_wrapper_reads_a_written_gguf() {
-        let dir = std::env::temp_dir().join(format!("thuki-gguf-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("veilura-gguf-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("model.gguf");
         let bytes = build_gguf(3, &[kv_string("tokenizer.chat_template", b"<|channel|>")]);
@@ -584,7 +584,7 @@ mod tests {
 
     #[test]
     fn file_wrapper_missing_file_is_none() {
-        let path = std::env::temp_dir().join("thuki-gguf-does-not-exist.gguf");
+        let path = std::env::temp_dir().join("veilura-gguf-does-not-exist.gguf");
         assert_eq!(read_gguf_metadata_from_file(&path), None);
     }
 }

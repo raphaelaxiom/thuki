@@ -33,13 +33,13 @@ export function StepCard({ active, done, children }: StepCardProps) {
   const borderColor = done
     ? 'rgba(34,197,94,0.2)'
     : active
-      ? 'rgba(255,141,92,0.4)'
+      ? 'rgba(124,108,240,0.4)'
       : 'rgba(255,255,255,0.06)';
 
   const background = done
     ? 'rgba(34,197,94,0.05)'
     : active
-      ? 'rgba(255,141,92,0.07)'
+      ? 'rgba(124,108,240,0.07)'
       : 'rgba(255,255,255,0.03)';
 
   return (
@@ -54,7 +54,7 @@ export function StepCard({ active, done, children }: StepCardProps) {
         background,
         boxShadow:
           active && !done
-            ? '0 0 20px rgba(255,141,92,0.08), inset 0 1px 0 rgba(255,141,92,0.1)'
+            ? '0 0 20px rgba(124,108,240,0.08), inset 0 1px 0 rgba(124,108,240,0.1)'
             : 'none',
       }}
     >

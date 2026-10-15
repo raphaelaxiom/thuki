@@ -1,10 +1,10 @@
 //! macOS TCC grant reset on app upgrade.
 //!
-//! Background. Thuki is ad-hoc signed (no Apple Developer ID). macOS keys
+//! Background. Veilura is ad-hoc signed (no Apple Developer ID). macOS keys
 //! TCC (Transparency, Consent, Control) grants by code requirement, not
 //! bundle ID. When the auto-updater swaps the binary, the new code
 //! requirement does not match the stored grant, so System Settings shows
-//! "Thuki: granted" but `AXIsProcessTrusted` returns false. The toggle is a
+//! "Veilura: granted" but `AXIsProcessTrusted` returns false. The toggle is a
 //! visual lie.
 //!
 //! `tccutil reset <service> <bundle-id>` removes the entry for that bundle
@@ -14,7 +14,7 @@
 //!
 //! This module:
 //!
-//! 1. Defines which TCC services Thuki uses.
+//! 1. Defines which TCC services Veilura uses.
 //! 2. Provides a pure helper, `should_reset_for_upgrade`, that decides
 //!    whether the running version differs from what the sidecar last
 //!    recorded.
@@ -25,7 +25,7 @@
 
 use std::process::Command;
 
-/// TCC services Thuki actively uses and whose stale grants need clearing
+/// TCC services Veilura actively uses and whose stale grants need clearing
 /// on an upgrade. `Accessibility` powers the global Control hotkey;
 /// `ScreenCapture` powers the `/screen` command.
 const SERVICES: &[&str] = &["Accessibility", "ScreenCapture"];
@@ -35,7 +35,7 @@ const SERVICES: &[&str] = &["Accessibility", "ScreenCapture"];
 /// explicit, reviewed change to the click-time API surface.
 const CLICK_TIME_SERVICES: &[&str] = &["Accessibility", "ScreenCapture"];
 
-/// Returns the canonical TCC service string when `service` is one Thuki
+/// Returns the canonical TCC service string when `service` is one Veilura
 /// is willing to reset on demand, or `None` otherwise. The frontend hands
 /// the string straight to a Tauri command so this validator is the trust
 /// boundary that prevents `tccutil reset <arbitrary> <bundle>` from
@@ -76,24 +76,24 @@ fn tccutil_reset_one(bundle_id: &str, service: &str) {
         .status();
     match result {
         Ok(status) if status.success() => {
-            eprintln!("thuki: [updater] cleared stale TCC grant for {service} ({bundle_id})");
+            eprintln!("veilura: [updater] cleared stale TCC grant for {service} ({bundle_id})");
         }
         Ok(status) => {
             eprintln!(
-                "thuki: [updater] tccutil reset {service} exited with {status}; \
+                "veilura: [updater] tccutil reset {service} exited with {status}; \
                  leaving any existing grant in place"
             );
         }
         Err(e) => {
             eprintln!(
-                "thuki: [updater] tccutil invocation failed: {e}; \
+                "veilura: [updater] tccutil invocation failed: {e}; \
                  leaving any existing grant in place"
             );
         }
     }
 }
 
-/// Resets every TCC service Thuki uses for `bundle_id`. Called from the
+/// Resets every TCC service Veilura uses for `bundle_id`. Called from the
 /// startup upgrade path so a relaunched binary starts with a clean slate.
 #[cfg_attr(coverage_nightly, coverage(off))]
 pub fn tccutil_reset(bundle_id: &str) {

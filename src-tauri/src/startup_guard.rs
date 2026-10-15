@@ -1,12 +1,12 @@
 //! Launch circuit breaker for issue #296.
 //!
-//! On a memory-constrained Mac, Thuki froze the whole machine while
+//! On a memory-constrained Mac, Veilura froze the whole machine while
 //! auto-loading a large model at startup. After a forced power-off macOS
 //! relaunched the app (its reopen-after-unclean-shutdown behavior) and the same
 //! no-user-action auto-startup work re-ran and re-froze the machine before the
 //! user could intervene: a deadloop.
 //!
-//! Thuki hides on window close and quits only from the tray, so a clean-exit
+//! Veilura hides on window close and quits only from the tray, so a clean-exit
 //! signal almost never fires during a healthy session. Crash-loop detection
 //! therefore MUST NOT depend on one. This module proves liveness two ways that
 //! survive process death by ANY cause:
@@ -225,7 +225,7 @@ pub fn run_startup_guard(app: &tauri::AppHandle, threshold: u32) -> StartupInit 
             // detect. This is a write-ahead guarantee, not merely atomicity.
             if let Err(e) = durable_write_record(&record_path, &record) {
                 eprintln!(
-                    "thuki: [startup_guard] failed to write launch record to {}: {e}",
+                    "veilura: [startup_guard] failed to write launch record to {}: {e}",
                     record_path.display()
                 );
             }
@@ -246,7 +246,7 @@ pub fn run_startup_guard(app: &tauri::AppHandle, threshold: u32) -> StartupInit 
             clean_init(threshold)
         }
         Err(e) => {
-            eprintln!("thuki: [startup_guard] could not take session lock: {e}. treating as clean");
+            eprintln!("veilura: [startup_guard] could not take session lock: {e}. treating as clean");
             clean_init(threshold)
         }
     }
@@ -431,7 +431,7 @@ pub(crate) fn decide_session(
 ) -> SessionDecision {
     // why: safe_mode is decided ONLY by `clean_exit == false` plus the streak,
     // and by NOTHING else. `boot_time_secs` and `activity` are deliberately
-    // excluded. An OS OOM-kill of Thuki during a model load happens on the SAME
+    // excluded. An OS OOM-kill of Veilura during a model load happens on the SAME
     // boot; gating safe mode on "boot time changed" would skip safe mode for
     // exactly the memory-pressure class this feature exists to catch. `activity`
     // is recovery-UI context only.
@@ -507,7 +507,7 @@ pub(crate) enum SessionLock {
     /// whole process: dropping it releases the lock. It is stored in
     /// [`SessionGuard`] managed state.
     Acquired(File),
-    /// The lock is already held: another Thuki instance is alive. NOT a crash.
+    /// The lock is already held: another Veilura instance is alive. NOT a crash.
     AlreadyRunning,
 }
 
@@ -518,7 +518,7 @@ pub(crate) enum SessionLock {
 // why: the fd MUST NOT leak into the spawned `llama-server` child. Rust sets
 // `O_CLOEXEC` on every fd it opens, so the lock is dropped across the `exec`
 // that starts the sidecar. If it leaked, the sidecar would hold the lock after
-// Thuki dies and the next launch would read "still alive" and never detect the
+// Veilura dies and the next launch would read "still alive" and never detect the
 // crash: a SILENT failure in the unsafe direction, hence the explicit test.
 #[cfg_attr(coverage_nightly, coverage(off))]
 fn open_lock_file(path: &Path) -> std::io::Result<File> {
@@ -653,7 +653,7 @@ pub(crate) fn read_record(path: &Path) -> Option<SessionRecord> {
             Ok(record) => Some(record),
             Err(e) => {
                 eprintln!(
-                    "thuki: [startup_guard] session record at {} unparseable: {e}. treating as clean",
+                    "veilura: [startup_guard] session record at {} unparseable: {e}. treating as clean",
                     path.display()
                 );
                 None
@@ -662,7 +662,7 @@ pub(crate) fn read_record(path: &Path) -> Option<SessionRecord> {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
         Err(source) => {
             eprintln!(
-                "thuki: [startup_guard] cannot read session record {}: {source}. treating as clean",
+                "veilura: [startup_guard] cannot read session record {}: {source}. treating as clean",
                 path.display()
             );
             None
@@ -697,7 +697,7 @@ pub(crate) fn mark_crashed(path: &Path) {
     record.state = SessionState::Crashed;
     if let Err(e) = durable_write_record(path, &record) {
         eprintln!(
-            "thuki: [startup_guard] failed to mark session crashed at {}: {e}",
+            "veilura: [startup_guard] failed to mark session crashed at {}: {e}",
             path.display()
         );
     }
@@ -809,7 +809,7 @@ pub(crate) fn session_lock_path(app: &tauri::AppHandle) -> Option<PathBuf> {
         .map(|dir| dir.join(crate::config::defaults::DEFAULT_SESSION_LOCK_FILENAME))
 }
 
-/// Sets Thuki's own `NSQuitAlwaysKeepsWindows` user default to false.
+/// Sets Veilura's own `NSQuitAlwaysKeepsWindows` user default to false.
 ///
 /// Defense-in-depth layered on top of the session record, not a replacement for
 /// it: this asks macOS not to reopen the overlay window automatically after an
@@ -844,7 +844,7 @@ pub fn disable_quit_keeps_windows() {
 // Shutdown-signal handling (issue #296): a signal-requested stop is a CLEAN exit.
 // ---------------------------------------------------------------------------
 
-/// The polite-stop signals a controlling process sends to ask Thuki to quit:
+/// The polite-stop signals a controlling process sends to ask Veilura to quit:
 /// `SIGINT` (Ctrl+C in the dev terminal) and `SIGTERM` (what macOS sends every
 /// app during a system shutdown or restart).
 ///
@@ -891,7 +891,7 @@ fn shutdown_sigset() -> libc::sigset_t {
 /// block.
 ///
 // why safe for the sidecar child: the spawned `llama-server` inherits this
-// block across fork+exec, but Thuki kills it with `SIGKILL` (tokio
+// block across fork+exec, but Veilura kills it with `SIGKILL` (tokio
 // `Child::kill`), which is unblockable, so the inherited block is inert and the
 // no-orphan-on-quit guarantee is unaffected.
 ///
@@ -951,7 +951,7 @@ where
             // kernel-released lock plus the `clean_exit: false` record still
             // classify an eventual abnormal death correctly, so nothing is lost.
             eprintln!(
-                "thuki: [startup_guard] sigwait failed: {}",
+                "veilura: [startup_guard] sigwait failed: {}",
                 std::io::Error::last_os_error()
             );
             return;

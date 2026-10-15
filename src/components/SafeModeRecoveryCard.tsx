@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useEffect, useRef, type KeyboardEvent } from 'react';
-import thukiLogo from '../../src-tauri/icons/128x128.png';
+import veiluraLogo from '../../src-tauri/icons/128x128.png';
 import { useFitOnboardingWindow } from '../hooks/useFitOnboardingWindow';
 
 /** Stable id for the headline, referenced by the dialog's `aria-labelledby`. */
@@ -76,7 +76,7 @@ export function SafeModeRecoveryCard({
     }
   };
 
-  // Thuki is summoned by a keyboard hotkey, so WebKit's :focus-visible
+  // Veilura is summoned by a keyboard hotkey, so WebKit's :focus-visible
   // heuristic treats the interaction as keyboard-originated: whichever
   // element receives focus at mount paints a UA focus ring. Focusing the
   // dialog container (a tabindex="-1" programmatic target, not a tab stop)
@@ -84,7 +84,7 @@ export function SafeModeRecoveryCard({
   // still moving focus into the dialog for screen readers and keyboard
   // traversal.
   useEffect(() => {
-    // why: Thuki's window is an NSPanel that only becomes key AFTER this
+    // why: Veilura's window is an NSPanel that only becomes key AFTER this
     // webview has mounted and painted (the panel is shown/activated
     // post-render). A synchronous `.focus()` here loses that race: when the
     // panel becomes key, WebKit assigns focus to the first focusable element
@@ -149,8 +149,8 @@ export function SafeModeRecoveryCard({
           // ModelCheckStep).
           flexShrink: 0,
           background:
-            'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(255,141,92,0.14) 0%, rgba(28,24,20,0.97) 60%), rgba(28,24,20,0.97)',
-          border: '1px solid rgba(255, 141, 92, 0.2)',
+            'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(124,108,240,0.14) 0%, rgba(28,26,58,0.97) 60%), rgba(28,26,58,0.97)',
+          border: '1px solid rgba(124, 108, 240, 0.2)',
           borderRadius: 24,
           padding: '32px 26px 26px',
           boxShadow: '0 0 40px rgba(255,100,40,0.07)',
@@ -167,10 +167,10 @@ export function SafeModeRecoveryCard({
           style={{ textAlign: 'center', cursor: 'grab' }}
         >
           <img
-            src={thukiLogo}
+            src={veiluraLogo}
             width={44}
             height={44}
-            alt="Thuki"
+            alt="Veilura"
             style={{
               objectFit: 'contain',
               display: 'block',
@@ -217,7 +217,7 @@ export function SafeModeRecoveryCard({
             display: 'block',
             width: '100%',
             padding: '12px',
-            background: 'linear-gradient(135deg, #ff8d5c 0%, #d45a1e 100%)',
+            background: 'linear-gradient(135deg, #7c6cf0 0%, #4f46e5 100%)',
             color: 'white',
             fontSize: 14,
             fontWeight: 600,

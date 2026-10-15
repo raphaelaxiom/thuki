@@ -19,7 +19,7 @@
 use crate::config::defaults::DENIED_PRIMARY_ARCHES;
 use crate::models::gguf::GgufMetadata;
 
-/// Role of a GGUF file relative to Thuki's chat load path (`llama-server -m`).
+/// Role of a GGUF file relative to Veilura's chat load path (`llama-server -m`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GgufRole {
     /// Chat / completion weights eligible for `-m` when the engine supports them.
@@ -80,7 +80,7 @@ pub fn validate_primary_architecture(architecture: Option<&str>) -> Result<(), S
     };
     if is_denied_primary_arch(raw) {
         return Err(format!(
-            "\"{raw}\" is not a chat model architecture Thuki can load as a primary model. \
+            "\"{raw}\" is not a chat model architecture Veilura can load as a primary model. \
              Download a text-generation GGUF (llama, gemma, qwen, phi, mistral, ...) instead."
         ));
     }
@@ -108,7 +108,7 @@ pub fn primary_role_error(role: GgufRole, file_name: &str) -> String {
         GgufRole::Primary => String::new(),
         GgufRole::Projector => format!(
             "\"{file_name}\" is a vision projector (CLIP/mmproj), not a chat model. \
-             Download a text model GGUF from the same repo; Thuki attaches the projector automatically."
+             Download a text model GGUF from the same repo; Veilura attaches the projector automatically."
         ),
         GgufRole::Helper => format!(
             "\"{file_name}\" is a helper file (draft/MTP/dspark/adapter/embedder), not a chat model. \

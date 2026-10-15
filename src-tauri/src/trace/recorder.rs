@@ -363,7 +363,7 @@ pub enum RecorderEvent {
     /// Final event in a chat-domain file. Emitted by the frontend when
     /// the user resets the conversation or by the backend on app quit
     /// (reason = "quit"). Window-hide does NOT emit this event because
-    /// Thuki's window-close intercept hides instead of quits and the
+    /// Veilura's window-close intercept hides instead of quits and the
     /// same conversation can resume on next hotkey activation.
     ///
     /// Late events arriving after `ConversationEnd` are tolerated; see
@@ -505,7 +505,7 @@ impl FileRecorder {
             .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
             .is_ok()
         {
-            eprintln!("thuki: [trace] {msg}");
+            eprintln!("veilura: [trace] {msg}");
         }
     }
 
@@ -835,7 +835,7 @@ mod tests {
     use std::sync::Arc;
 
     fn fresh_dir() -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("thuki-trace-tests-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("veilura-trace-tests-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }
@@ -1007,7 +1007,7 @@ mod tests {
             &cid("conv-meta"),
             RecorderEvent::ConversationStart {
                 model: "qwen3:4b".into(),
-                system_prompt: "You are Thuki...".into(),
+                system_prompt: "You are Veilura...".into(),
             },
         );
         r.record(

@@ -121,13 +121,13 @@ export const COMMANDS: readonly Command[] = [
         '`/screen what is this error?`: attaches a screenshot and asks a question about it',
       ],
       behavior:
-        "The screenshot is taken when you submit the message. Thuki's own window is excluded from the capture, and the image appears in your message bubble like a pasted screenshot.",
+        "The screenshot is taken when you submit the message. Veilura's own window is excluded from the capture, and the image appears in your message bubble like a pasted screenshot.",
       composability:
         '`/screen` can combine with `/think` and utility commands. For example, `/screen /rewrite` captures the screen and rewrites whatever text the model can see.',
       limit:
         'One `/screen` capture per message. You may also attach up to 3 images manually for a total of 4 images per message.',
       permission:
-        'Requires Screen Recording permission. If denied, Thuki cannot capture the screen until access is granted in System Settings.',
+        'Requires Screen Recording permission. If denied, Veilura cannot capture the screen until access is granted in System Settings.',
     },
     promptHelp: {
       summary: 'capture current screen and attach it as image context.',

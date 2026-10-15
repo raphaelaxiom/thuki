@@ -154,7 +154,7 @@ fn sidecar_path(app: &AppHandle) -> Result<PathBuf, String> {
 
 /// Stores `service` on `sidecar` so the post-restart launch can resume the
 /// grant flow. Returns `Err` when the service string is not one of the
-/// values Thuki resets at click time, so callers cannot smuggle arbitrary
+/// values Veilura resets at click time, so callers cannot smuggle arbitrary
 /// strings into a later `tccutil reset` invocation.
 pub fn prepare_pending_reregister(
     sidecar: &mut SnoozeSidecar,
@@ -238,7 +238,7 @@ pub fn reset_and_relaunch_for_grant(
     tauri::async_runtime::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_millis(150)).await;
         eprintln!(
-            "thuki: [updater] relaunching after click-time TCC reset \
+            "veilura: [updater] relaunching after click-time TCC reset \
              to refresh tccd PID tracking"
         );
         app_handle.restart();

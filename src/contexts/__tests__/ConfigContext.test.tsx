@@ -297,7 +297,7 @@ describe('ConfigContext', () => {
       expect(container.textContent).toBe('');
     });
 
-    it('refetches and updates state when thuki://config-updated fires', async () => {
+    it('refetches and updates state when veilura://config-updated fires', async () => {
       const initial = {
         inference: {
           active_provider: 'ollama',
@@ -348,7 +348,7 @@ describe('ConfigContext', () => {
       expect(screen.getByTestId('overlay-width').textContent).toBe('600');
 
       await act(async () => {
-        emitTauriEvent('thuki://config-updated', null);
+        emitTauriEvent('veilura://config-updated', null);
       });
 
       expect(screen.getByTestId('overlay-width').textContent).toBe('900');
@@ -399,7 +399,7 @@ describe('ConfigContext', () => {
       expect(screen.getByTestId('overlay-width').textContent).toBe('600');
 
       await act(async () => {
-        emitTauriEvent('thuki://visibility', { state: 'show' });
+        emitTauriEvent('veilura://visibility', { state: 'show' });
       });
 
       expect(screen.getByTestId('overlay-width').textContent).toBe('950');
@@ -447,8 +447,8 @@ describe('ConfigContext', () => {
       // A hide-request (state !== 'show') and a payloadless event must not
       // trigger a config refetch.
       await act(async () => {
-        emitTauriEvent('thuki://visibility', { state: 'hide-request' });
-        emitTauriEvent('thuki://visibility', null);
+        emitTauriEvent('veilura://visibility', { state: 'hide-request' });
+        emitTauriEvent('veilura://visibility', null);
       });
 
       expect(invoke.mock.calls.length).toBe(callsAfterMount);
@@ -501,13 +501,13 @@ describe('ConfigContext', () => {
 
       // Rejected refresh: state stays at the last good value (no flip to defaults).
       await act(async () => {
-        emitTauriEvent('thuki://config-updated', null);
+        emitTauriEvent('veilura://config-updated', null);
       });
       expect(screen.getByTestId('overlay-width').textContent).toBe('700');
 
       // Nullish refresh: same — state preserved.
       await act(async () => {
-        emitTauriEvent('thuki://config-updated', null);
+        emitTauriEvent('veilura://config-updated', null);
       });
       expect(screen.getByTestId('overlay-width').textContent).toBe('700');
     });
@@ -554,7 +554,7 @@ describe('ConfigContext', () => {
       const callsBeforeUnmount = invoke.mock.calls.length;
       unmount();
       await act(async () => {
-        emitTauriEvent('thuki://config-updated', null);
+        emitTauriEvent('veilura://config-updated', null);
       });
       expect(invoke.mock.calls.length).toBe(callsBeforeUnmount);
     });

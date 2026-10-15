@@ -1,6 +1,6 @@
 //! Startup reaper for orphaned `llama-server` sidecars (issue #296).
 //!
-//! Thuki spawns `llama-server` as a child process. When Thuki dies by `SIGKILL`,
+//! Veilura spawns `llama-server` as a child process. When Veilura dies by `SIGKILL`,
 //! a kernel panic, or a machine freeze, no shutdown path runs (those are
 //! uncatchable by construction), and macOS has no `PR_SET_PDEATHSIG`, so the
 //! child is not taken down with the parent. An idle sidecar never writes to its
@@ -11,16 +11,16 @@
 //! The polite-stop path (`startup_guard`'s `sigwait` thread) covers `SIGINT` and
 //! `SIGTERM`, but the uncatchable deaths can only be cleaned up at the NEXT
 //! launch. This module enumerates processes and kills a sidecar left behind by a
-//! previous Thuki, gated on a strict three-clause predicate.
+//! previous Veilura, gated on a strict three-clause predicate.
 //!
 //! ## The predicate: all three clauses, never fewer
 //!
 //! A process is reaped ONLY when all of the following hold ([`is_reapable_orphan`]
 //! is the sole authorizer, at every check including the pre-`SIGKILL` re-verify):
-//! 1. `ppid == 1`. A live Thuki's sidecar has `ppid` equal to that Thuki's pid,
+//! 1. `ppid == 1`. A live Veilura's sidecar has `ppid` equal to that Veilura's pid,
 //!    so this clause can never match a running instance's child, including a
-//!    second Thuki the user has open. This is the load-bearing discriminator,
-//!    and it is why reaping runs at startup only: while Thuki is alive it cannot
+//!    second Veilura the user has open. This is the load-bearing discriminator,
+//!    and it is why reaping runs at startup only: while Veilura is alive it cannot
 //!    create its own orphan.
 //! 2. The canonicalized exec path equals our canonicalized sidecar binary path.
 //!    A user's own llama.cpp build lives elsewhere and must never be touched.
@@ -299,7 +299,7 @@ fn send_signal(pid: i32, sig: libc::c_int) {
     }
 }
 
-/// Reaps every `llama-server` sidecar orphaned by a previous Thuki (issue #296).
+/// Reaps every `llama-server` sidecar orphaned by a previous Veilura (issue #296).
 ///
 /// Startup only. Thin `coverage(off)` wrapper: it canonicalizes our own sidecar
 /// path (returning without reaping if that fails, so nothing is matched against
@@ -337,7 +337,7 @@ mod tests {
 
     /// The stand-in path for "our" bundled `llama-server` binary under test.
     fn our_binary() -> PathBuf {
-        PathBuf::from("/apps/Thuki.app/Contents/MacOS/llama-server")
+        PathBuf::from("/apps/Veilura.app/Contents/MacOS/llama-server")
     }
 
     /// Builds a `ProcIdent` from raw pid/ppid/ruid fields.
@@ -483,11 +483,11 @@ mod tests {
 
     #[test]
     fn not_reapable_when_ppid_is_not_one() {
-        // Right path and uid, but the process is still parented to a live Thuki
+        // Right path and uid, but the process is still parented to a live Veilura
         // (ppid != 1): the load-bearing discriminator rejects it.
         let binary = our_binary();
         let mut proc = matching_info(4242);
-        proc.ppid = 9931; // a live Thuki's pid, not launchd
+        proc.ppid = 9931; // a live Veilura's pid, not launchd
         assert!(!is_reapable_orphan(&proc, &binary, OUR_UID));
     }
 

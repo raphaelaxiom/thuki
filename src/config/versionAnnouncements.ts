@@ -7,15 +7,15 @@
 
 /** Public blog post for Auto search / built-in web search disclosure. */
 export const AUTO_SEARCH_PUBLIC_BLOG_POST_URL =
-  'https://thuki.app/blog/thuki-built-in-web-search';
+  'https://veilura.online/blog/veilura-built-in-web-search';
 
 /**
  * v0.16.0 Auto search spotlight shown on the ask bar until the user
  * acknowledges (`behavior.search_notice_acknowledged`).
  */
 export const V016_AUTO_SEARCH_ANNOUNCEMENT = {
-  title: 'Thuki can now search the web, automatically!',
-  body: 'Since v0.16.0, when a question needs fresh facts, Thuki smartly searches the web for them. Turn Auto search off to stay fully local and use /search only when you want a look-up.',
+  title: 'Veilura can now search the web, automatically!',
+  body: 'Since v0.16.0, when a question needs fresh facts, Veilura smartly searches the web for them. Turn Auto search off to stay fully local and use /search only when you want a look-up.',
   learn: {
     label: 'See how Auto search works ↗',
     url: AUTO_SEARCH_PUBLIC_BLOG_POST_URL,

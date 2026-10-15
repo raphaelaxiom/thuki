@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Veilura mark — original design: layered veil / aurora arcs + spark. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b3796"/>
+      <stop offset="55%" stop-color="#2a2770"/>
+      <stop offset="100%" stop-color="#1b1838"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" rx="230" fill="url(#bg)"/>
+  <path d="M -213.0 751.9 A 800 800 0 0 1 1237.0 751.9" fill="none" stroke="#7c6cf0" stroke-width="58" stroke-linecap="round"/><path d="M -68.0 819.5 A 640 640 0 0 1 1092.0 819.5" fill="none" stroke="#2dd4bf" stroke-width="48" stroke-linecap="round"/><path d="M 67.9 882.9 A 490 490 0 0 1 956.1 882.9" fill="none" stroke="#5eead4" stroke-width="38" stroke-linecap="round"/>
+  <polygon points="700.0,205.0 714.8,285.2 795.0,300.0 714.8,314.8 700.0,395.0 685.2,314.8 605.0,300.0 685.2,285.2" fill="#faf7f2"/><polygon points="330.0,388.0 336.5,423.5 372.0,430.0 336.5,436.5 330.0,472.0 323.5,436.5 288.0,430.0 323.5,423.5" fill="#5eead4"/>
+</svg>

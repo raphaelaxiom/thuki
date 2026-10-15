@@ -157,7 +157,7 @@ export interface HfGgufFile {
  * Mirrors `models::ActiveDownload`: the backend slot `key`, the blob `shas` it
  * writes (the cross-window match discriminator), and its latest progress
  * `event` (`null` until the first event arrives). Returned in bulk by
- * `get_active_downloads` and broadcast singly on the `thuki://download-progress`
+ * `get_active_downloads` and broadcast singly on the `veilura://download-progress`
  * event.
  */
 export interface ActiveDownload {

@@ -68,11 +68,11 @@ pub mod weather;
 pub mod writer;
 
 /// Honest product User-Agent for keyless API verticals (weather, news, sports).
-/// Identifies Thuki with version + homepage so operators can contact us. Not used
+/// Identifies Veilura with version + homepage so operators can contact us. Not used
 /// on SERP scrapers: DuckDuckGo/Mojeek block non-browser UAs on `/html` instantly
 /// (browser UA stays deliberate there; see `engine::BROWSER_USER_AGENT`).
-pub(crate) const THUKI_USER_AGENT: &str =
-    concat!("Thuki/", env!("CARGO_PKG_VERSION"), " (+https://thuki.app)");
+pub(crate) const VEILURA_USER_AGENT: &str =
+    concat!("Veilura/", env!("CARGO_PKG_VERSION"), " (+https://veilura.online)");
 
 /// Attribution required by Open-Meteo's CC BY 4.0 licence. Markdown link so the
 /// "Weather data by Open-Meteo.com" hyperlink is present. Single source of
@@ -157,10 +157,10 @@ mod tests {
     }
 
     #[test]
-    fn thuki_user_agent_identifies_product_with_version_and_contact() {
-        assert!(super::THUKI_USER_AGENT.starts_with("Thuki/"));
-        assert!(super::THUKI_USER_AGENT.contains("(+https://thuki.app)"));
-        assert!(super::THUKI_USER_AGENT.contains(env!("CARGO_PKG_VERSION")));
+    fn veilura_user_agent_identifies_product_with_version_and_contact() {
+        assert!(super::VEILURA_USER_AGENT.starts_with("Veilura/"));
+        assert!(super::VEILURA_USER_AGENT.contains("(+https://veilura.online)"));
+        assert!(super::VEILURA_USER_AGENT.contains(env!("CARGO_PKG_VERSION")));
     }
 
     #[test]

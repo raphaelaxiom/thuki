@@ -45,7 +45,7 @@
 //! [`CiteClass::Unverifiable`]) and never counted toward the answer-facing
 //! total-failure note built by [`honest_failure_note`].
 //!
-//! After the audit, Thuki may run a small number of writer repair rounds
+//! After the audit, Veilura may run a small number of writer repair rounds
 //! (see [`crate::config::defaults::CITE_REPAIR_MAX_ATTEMPTS`]) and then
 //! deterministically [`strip_unsupported_citations`]. Only a total
 //! citation failure still surfaces an honest note to the user; partial
@@ -293,12 +293,12 @@ fn format_index_markers(indices: &[usize]) -> String {
 /// User-facing body for total citation failure. Plain text: frontend owns
 /// italic + hairline-rail styling. Keep in lock-step with
 /// `HONEST_FAILURE_NOTE_BODY` in `src/utils/honestFailureNote.ts`.
-pub const HONEST_FAILURE_NOTE_BODY: &str = "Thuki found sources but could not \
+pub const HONEST_FAILURE_NOTE_BODY: &str = "Veilura found sources but could not \
 verify the answer's citations against the page text. Treat specific claims \
 carefully.";
 
 /// User-facing note used only after repair rounds are exhausted and **every**
-/// citation still fails the audit. Speaks as Thuki owning the verification
+/// citation still fails the audit. Speaks as Veilura owning the verification
 /// failure (not retrieval failure: sources were found), and optionally points
 /// at a stronger model. Returns `None` when the audit is not a total failure.
 pub fn honest_failure_note(audit: &CitationAudit) -> Option<String> {

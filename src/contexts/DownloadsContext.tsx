@@ -43,7 +43,7 @@ import type { ActiveDownload, DownloadEvent } from '../types/starter';
  * registry while onboarding downloads in the main window) render its live
  * progress, matched by blob sha. Mirrors `models::DOWNLOAD_PROGRESS_EVENT`.
  */
-const DOWNLOAD_PROGRESS_EVENT = 'thuki://download-progress';
+const DOWNLOAD_PROGRESS_EVENT = 'veilura://download-progress';
 
 /** What the Settings panes start: a Staff Picks id or a Browse-all repo file. */
 type RegistryIdentity = Extract<

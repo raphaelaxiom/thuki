@@ -24,7 +24,7 @@
 use crate::config::defaults::{SPORTS_LEAGUE_MAP, SPORTS_SCHEDULE_WINDOW_DAYS};
 use crate::net::transport::{send_with_retry, HttpMethod, HttpRequest, HttpTransport};
 use crate::websearch::assemble::SourceBlock;
-use crate::websearch::THUKI_USER_AGENT;
+use crate::websearch::VEILURA_USER_AGENT;
 
 /// ESPN's public (unofficial, keyless) scoreboard API base. Path segments are
 /// `{sport}/{league}` per [`SPORTS_LEAGUE_MAP`], e.g.
@@ -116,7 +116,7 @@ pub(crate) fn scoreboard_request(sport: &str, league: &str, today: &str) -> Http
     HttpRequest {
         method: HttpMethod::Get,
         url,
-        headers: vec![("User-Agent".to_string(), THUKI_USER_AGENT.to_string())],
+        headers: vec![("User-Agent".to_string(), VEILURA_USER_AGENT.to_string())],
         form: Vec::new(),
     }
 }
@@ -656,7 +656,7 @@ mod tests {
         assert!(req
             .headers
             .iter()
-            .any(|(k, v)| k == "User-Agent" && v == THUKI_USER_AGENT));
+            .any(|(k, v)| k == "User-Agent" && v == VEILURA_USER_AGENT));
     }
 
     #[test]

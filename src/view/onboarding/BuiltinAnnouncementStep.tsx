@@ -1,6 +1,6 @@
 /**
  * Onboarding step shown once to upgraders coming from a pre-built-in-engine
- * version. It announces that Thuki now ships its own inference engine and lets
+ * version. It announces that Veilura now ships its own inference engine and lets
  * the user either adopt it ("Try Built-in Engine") or stay on their existing
  * Ollama setup ("Keep using Ollama"). Both choices are non-destructive: the
  * grandfathered Ollama provider is left intact until the user explicitly
@@ -20,7 +20,7 @@ import { useCallback, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type React from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import thukiLogo from '../../../src-tauri/icons/128x128.png';
+import veiluraLogo from '../../../src-tauri/icons/128x128.png';
 import { useFitOnboardingWindow } from '../../hooks/useFitOnboardingWindow';
 import { InlineLink } from '../../components/InlineLink';
 
@@ -32,7 +32,7 @@ const PROVIDER_ID_BUILTIN = 'builtin';
  * subtitle "v0.15" anchor and the footer "Learn more" link.
  */
 const BLOG_POST_URL =
-  'https://www.thuki.app/blog/thuki-built-in-local-ai-engine';
+  'https://veilura.online/blog/veilura-built-in-local-ai-engine';
 
 /** Hugging Face home, opened from the "Total AI model freedom" point. */
 const HUGGING_FACE_URL = 'https://huggingface.co';
@@ -40,7 +40,7 @@ const HUGGING_FACE_URL = 'https://huggingface.co';
 export function BuiltinAnnouncementStep() {
   const cardRef = useRef<HTMLDivElement>(null);
   // The onboarding window is transparent; fit it to the card so the empty area
-  // never blocks clicks to the apps behind Thuki.
+  // never blocks clicks to the apps behind Veilura.
   useFitOnboardingWindow(cardRef, null);
 
   const handleTryBuiltin = useCallback(async () => {
@@ -80,8 +80,8 @@ export function BuiltinAnnouncementStep() {
           // during a mid-resize measure (see the picker card in ModelCheckStep).
           flexShrink: 0,
           background:
-            'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(255,141,92,0.14) 0%, rgba(28,24,20,0.97) 60%), rgba(28,24,20,0.97)',
-          border: '1px solid rgba(255, 141, 92, 0.2)',
+            'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(124,108,240,0.14) 0%, rgba(28,26,58,0.97) 60%), rgba(28,26,58,0.97)',
+          border: '1px solid rgba(124, 108, 240, 0.2)',
           borderRadius: 24,
           padding: '28px 26px 22px',
           boxShadow: '0 0 40px rgba(255,100,40,0.07)',
@@ -98,7 +98,7 @@ export function BuiltinAnnouncementStep() {
             right: 0,
             height: 1,
             background:
-              'linear-gradient(90deg, transparent, rgba(255,141,92,0.4), transparent)',
+              'linear-gradient(90deg, transparent, rgba(124,108,240,0.4), transparent)',
           }}
         />
 
@@ -110,10 +110,10 @@ export function BuiltinAnnouncementStep() {
           style={{ textAlign: 'center', cursor: 'grab' }}
         >
           <img
-            src={thukiLogo}
+            src={veiluraLogo}
             width={46}
             height={46}
-            alt="Thuki"
+            alt="Veilura"
             style={{
               objectFit: 'contain',
               pointerEvents: 'none',
@@ -130,9 +130,9 @@ export function BuiltinAnnouncementStep() {
               fontSize: 10,
               fontWeight: 700,
               letterSpacing: '0.5px',
-              color: '#ff8d5c',
-              background: 'rgba(255,141,92,0.1)',
-              border: '1px solid rgba(255,141,92,0.22)',
+              color: '#7c6cf0',
+              background: 'rgba(124,108,240,0.1)',
+              border: '1px solid rgba(124,108,240,0.22)',
               borderRadius: 20,
               padding: '2px 9px',
               marginBottom: 13,
@@ -173,14 +173,14 @@ export function BuiltinAnnouncementStep() {
           >
             v0.15
           </InlineLink>
-          , Thuki ships its own inference engine.
+          , Veilura ships its own inference engine.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <Point
             icon={<BoltIcon />}
             title="One app, nothing else to manage"
-            desc="No more background Ollama, Thuki runs models itself."
+            desc="No more background Ollama, Veilura runs models itself."
           />
           <Point
             icon={<LayersIcon />}
@@ -223,7 +223,7 @@ export function BuiltinAnnouncementStep() {
             display: 'block',
             width: '100%',
             padding: '12px',
-            background: 'linear-gradient(135deg, #ff8d5c 0%, #d45a1e 100%)',
+            background: 'linear-gradient(135deg, #7c6cf0 0%, #4f46e5 100%)',
             color: 'white',
             fontSize: 14,
             fontWeight: 600,
@@ -319,7 +319,7 @@ function Point({ icon, title, desc, last = false }: PointProps) {
           justifyContent: 'center',
           flexShrink: 0,
           paddingTop: 1,
-          color: 'rgba(255,141,92,0.7)',
+          color: 'rgba(124,108,240,0.7)',
         }}
       >
         {icon}

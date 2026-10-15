@@ -76,40 +76,40 @@
 //! ## Running
 //!
 //! ```sh
-//! THUKI_EVAL_PORT=<port> cargo test --test live_answer_quality_eval -- --ignored --nocapture --test-threads=1
+//! VEILURA_EVAL_PORT=<port> cargo test --test live_answer_quality_eval -- --ignored --nocapture --test-threads=1
 //! ```
 //!
 //! `<port>` must be a running `llama-server`. **If you plan to spawn your own
 //! `llama-server` instance for this rather than pointing at the app's own
-//! sidecar port, quit the Thuki app first.** Two `llama-server` processes each
+//! sidecar port, quit the Veilura app first.** Two `llama-server` processes each
 //! holding a model resident in Metal memory can exhaust the GPU memory
 //! budget on the dev machine (see the keep-warm/Metal-residency notes this
-//! repo already carries for the built-in engine). Pointing `THUKI_EVAL_PORT`
+//! repo already carries for the built-in engine). Pointing `VEILURA_EVAL_PORT`
 //! at the app's own already-running sidecar port needs no quit, exactly as
 //! `live_classifier_eval.rs` documents.
 //!
 //! This harness also hits the live internet through the production
 //! `websearch` retrieval pipeline; no local search services are required.
 
-use thuki_agent_lib::commands::ChatMessage;
-use thuki_agent_lib::net::reachability::DnsReachability;
-use thuki_agent_lib::net::transport::ReqwestTransport;
-use thuki_agent_lib::openai::{
+use veilura_agent_lib::commands::ChatMessage;
+use veilura_agent_lib::net::reachability::DnsReachability;
+use veilura_agent_lib::net::transport::ReqwestTransport;
+use veilura_agent_lib::openai::{
     request_openai_json, stream_openai_chat, OpenAiChatParams, V1Flavor,
 };
-use thuki_agent_lib::trace::{BoundRecorder, ConversationId};
-use thuki_agent_lib::websearch::assemble::SourceBlock;
-use thuki_agent_lib::websearch::cache::TtlSourceCache;
-use thuki_agent_lib::websearch::engine::EngineHealth;
-use thuki_agent_lib::websearch::judge::{
+use veilura_agent_lib::trace::{BoundRecorder, ConversationId};
+use veilura_agent_lib::websearch::assemble::SourceBlock;
+use veilura_agent_lib::websearch::cache::TtlSourceCache;
+use veilura_agent_lib::websearch::engine::EngineHealth;
+use veilura_agent_lib::websearch::judge::{
     InsufficiencyReason, SufficiencyJudge, SufficiencyVerdict,
 };
-use thuki_agent_lib::websearch::orchestrator::{run_search, SearchDeps, SearchOutcome};
-use thuki_agent_lib::websearch::prepass::{
+use veilura_agent_lib::websearch::orchestrator::{run_search, SearchDeps, SearchOutcome};
+use veilura_agent_lib::websearch::prepass::{
     InferenceError, PrePass, PrePassDecision, SearchDecision, SearchRoute,
 };
-use thuki_agent_lib::websearch::rank::Bm25Scorer;
-use thuki_agent_lib::websearch::serp_cache::WebCache;
+use veilura_agent_lib::websearch::rank::Bm25Scorer;
+use veilura_agent_lib::websearch::serp_cache::WebCache;
 
 use async_trait::async_trait;
 use std::collections::HashMap;
@@ -844,10 +844,10 @@ impl SufficiencyJudge for AlwaysSufficientJudge {
 struct AlwaysGroundedSynthesizer;
 
 #[async_trait]
-impl thuki_agent_lib::websearch::orchestrator::Synthesizer for AlwaysGroundedSynthesizer {
+impl veilura_agent_lib::websearch::orchestrator::Synthesizer for AlwaysGroundedSynthesizer {
     async fn synthesize(
         &self,
-        _messages: &[thuki_agent_lib::commands::ChatMessage],
+        _messages: &[veilura_agent_lib::commands::ChatMessage],
         _cancel: &CancellationToken,
     ) -> Result<String, InferenceError> {
         Ok("reused answer [1]".to_string())
@@ -873,7 +873,7 @@ async fn live_answer_for(
     let recorder = BoundRecorder::noop_for(ConversationId::new("j5-eval"));
     let cache = TtlSourceCache::new(
         std::time::Duration::from_secs(600),
-        thuki_agent_lib::config::defaults::SEARCH_CACHE_MAX_ENTRIES,
+        veilura_agent_lib::config::defaults::SEARCH_CACHE_MAX_ENTRIES,
     );
     let web_cache = WebCache::new(
         std::time::Duration::from_secs(600),
@@ -881,7 +881,7 @@ async fn live_answer_for(
         64,
         128,
     );
-    let timings = thuki_agent_lib::websearch::stage_timing::TimingBag::new();
+    let timings = veilura_agent_lib::websearch::stage_timing::TimingBag::new();
     let synthesizer = AlwaysGroundedSynthesizer;
     let deps = SearchDeps {
         prepass: &prepass,
@@ -945,10 +945,10 @@ async fn live_answer_for(
 /// [`CONFIDENTLY_WRONG_GATE`]. See the module doc comment for corpus
 /// composition, grading pipeline, and how to run this.
 #[tokio::test]
-#[ignore = "needs a live llama-server (THUKI_EVAL_PORT) and the live internet; run explicitly"]
+#[ignore = "needs a live llama-server (VEILURA_EVAL_PORT) and the live internet; run explicitly"]
 async fn live_answer_quality_eval_over_corpus() {
-    let port = std::env::var("THUKI_EVAL_PORT")
-        .expect("set THUKI_EVAL_PORT to a running llama-server port");
+    let port = std::env::var("VEILURA_EVAL_PORT")
+        .expect("set VEILURA_EVAL_PORT to a running llama-server port");
     let base_url = format!("http://127.0.0.1:{port}");
     let model = "eval";
     let client = reqwest::Client::new();

@@ -209,7 +209,7 @@ describe('useConfigSync', () => {
     expect(invokeMock).not.toHaveBeenCalled();
   });
 
-  it('refreshes from get_config (not reload) when thuki://config-updated fires', async () => {
+  it('refreshes from get_config (not reload) when veilura://config-updated fires', async () => {
     // An in-app write from either window broadcasts config-updated. The
     // Settings window must pick the change up live via the read-only
     // get_config: calling reload_config_from_disk here would re-emit the
@@ -220,7 +220,7 @@ describe('useConfigSync', () => {
     await waitFor(() => expect(result.current.config).toEqual(CONFIG_A));
 
     await act(async () => {
-      emitTauriEvent('thuki://config-updated', null);
+      emitTauriEvent('veilura://config-updated', null);
       await Promise.resolve();
     });
 
@@ -238,7 +238,7 @@ describe('useConfigSync', () => {
     await waitFor(() => expect(result.current.config).toEqual(CONFIG_A));
 
     await act(async () => {
-      emitTauriEvent('thuki://config-updated', null);
+      emitTauriEvent('veilura://config-updated', null);
       await Promise.resolve();
     });
 
@@ -283,7 +283,7 @@ describe('useConfigSync', () => {
     unmount();
     invokeMock.mockClear();
     await act(async () => {
-      emitTauriEvent('thuki://config-updated', null);
+      emitTauriEvent('veilura://config-updated', null);
     });
 
     expect(invokeMock).not.toHaveBeenCalled();

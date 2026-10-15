@@ -5,7 +5,7 @@
 // building anything.
 //
 // The target architecture derives from the build host (`process.arch`) and
-// can be overridden with THUKI_LLAMA_ARCH ('arm64' | 'x86_64'). The stamp
+// can be overridden with VEILURA_LLAMA_ARCH ('arm64' | 'x86_64'). The stamp
 // includes the arch, so switching hosts forces a rebuild instead of reusing
 // a stale binary for the other arch.
 //
@@ -43,7 +43,7 @@ const LLAMA_CPP_TAG = 'b10056';
 const LLAMA_CPP_COMMIT = 'b85833e934123f373a8dc087316e385b28c98cc0';
 const LLAMA_CPP_REPO = 'https://github.com/ggml-org/llama.cpp.git';
 
-// Minimum macOS Thuki supports, and the engine's build deployment target. This
+// Minimum macOS Veilura supports, and the engine's build deployment target. This
 // is the single source of truth: the build flag, the install-time audit, and
 // the stamp all derive from it, so they cannot drift. 13.4 matches LM Studio's
 // llama.cpp floor and is more inclusive than Ollama (14) and Jan (13.6); keep it
@@ -52,17 +52,17 @@ const MACOS_DEPLOYMENT_TARGET = '13.4';
 
 // Target CPU architecture for the bundled engine. Derived from the build
 // host (arm64 on Apple Silicon, x64 on Intel Macs), overridable with
-// THUKI_LLAMA_ARCH ('arm64' | 'x86_64'). The Rust side resolves the matching
+// VEILURA_LLAMA_ARCH ('arm64' | 'x86_64'). The Rust side resolves the matching
 // triple-suffixed binary at runtime (engine_sidecar_path in
 // src-tauri/src/lib.rs), and Tauri's `externalBin` strips the triple suffix
 // when bundling, so both arch builds share one config.
 const TARGET_ARCH = ((): 'arm64' | 'x86_64' => {
-  const override = process.env.THUKI_LLAMA_ARCH;
+  const override = process.env.VEILURA_LLAMA_ARCH;
   if (override === 'arm64' || override === 'x86_64') {
     return override;
   }
   if (override !== undefined) {
-    fail(`THUKI_LLAMA_ARCH must be 'arm64' or 'x86_64', got '${override}'`);
+    fail(`VEILURA_LLAMA_ARCH must be 'arm64' or 'x86_64', got '${override}'`);
   }
   return process.arch === 'x64' ? 'x86_64' : 'arm64';
 })();
@@ -436,7 +436,7 @@ if (await exists(binPath)) {
 
 preflightBuildTools();
 
-const workDir = await mkdtemp(join(tmpdir(), 'thuki-llama-'));
+const workDir = await mkdtemp(join(tmpdir(), 'veilura-llama-'));
 try {
   const binDir = buildFromSource(workDir);
   const serverPath = join(binDir, 'llama-server');

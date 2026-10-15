@@ -40,9 +40,9 @@ use super::schema::{
 use super::writer::atomic_write;
 
 /// Creates a fresh temp directory that is unique per test run. Returned paths
-/// live inside `std::env::temp_dir()/thuki-config-tests-<uuid>/`.
+/// live inside `std::env::temp_dir()/veilura-config-tests-<uuid>/`.
 fn fresh_temp_dir() -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("thuki-config-tests-{}", uuid::Uuid::new_v4()));
+    let dir = std::env::temp_dir().join(format!("veilura-config-tests-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&dir).expect("create temp dir");
     dir
 }
@@ -105,7 +105,7 @@ fn defaults_prompt_base_is_nonempty() {
 
 #[test]
 fn fresh_default_active_provider_is_builtin() {
-    // Thuki ships the bundled engine, so a fresh install starts on the
+    // Veilura ships the bundled engine, so a fresh install starts on the
     // built-in provider. Existing configs keep whatever active_provider they
     // persisted (see the legacy pin tests below).
     assert_eq!(DEFAULT_ACTIVE_PROVIDER, PROVIDER_ID_BUILTIN);
@@ -1897,7 +1897,7 @@ fn builtin_label_is_healed_to_the_current_default() {
             [[inference.providers]]
             id = "builtin"
             kind = "builtin"
-            label = "Built-in (Thuki)"
+            label = "Built-in (Veilura)"
             [[inference.providers]]
             id = "ollama"
             kind = "ollama"

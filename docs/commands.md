@@ -2,7 +2,7 @@
 
 # Commands
 
-Website: [thuki.app](https://www.thuki.app/)
+Website: [veilura.online](https://veilura.online/)
 
 Commands are written as whole-word `/` triggers anywhere in your message. Press `/` to open the command suggestion menu, then Tab to complete or Enter to select.
 
@@ -16,7 +16,7 @@ Commands that operate on text follow a consistent input priority:
 2. **No highlighted text + typed text after command:** typed text is the input
 3. **Both present:** highlighted text is the primary input; typed text is appended as an additional instruction
 
-This means you can highlight text anywhere on screen, summon Thuki with double-tap Control, type a command, and hit Enter without retyping the selected content.
+This means you can highlight text anywhere on screen, summon Veilura with double-tap Control, type a command, and hit Enter without retyping the selected content.
 
 ## Image input on text-only models
 
@@ -66,13 +66,13 @@ Captures your screen and attaches it as context for the current message.
 - `/screen`: sends a screenshot with no additional message
 - `/screen what is this error?`: attaches a screenshot and asks a question about it
 
-**Behavior:** The screenshot is taken when you submit the message. Thuki's own window is excluded from the capture, and the image appears in your message bubble like a pasted screenshot.
+**Behavior:** The screenshot is taken when you submit the message. Veilura's own window is excluded from the capture, and the image appears in your message bubble like a pasted screenshot.
 
 **Composable:** `/screen` can combine with `/think` and utility commands. For example, `/screen /rewrite` captures the screen and rewrites whatever text the model can see.
 
 **Limit:** One `/screen` capture per message. You may also attach up to 3 images manually for a total of 4 images per message.
 
-**Permission:** Requires Screen Recording permission. If denied, Thuki cannot capture the screen until access is granted in System Settings.
+**Permission:** Requires Screen Recording permission. If denied, Veilura cannot capture the screen until access is granted in System Settings.
 
 ---
 

@@ -57,7 +57,7 @@
 }
 .addButton:hover {
   color: var(--accent);
-  border-color: rgba(255, 141, 92, 0.45);
+  border-color: rgba(124, 108, 240, 0.45);
   background: var(--accent-soft);
 }
 .addIcon {
@@ -83,11 +83,11 @@
 }
 
 .cardActive {
-  border-color: rgba(255, 141, 92, 0.4);
+  border-color: rgba(124, 108, 240, 0.4);
   background: linear-gradient(
     180deg,
-    rgba(255, 141, 92, 0.05),
-    rgba(255, 141, 92, 0.015)
+    rgba(124, 108, 240, 0.05),
+    rgba(124, 108, 240, 0.015)
   );
 }
 
@@ -195,7 +195,7 @@
 }
 .manageButton:hover {
   color: var(--t1);
-  border-color: rgba(255, 141, 92, 0.4);
+  border-color: rgba(124, 108, 240, 0.4);
 }
 
 /* ── Popover menu (replaces the old inline card expand) ─────────────────── */
@@ -225,11 +225,11 @@
   padding: 6px;
   background: rgba(28, 23, 20, 0.98);
   border: 1px solid var(--hair);
-  border-top-color: rgba(255, 141, 92, 0.18);
+  border-top-color: rgba(124, 108, 240, 0.18);
   border-radius: 12px;
   box-shadow:
     0 14px 34px -10px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 141, 92, 0.08),
+    0 0 0 1px rgba(124, 108, 240, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   transform-origin: top right;
   animation: menuIn 130ms cubic-bezier(0.2, 0.8, 0.3, 1);

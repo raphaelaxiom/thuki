@@ -110,7 +110,7 @@
   display: grid;
   place-items: center;
   color: var(--accent);
-  border: 1px solid rgba(255, 141, 92, 0.4);
+  border: 1px solid rgba(124, 108, 240, 0.4);
   border-radius: var(--radius-control);
   background: transparent;
   cursor: pointer;
@@ -128,7 +128,7 @@
   stroke-linejoin: round;
 }
 .getBtn:hover {
-  border-color: rgba(255, 141, 92, 0.6);
+  border-color: rgba(124, 108, 240, 0.6);
   background: var(--accent-soft);
 }
 

@@ -310,7 +310,7 @@ describe('useStarterOptions', () => {
     // picker must re-pull so the now-gone partial stops showing.
     invoke.mockResolvedValueOnce([]);
     await act(async () => {
-      emitTauriEvent('thuki://models-changed', null);
+      emitTauriEvent('veilura://models-changed', null);
     });
     expect(result.current.options).toEqual([]);
   });
@@ -366,7 +366,7 @@ describe('useStaffPicks', () => {
     // the partial, so the Discover catalog must drop its stale Paused row.
     invoke.mockResolvedValueOnce([]);
     await act(async () => {
-      emitTauriEvent('thuki://models-changed', null);
+      emitTauriEvent('veilura://models-changed', null);
     });
     expect(result.current.options).toEqual([]);
   });

@@ -120,7 +120,7 @@ describe('ModelCheckStep', () => {
       screen.queryByText('STEP 2 · ACTION NEEDED'),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText("Almost there. Let's pick a model for Thuki."),
+      screen.getByText("Almost there. Let's pick a model for Veilura."),
     ).toBeInTheDocument();
     expect(
       screen.getByText('You can swap or add more later.'),
@@ -325,12 +325,12 @@ describe('ModelCheckStep', () => {
     await act(async () => {});
 
     const installTab = screen.getByRole('button', { name: 'Install Ollama' });
-    expect(installTab.style.color).toContain('255, 141, 92');
+    expect(installTab.style.color).toContain('124, 108, 240');
 
     const alreadyTab = screen.getByRole('button', {
       name: 'Already Installed?',
     });
-    expect(alreadyTab.style.color).not.toContain('255, 141, 92');
+    expect(alreadyTab.style.color).not.toContain('124, 108, 240');
   });
 
   it('hovering an inactive tab brightens the label', async () => {
@@ -631,7 +631,7 @@ describe('ModelCheckStep', () => {
 
     const button = screen.getByLabelText('Copy install ollama command');
     fireEvent.mouseEnter(button);
-    expect(button.style.borderColor).toContain('255, 141, 92');
+    expect(button.style.borderColor).toContain('124, 108, 240');
     fireEvent.mouseLeave(button);
     expect(button.style.borderColor).toContain('255, 255, 255');
   });

@@ -1,7 +1,7 @@
 /**
  * Staff-picks pane: the curated front door of Discover.
  *
- * Thuki hand-picks a short catalog and groups it into use-case sections
+ * Veilura hand-picks a short catalog and groups it into use-case sections
  * ("Everyday chat", "Compact & fast", "Deep reasoning", ...) so a non-expert
  * can pick by intent. Known sections show first in a fixed order, then any
  * extra category alphabetically; within a section models are alphabetical. Each

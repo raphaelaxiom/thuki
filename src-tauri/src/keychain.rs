@@ -6,8 +6,8 @@
 //! they are never written to the TOML config and are never returned to the
 //! frontend (only existence is queryable via [`has_provider_api_key`]).
 //!
-//! Scoping by bundle id keeps stable (`com.quietnode.thuki`) and nightly
-//! (`com.quietnode.thuki.nightly`) from sharing provider API keys when both
+//! Scoping by bundle id keeps stable (`com.veilura.app`) and nightly
+//! (`com.veilura.app.nightly`) from sharing provider API keys when both
 //! are installed side by side.
 //!
 //! ## Extension points
@@ -22,7 +22,7 @@ use std::sync::Arc;
 
 /// Stable Keychain service name. Changing it orphans existing entries for the
 /// production app. Nightly uses a different service via [`keychain_service`].
-pub const KEYCHAIN_SERVICE: &str = "com.quietnode.thuki.provider-api-key";
+pub const KEYCHAIN_SERVICE: &str = "com.veilura.app.provider-api-key";
 
 /// Keychain service name scoped by product identity so stable and nightly
 /// do not share provider API keys.
@@ -216,30 +216,30 @@ mod tests {
     // This test makes any accidental rename visible in review.
     #[test]
     fn service_name_is_stable() {
-        assert_eq!(KEYCHAIN_SERVICE, "com.quietnode.thuki.provider-api-key");
+        assert_eq!(KEYCHAIN_SERVICE, "com.veilura.app.provider-api-key");
     }
 
     #[test]
     fn keychain_service_stable_matches_const() {
-        assert_eq!(keychain_service("com.quietnode.thuki"), KEYCHAIN_SERVICE);
+        assert_eq!(keychain_service("com.veilura.app"), KEYCHAIN_SERVICE);
     }
 
     #[test]
     fn keychain_service_nightly_is_isolated() {
         assert_eq!(
-            keychain_service("com.quietnode.thuki.nightly"),
-            "com.quietnode.thuki.nightly.provider-api-key"
+            keychain_service("com.veilura.app.nightly"),
+            "com.veilura.app.nightly.provider-api-key"
         );
     }
 
     #[test]
     fn keyring_store_new_scopes_service() {
-        let stable = KeyringStore::new("com.quietnode.thuki");
+        let stable = KeyringStore::new("com.veilura.app");
         assert_eq!(stable.service, KEYCHAIN_SERVICE);
-        let nightly = KeyringStore::new("com.quietnode.thuki.nightly");
+        let nightly = KeyringStore::new("com.veilura.app.nightly");
         assert_eq!(
             nightly.service,
-            "com.quietnode.thuki.nightly.provider-api-key"
+            "com.veilura.app.nightly.provider-api-key"
         );
     }
 

@@ -76,7 +76,7 @@ export const INSUFFICIENT_MEMORY_CONSEQUENCE =
  * and this in-chat card render byte-identical wording from one source.
  */
 export const MEMORY_FREEZE_NOTE =
-  'That is far too tight to load on its own. Thuki always asks at this level, because loading can slow your Mac badly or freeze it.';
+  'That is far too tight to load on its own. Veilura always asks at this level, because loading can slow your Mac badly or freeze it.';
 
 /**
  * Red "Memory critically low" severity tag that heads the freeze-band warning.
@@ -124,7 +124,7 @@ function formatGb(bytes: number): string {
 /** Fixed title for an engine start failure; the backend detail renders below
  *  it verbatim, so the title stays a stable, human heading regardless of the
  *  raw llama-server output. */
-const ENGINE_START_FAILED_TITLE = "Thuki's engine couldn't start this model";
+const ENGINE_START_FAILED_TITLE = "Veilura's engine couldn't start this model";
 
 /** Outlined primary action button (transparent fill). Used by "Switch model"
  *  on other cards, and by "Load once" / "Load anyway" on the memory card. */

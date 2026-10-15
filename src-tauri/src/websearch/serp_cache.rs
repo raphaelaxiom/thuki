@@ -7,7 +7,7 @@
 //!
 //! ## Security: in-memory ONLY, never disk
 //!
-//! Thuki is privacy-first. User search queries and fetched page content are
+//! Veilura is privacy-first. User search queries and fetched page content are
 //! sensitive and MUST never be persisted. This cache lives entirely in process
 //! memory: process exit wipes it, and nothing here ever touches the filesystem.
 //! This is a deliberate rejection of a SQLite-backed design; do not add one.

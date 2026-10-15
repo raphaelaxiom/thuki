@@ -48,7 +48,7 @@ max_context_length = 4096
 [updater]
 auto_check = true
 check_interval_hours = 24
-manifest_url = "https://github.com/quiet-node/thuki/releases/latest/download/latest.json"
+manifest_url = "https://veilura.online/updates/latest.json"
 "#;
 
 fn parse_sample() -> DocumentMut {
@@ -1869,7 +1869,7 @@ fn tempdir() -> PathBuf {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or(0);
-    let dir = std::env::temp_dir().join(format!("thuki-settings-cmd-{pid}-{nanos}-{n}"));
+    let dir = std::env::temp_dir().join(format!("veilura-settings-cmd-{pid}-{nanos}-{n}"));
     std::fs::create_dir_all(&dir).expect("create tempdir");
     dir
 }

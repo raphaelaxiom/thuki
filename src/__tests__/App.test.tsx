@@ -148,7 +148,7 @@ function setAskValue(text: string): void {
 
 async function showOverlay(selectedText: string | null = null) {
   await act(async () => {
-    emitTauriEvent('thuki://visibility', {
+    emitTauriEvent('veilura://visibility', {
       state: 'show',
       selected_text: selectedText,
       window_x: null,
@@ -365,7 +365,7 @@ describe('App', () => {
     await showOverlay();
 
     const strip = screen.getByTestId('capability-mismatch-strip');
-    expect(strip.textContent).toContain("Thuki couldn't find any models");
+    expect(strip.textContent).toContain("Veilura couldn't find any models");
     expect(strip.textContent).toContain('ollama pull <model>');
   });
 
@@ -1649,7 +1649,7 @@ describe('App', () => {
     await act(async () => {});
 
     await act(async () => {
-      emitTauriEvent('thuki://visibility', {
+      emitTauriEvent('veilura://visibility', {
         state: 'show',
         selected_text: null,
         window_x: 50,
@@ -1680,7 +1680,7 @@ describe('App', () => {
     await act(async () => {});
 
     await act(async () => {
-      emitTauriEvent('thuki://visibility', {
+      emitTauriEvent('veilura://visibility', {
         state: 'show',
         selected_text: null,
         window_x: 50,
@@ -1767,7 +1767,7 @@ describe('App', () => {
 
     // Act: dispatch a restore visibility event.
     await act(async () => {
-      emitTauriEvent('thuki://visibility', { state: 'restore' });
+      emitTauriEvent('veilura://visibility', { state: 'restore' });
     });
 
     // Assert: existing messages are still rendered (conversation was NOT wiped).
@@ -1857,7 +1857,7 @@ describe('App', () => {
 
     expect(invoke).toHaveBeenCalledWith('cancel_generation');
     expect(invoke).toHaveBeenCalledWith('notify_overlay_hidden');
-    expect(screen.queryByPlaceholderText('Ask Thuki anything...')).toBeNull();
+    expect(screen.queryByPlaceholderText('Ask Veilura anything...')).toBeNull();
     vi.useRealTimers();
   });
 
@@ -1910,12 +1910,12 @@ describe('App', () => {
 
     // Then send hide-request - calls requestHideOverlay() (not handleCloseOverlay)
     await act(async () => {
-      emitTauriEvent('thuki://visibility', { state: 'hide-request' });
+      emitTauriEvent('veilura://visibility', { state: 'hide-request' });
     });
 
     // The hide-request path transitions overlay to hiding state (overlayState !== 'visible'),
     // so shouldRenderOverlay becomes false and the overlay is removed from the DOM.
-    expect(screen.queryByPlaceholderText('Ask Thuki anything...')).toBeNull();
+    expect(screen.queryByPlaceholderText('Ask Veilura anything...')).toBeNull();
   });
 
   it('hides overlay on Cmd+W key', async () => {
@@ -2400,7 +2400,7 @@ describe('App', () => {
     });
     await act(async () => {});
 
-    // A skipped replace (no target app / secure field) must leave Thuki open.
+    // A skipped replace (no target app / secure field) must leave Veilura open.
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 400));
     });
@@ -2664,7 +2664,7 @@ describe('App', () => {
     // Show overlay near screen bottom: window_y=750, screen_bottom=900.
     // 750 + MAX_CHAT_WINDOW_HEIGHT(648) = 1398 > 900 → grows upward.
     await act(async () => {
-      emitTauriEvent('thuki://visibility', {
+      emitTauriEvent('veilura://visibility', {
         state: 'show',
         selected_text: null,
         window_x: 100,
@@ -2684,7 +2684,7 @@ describe('App', () => {
     // Show overlay near top: window_y=100, screen_bottom=900.
     // 100 + 648 = 748 < 900 → grows downward.
     await act(async () => {
-      emitTauriEvent('thuki://visibility', {
+      emitTauriEvent('veilura://visibility', {
         state: 'show',
         selected_text: null,
         window_x: 100,
@@ -2739,7 +2739,7 @@ describe('App', () => {
 
       // window_y=804, screen_bottom=900. bottomY = 804+80 = 884.
       await act(async () => {
-        emitTauriEvent('thuki://visibility', {
+        emitTauriEvent('veilura://visibility', {
           state: 'show',
           selected_text: null,
           window_x: 100,
@@ -2774,7 +2774,7 @@ describe('App', () => {
       await act(async () => {});
 
       await act(async () => {
-        emitTauriEvent('thuki://visibility', {
+        emitTauriEvent('veilura://visibility', {
           state: 'show',
           selected_text: null,
           window_x: 100,
@@ -2815,7 +2815,7 @@ describe('App', () => {
 
       // Session 1: near bottom, grows upward
       await act(async () => {
-        emitTauriEvent('thuki://visibility', {
+        emitTauriEvent('veilura://visibility', {
           state: 'show',
           selected_text: null,
           window_x: 100,
@@ -2831,12 +2831,12 @@ describe('App', () => {
 
       // Close
       await act(async () => {
-        emitTauriEvent('thuki://visibility', { state: 'hide-request' });
+        emitTauriEvent('veilura://visibility', { state: 'hide-request' });
       });
 
       // Session 2: reopen near bottom again
       await act(async () => {
-        emitTauriEvent('thuki://visibility', {
+        emitTauriEvent('veilura://visibility', {
           state: 'show',
           selected_text: null,
           window_x: 100,
@@ -2869,7 +2869,7 @@ describe('App', () => {
     // Overlay is hidden initially - fire hide-request on hidden overlay
     // This exercises the 'hidden' branch in requestHideOverlay's state setter
     await act(async () => {
-      emitTauriEvent('thuki://visibility', { state: 'hide-request' });
+      emitTauriEvent('veilura://visibility', { state: 'hide-request' });
     });
 
     // No crash, no change - overlay is already hidden
@@ -2905,7 +2905,7 @@ describe('App', () => {
       // the card's own buttons, so the card is still up - the window must
       // stay at whatever size the card already fit itself to, not collapse.
       await act(async () => {
-        emitTauriEvent('thuki://visibility', { state: 'hide-request' });
+        emitTauriEvent('veilura://visibility', { state: 'hide-request' });
       });
       __mockWindow.setSize.mockClear();
       await showOverlay();
@@ -3439,7 +3439,7 @@ describe('App', () => {
 
       // Free chats while save is in flight.
       await act(async () => {
-        emitTauriEvent('thuki://history-cleared', null);
+        emitTauriEvent('veilura://history-cleared', null);
       });
 
       // Save resolves after wipe and would stamp identity without epoch guard.
@@ -3667,7 +3667,7 @@ describe('App', () => {
       );
 
       await act(async () => {
-        emitTauriEvent('thuki://history-cleared', null);
+        emitTauriEvent('veilura://history-cleared', null);
       });
 
       await waitFor(() =>
@@ -9285,7 +9285,7 @@ describe('App', () => {
   });
 
   describe('Onboarding', () => {
-    it('shows onboarding screen when thuki://onboarding event fires', async () => {
+    it('shows onboarding screen when veilura://onboarding event fires', async () => {
       enableChannelCaptureWithResponses({
         check_accessibility_permission: false,
         check_screen_recording_permission: false,
@@ -9295,10 +9295,10 @@ describe('App', () => {
       await act(async () => {});
 
       await act(async () => {
-        emitTauriEvent('thuki://onboarding', { stage: 'permissions' });
+        emitTauriEvent('veilura://onboarding', { stage: 'permissions' });
       });
 
-      expect(screen.getByText("Let's get Thuki set up")).toBeInTheDocument();
+      expect(screen.getByText("Let's get Veilura set up")).toBeInTheDocument();
     });
 
     it('does not show onboarding on normal visibility event', async () => {
@@ -9307,7 +9307,7 @@ describe('App', () => {
 
       await showOverlay();
 
-      expect(screen.queryByText("Let's get Thuki set up")).toBeNull();
+      expect(screen.queryByText("Let's get Veilura set up")).toBeNull();
     });
 
     it('renders normal ask bar when overlay is shown without onboarding', async () => {
@@ -9326,7 +9326,7 @@ describe('App', () => {
       await act(async () => {});
 
       await act(async () => {
-        emitTauriEvent('thuki://onboarding', { stage: 'intro' });
+        emitTauriEvent('veilura://onboarding', { stage: 'intro' });
       });
 
       expect(screen.getByText("You're all set")).toBeInTheDocument();
@@ -9896,7 +9896,7 @@ describe('App', () => {
 
       // model_check: the picker matrix owns the bar, so no app-root strip.
       await act(async () => {
-        emitTauriEvent('thuki://onboarding', { stage: 'model_check' });
+        emitTauriEvent('veilura://onboarding', { stage: 'model_check' });
       });
       expect(
         screen.queryByTestId('download-status-strip'),
@@ -9904,7 +9904,7 @@ describe('App', () => {
 
       // intro: the tips card shows with the ambient strip floating over it.
       await act(async () => {
-        emitTauriEvent('thuki://onboarding', { stage: 'intro' });
+        emitTauriEvent('veilura://onboarding', { stage: 'intro' });
       });
       expect(screen.getByText("You're all set")).toBeInTheDocument();
       expect(screen.getByTestId('download-status-strip')).toBeInTheDocument();
@@ -10182,7 +10182,7 @@ describe('App', () => {
 
       // MinimizedIcon should be rendered
       expect(
-        screen.getByRole('button', { name: /restore thuki/i }),
+        screen.getByRole('button', { name: /restore veilura/i }),
       ).toBeInTheDocument();
 
       // ConversationView content should be gone
@@ -10252,7 +10252,9 @@ describe('App', () => {
       expect(rootAfter?.className).not.toContain('pb-6');
 
       // Restore
-      const restoreBtn = screen.getByRole('button', { name: /restore thuki/i });
+      const restoreBtn = screen.getByRole('button', {
+        name: /restore veilura/i,
+      });
       await act(async () => {
         fireEvent.pointerDown(restoreBtn, { clientX: 0, clientY: 0 });
         fireEvent.pointerUp(restoreBtn);
@@ -10278,7 +10280,7 @@ describe('App', () => {
         fireEvent.click(minimizeBtn);
       });
       expect(
-        screen.getByRole('button', { name: /restore thuki/i }),
+        screen.getByRole('button', { name: /restore veilura/i }),
       ).toBeInTheDocument();
 
       // Icon sits comfortably inside the monitor (no edge clamping), so the
@@ -10295,7 +10297,9 @@ describe('App', () => {
       invoke.mockClear();
 
       // Restore — MinimizedIcon fires onRestore via onPointerUp (not onClick)
-      const restoreBtn = screen.getByRole('button', { name: /restore thuki/i });
+      const restoreBtn = screen.getByRole('button', {
+        name: /restore veilura/i,
+      });
       await act(async () => {
         fireEvent.pointerDown(restoreBtn, { clientX: 0, clientY: 0 });
         fireEvent.pointerUp(restoreBtn);
@@ -10327,7 +10331,7 @@ describe('App', () => {
 
       // MinimizedIcon should be gone
       expect(
-        screen.queryByRole('button', { name: /restore thuki/i }),
+        screen.queryByRole('button', { name: /restore veilura/i }),
       ).toBeNull();
     });
 
@@ -10356,7 +10360,9 @@ describe('App', () => {
       });
       invoke.mockClear();
 
-      const restoreBtn = screen.getByRole('button', { name: /restore thuki/i });
+      const restoreBtn = screen.getByRole('button', {
+        name: /restore veilura/i,
+      });
       await act(async () => {
         fireEvent.pointerDown(restoreBtn, { clientX: 0, clientY: 0 });
         fireEvent.pointerUp(restoreBtn);
@@ -10397,7 +10403,9 @@ describe('App', () => {
       });
       invoke.mockClear();
 
-      const restoreBtn = screen.getByRole('button', { name: /restore thuki/i });
+      const restoreBtn = screen.getByRole('button', {
+        name: /restore veilura/i,
+      });
       await act(async () => {
         fireEvent.pointerDown(restoreBtn, { clientX: 0, clientY: 0 });
         fireEvent.pointerUp(restoreBtn);
@@ -10442,7 +10450,9 @@ describe('App', () => {
         monitorWidth: 1440,
         monitorHeight: 900,
       });
-      const restoreBtn = screen.getByRole('button', { name: /restore thuki/i });
+      const restoreBtn = screen.getByRole('button', {
+        name: /restore veilura/i,
+      });
       await act(async () => {
         fireEvent.pointerDown(restoreBtn, { clientX: 0, clientY: 0 });
         fireEvent.pointerUp(restoreBtn);
@@ -10489,7 +10499,7 @@ describe('App', () => {
         fireEvent.click(minimizeBtn);
       });
       expect(
-        screen.getByRole('button', { name: /restore thuki/i }),
+        screen.getByRole('button', { name: /restore veilura/i }),
       ).toBeInTheDocument();
       // No ready dot yet — still generating
       expect(screen.queryByTestId('minimized-ready-dot')).toBeNull();
@@ -10505,7 +10515,9 @@ describe('App', () => {
       expect(screen.getByTestId('minimized-ready-dot')).toBeInTheDocument();
 
       // Restore clears it
-      const restoreBtn = screen.getByRole('button', { name: /restore thuki/i });
+      const restoreBtn = screen.getByRole('button', {
+        name: /restore veilura/i,
+      });
       await act(async () => {
         fireEvent.pointerDown(restoreBtn, { clientX: 0, clientY: 0 });
         fireEvent.pointerUp(restoreBtn);
@@ -10540,7 +10552,9 @@ describe('App', () => {
       });
 
       // Restore — geometry query fires inside the async IIFE
-      const restoreBtn = screen.getByRole('button', { name: /restore thuki/i });
+      const restoreBtn = screen.getByRole('button', {
+        name: /restore veilura/i,
+      });
       await act(async () => {
         fireEvent.pointerDown(restoreBtn, { clientX: 0, clientY: 0 });
         fireEvent.pointerUp(restoreBtn);
@@ -10572,7 +10586,7 @@ describe('App', () => {
       render(<App />);
       await act(async () => {});
       await act(async () => {
-        emitTauriEvent('thuki://visibility', {
+        emitTauriEvent('veilura://visibility', {
           state: 'show',
           selected_text: null,
           window_x: 100,
@@ -10610,7 +10624,9 @@ describe('App', () => {
       // After minimize, growsUpward is forced false
       expect(document.querySelector('.h-screen.justify-start')).not.toBeNull();
 
-      const restoreBtn = screen.getByRole('button', { name: /restore thuki/i });
+      const restoreBtn = screen.getByRole('button', {
+        name: /restore veilura/i,
+      });
       await act(async () => {
         fireEvent.pointerDown(restoreBtn, { clientX: 0, clientY: 0 });
         fireEvent.pointerUp(restoreBtn);
@@ -10635,7 +10651,9 @@ describe('App', () => {
       await act(async () => {
         fireEvent.click(minimizeBtn);
       });
-      const restoreBtn = screen.getByRole('button', { name: /restore thuki/i });
+      const restoreBtn = screen.getByRole('button', {
+        name: /restore veilura/i,
+      });
       await act(async () => {
         fireEvent.pointerDown(restoreBtn, { clientX: 0, clientY: 0 });
         fireEvent.pointerUp(restoreBtn);
@@ -10670,7 +10688,9 @@ describe('App', () => {
       });
 
       invoke.mockClear();
-      const restoreBtn = screen.getByRole('button', { name: /restore thuki/i });
+      const restoreBtn = screen.getByRole('button', {
+        name: /restore veilura/i,
+      });
       await act(async () => {
         fireEvent.pointerDown(restoreBtn, { clientX: 0, clientY: 0 });
         fireEvent.pointerUp(restoreBtn);
@@ -10720,7 +10740,7 @@ describe('App', () => {
 
       // MinimizedIcon still shown
       expect(
-        screen.getByRole('button', { name: /restore thuki/i }),
+        screen.getByRole('button', { name: /restore veilura/i }),
       ).toBeInTheDocument();
       // notify_overlay_hidden must NOT have been called
       expect(invoke).not.toHaveBeenCalledWith('notify_overlay_hidden');
@@ -10742,7 +10762,7 @@ describe('App', () => {
 
       // Emit a restore visibility event (hotkey/tray path)
       await act(async () => {
-        emitTauriEvent('thuki://visibility', { state: 'restore' });
+        emitTauriEvent('veilura://visibility', { state: 'restore' });
       });
       await act(async () => {});
 
@@ -10751,7 +10771,7 @@ describe('App', () => {
       expect(screen.getByText('world')).toBeInTheDocument();
       // MinimizedIcon gone
       expect(
-        screen.queryByRole('button', { name: /restore thuki/i }),
+        screen.queryByRole('button', { name: /restore veilura/i }),
       ).toBeNull();
     });
 
@@ -10771,11 +10791,11 @@ describe('App', () => {
           fireEvent.click(minimizeBtn);
         });
         expect(
-          screen.getByRole('button', { name: /restore thuki/i }),
+          screen.getByRole('button', { name: /restore veilura/i }),
         ).toBeInTheDocument();
 
         const restoreBtn = screen.getByRole('button', {
-          name: /restore thuki/i,
+          name: /restore veilura/i,
         });
         await act(async () => {
           fireEvent.pointerDown(restoreBtn, { clientX: 0, clientY: 0 });
@@ -10783,7 +10803,7 @@ describe('App', () => {
         });
         await act(async () => {});
         expect(
-          screen.queryByRole('button', { name: /restore thuki/i }),
+          screen.queryByRole('button', { name: /restore veilura/i }),
         ).toBeNull();
         // Chat is back so the next iteration can minimize again.
         expect(screen.getByText('hello')).toBeInTheDocument();
@@ -10802,7 +10822,7 @@ describe('App', () => {
       // (which would strand the state machine in 'expanding'); it only
       // re-syncs the Rust minimized flag.
       await act(async () => {
-        emitTauriEvent('thuki://visibility', { state: 'restore' });
+        emitTauriEvent('veilura://visibility', { state: 'restore' });
       });
       await act(async () => {});
 
@@ -10811,7 +10831,7 @@ describe('App', () => {
       });
       // Never minimized: no mascot, chat still visible.
       expect(
-        screen.queryByRole('button', { name: /restore thuki/i }),
+        screen.queryByRole('button', { name: /restore veilura/i }),
       ).toBeNull();
       expect(screen.getByText('hello')).toBeInTheDocument();
 
@@ -10821,39 +10841,39 @@ describe('App', () => {
         fireEvent.click(minimizeBtn);
       });
       expect(
-        screen.getByRole('button', { name: /restore thuki/i }),
+        screen.getByRole('button', { name: /restore veilura/i }),
       ).toBeInTheDocument();
     });
   });
 
   describe('text base CSS variable', () => {
-    it('writes window.textBasePx to --thuki-text-base on <html> on mount', async () => {
-      document.documentElement.style.removeProperty('--thuki-text-base');
+    it('writes window.textBasePx to --veilura-text-base on <html> on mount', async () => {
+      document.documentElement.style.removeProperty('--veilura-text-base');
 
       render(<App />);
       await act(async () => {});
 
       expect(
-        document.documentElement.style.getPropertyValue('--thuki-text-base'),
+        document.documentElement.style.getPropertyValue('--veilura-text-base'),
       ).toBe(`${DEFAULT_CONFIG.window.textBasePx}px`);
     });
 
     it('writes the three typography vars (line-height, letter-spacing, font-weight) on mount', async () => {
       const root = document.documentElement;
-      root.style.removeProperty('--thuki-text-line-height');
-      root.style.removeProperty('--thuki-text-letter-spacing');
-      root.style.removeProperty('--thuki-text-font-weight');
+      root.style.removeProperty('--veilura-text-line-height');
+      root.style.removeProperty('--veilura-text-letter-spacing');
+      root.style.removeProperty('--veilura-text-font-weight');
 
       render(<App />);
       await act(async () => {});
 
-      expect(root.style.getPropertyValue('--thuki-text-line-height')).toBe(
+      expect(root.style.getPropertyValue('--veilura-text-line-height')).toBe(
         `${DEFAULT_CONFIG.window.textLineHeight}`,
       );
-      expect(root.style.getPropertyValue('--thuki-text-letter-spacing')).toBe(
+      expect(root.style.getPropertyValue('--veilura-text-letter-spacing')).toBe(
         `${DEFAULT_CONFIG.window.textLetterSpacingPx}px`,
       );
-      expect(root.style.getPropertyValue('--thuki-text-font-weight')).toBe(
+      expect(root.style.getPropertyValue('--veilura-text-font-weight')).toBe(
         `${DEFAULT_CONFIG.window.textFontWeight}`,
       );
     });
@@ -10999,7 +11019,7 @@ describe('App', () => {
       expect(md?.content.startsWith('---\napp: ')).toBe(true);
       expect(md?.content).toContain('## User');
       expect(md?.defaultFilename).toMatch(
-        /^thuki-chat-\d{4}-\d{2}-\d{2}-\d{4}\.md$/,
+        /^veilura-chat-\d{4}-\d{2}-\d{2}-\d{4}\.md$/,
       );
     });
 

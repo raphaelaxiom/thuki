@@ -1,6 +1,6 @@
 # Built-in web search (design handbook)
 
-Design handbook for Thuki’s built-in web search: how a turn decides to search, what runs in order, why each step exists, and how answers stay grounded and safe. Search runs inside the app on the **builtin** provider: public sources over HTTP, grounded answers with citations, progressive status in chat.
+Design handbook for Veilura’s built-in web search: how a turn decides to search, what runs in order, why each step exists, and how answers stay grounded and safe. Search runs inside the app on the **builtin** provider: public sources over HTTP, grounded answers with citations, progressive status in chat.
 
 **Related docs (do not duplicate here)**
 
@@ -51,7 +51,7 @@ Design handbook for Thuki’s built-in web search: how a turn decides to search,
 
 **Built-in web search** is an in-app multi-step process (a **pipeline**: fixed stages in order) on the **builtin** provider only.
 
-- **Builtin provider:** Thuki’s own local AI engine (not Ollama or a cloud chat API). It runs a bundled **llama.cpp** program named **`llama-server`**: the process that loads your **GGUF** model file (a common on-disk format for local LLMs) and answers chat/search model calls on your Mac.
+- **Builtin provider:** Veilura’s own local AI engine (not Ollama or a cloud chat API). It runs a bundled **llama.cpp** program named **`llama-server`**: the process that loads your **GGUF** model file (a common on-disk format for local LLMs) and answers chat/search model calls on your Mac.
 - **Keyless sources:** public websites and APIs the app can call **without you pasting an API key** (weather, news feeds, Wikipedia, HTML search pages, and similar).
 
 It can:
@@ -73,7 +73,7 @@ Two layers. Which one runs depends on the question.
 
 ### Specialized APIs (verticals)
 
-For clear intents, Thuki calls structured public APIs **before** general web search:
+For clear intents, Veilura calls structured public APIs **before** general web search:
 
 | Intent                     | Service                                          |
 | -------------------------- | ------------------------------------------------ |
@@ -86,14 +86,14 @@ Privacy links and User-Agent policy: [search-privacy.md](./search-privacy.md).
 
 ### General web search engines (SERP tier)
 
-When the turn needs open-web links (or a vertical was thin), Thuki scrapes **two** keyless HTML search engines **from your Mac**, in parallel, then **fuses** their hit lists:
+When the turn needs open-web links (or a vertical was thin), Veilura scrapes **two** keyless HTML search engines **from your Mac**, in parallel, then **fuses** their hit lists:
 
-| Engine                                                   | Role in Thuki                                                                                                                         |
+| Engine                                                   | Role in Veilura                                                                                                                         |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **[DuckDuckGo](https://duckduckgo.com/)** HTML (`/html`) | **Primary.** Richest organic results for general queries.                                                                             |
 | **[Mojeek](https://www.mojeek.com/)**                    | **Second independent ranking.** Scraper-friendly, lightweight HTML; still useful when DuckDuckGo is rate-limiting or blocking the IP. |
 
-Queries go **device → those services**. Thuki does not proxy search through Quiet Node servers.
+Queries go **device → those services**. Veilura does not proxy search through any Veilura-operated servers.
 
 ### Why these two (and not others)
 
@@ -125,7 +125,7 @@ These principles drive the design. Everything later is an application of them.
 
 | Principle                      | Meaning in practice                                                                                                                                                                                                                                            |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **In-app and keyless**         | Pipeline ships with Thuki. Sources are public HTTP endpoints and HTML search pages; no per-user API credentials.                                                                                                                                               |
+| **In-app and keyless**         | Pipeline ships with Veilura. Sources are public HTTP endpoints and HTML search pages; no per-user API credentials.                                                                                                                                               |
 | **Local-first**                | **Inference** (running the model to generate text) stays on-device. Network is optional and user-controllable (Auto search and `/search`).                                                                                                                     |
 | **Decide before you spend**    | Cheap code rules first; only then a small **classifier** call (a short model call that only chooses search routing, not the final answer); only then the web.                                                                                                  |
 | **Language parity**            | A non-English question searches that language’s web and Wikipedia edition; answers follow the user, not a fixed English default.                                                                                                                               |
@@ -153,7 +153,7 @@ Terms used in the map below:
 | **SERP**                           | **S**earch **E**ngine **R**esults **P**age: the list of titled links + snippets a search engine returns for a query (before opening any result page). |
 | **RRF**                            | **R**eciprocal **R**ank **F**usion: formula that merges several ranked URL lists without training (`score ≈ sum 1/(k + rank)`).                       |
 | **BM25**                           | Classic **keyword** score for “how well does this passage match the query?” (also called Okapi BM25). No neural embedding required.                   |
-| **DDG / Mojeek**                   | **DuckDuckGo** and **Mojeek**: the two public HTML search engines Thuki scrapes for general web hits.                                                 |
+| **DDG / Mojeek**                   | **DuckDuckGo** and **Mojeek**: the two public HTML search engines Veilura scrapes for general web hits.                                                 |
 | **Citation audit**                 | After the answer streams, code checks that `[n]` markers match the numbered sources (may repair or show an honesty note).                             |
 
 ```mermaid
@@ -349,7 +349,7 @@ Without the race, the timeline is sequential:
 1. Wait for the **classifier** (model rewrites the question into search keywords).
 2. **Then** call DuckDuckGo/Mojeek with those keywords (**SERP** = the hit list).
 
-With the race, Thuki **overlaps** those two waits:
+With the race, Veilura **overlaps** those two waits:
 
 1. **At the same time:**
    - Task A: classifier rewrites the question.
@@ -668,7 +668,7 @@ Code: `writer.rs`, `cite_check.rs`.
 
 **What.** Shared HTTP client for every search download.
 
-**Why.** Result URLs and redirects are untrusted. A bad link must not make Thuki call your LAN or cloud metadata.
+**Why.** Result URLs and redirects are untrusted. A bad link must not make Veilura call your LAN or cloud metadata.
 
 **How.**
 
@@ -685,7 +685,7 @@ Code: `net/ssrf.rs`, `net/transport.rs`.
 
 ## Trust signals: User-Agent, attribution, hosts
 
-**What.** How Thuki identifies itself on the wire, credits sources, and names hosts.
+**What.** How Veilura identifies itself on the wire, credits sources, and names hosts.
 
 **Why.** Lawful honesty for APIs; SERP reachability; correct domain classification for non-ASCII hosts.
 
@@ -693,7 +693,7 @@ Code: `net/ssrf.rs`, `net/transport.rs`.
 
 | Case                  | How                                                                                                                                               |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Weather / News / ESPN | Send product UA `Thuki/<version> (+https://thuki.app)`                                                                                            |
+| Weather / News / ESPN | Send product UA `Veilura/<version> (+https://veilura.online)`                                                                                            |
 | Wikipedia             | Descriptive UA (name, site, contact) per Wikimedia norms                                                                                          |
 | DDG / Mojeek HTML     | Browser-like UA (product bot UA is blocked on DDG HTML) + cooldown if blocked                                                                     |
 | Attribution           | Attach licence/credit strings on source metadata for the UI when required                                                                         |
@@ -798,7 +798,7 @@ How to run: [search-eval.md](./search-eval.md).
 | Term                 | Plain meaning                                                      |
 | -------------------- | ------------------------------------------------------------------ |
 | Auto search          | Setting that allows plain turns to open the web when needed        |
-| Builtin              | Thuki’s bundled llama.cpp / `llama-server` provider                |
+| Builtin              | Veilura’s bundled llama.cpp / `llama-server` provider                |
 | Pipeline             | Fixed multi-step stages run in order                               |
 | Keyless              | No user-supplied API key for those sources                         |
 | Classifier / prepass | Short model call that only routes search (JSON form)               |

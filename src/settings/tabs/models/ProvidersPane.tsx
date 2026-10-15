@@ -85,7 +85,7 @@ function posToCtx(pos: number): number {
 
 // Deep link to the 5-minute benchmark recipe, opened via the open_url command.
 const CTX_TUNING_URL =
-  'https://github.com/quiet-node/thuki/blob/main/docs/tuning-context-window.md#the-5-minute-benchmark-recipe';
+  'https://github.com/veilura/veilura/blob/main/docs/tuning-context-window.md#the-5-minute-benchmark-recipe';
 
 /** Bytes rendered as decimal gigabytes with one decimal (e.g. "8.2"). */
 function gb(bytes: number): string {
@@ -94,7 +94,7 @@ function gb(bytes: number): string {
 
 /** One-line description shown under a provider's name. */
 function providerSubtitle(p: RawProvider): string {
-  if (p.kind === 'builtin') return "Thuki's bundled llama.cpp engine";
+  if (p.kind === 'builtin') return "Veilura's bundled llama.cpp engine";
   if (p.kind === 'ollama') return p.base_url || 'Local or remote Ollama';
   return p.base_url || 'OpenAI-compatible server';
 }
@@ -479,7 +479,7 @@ export function ProvidersPane({
             </div>
             {isNonLocalUrl(ollamaUrl) ? (
               <p className={styles.providerWarning} role="alert">
-                This points Thuki at a non-local Ollama server. You are
+                This points Veilura at a non-local Ollama server. You are
                 responsible for securing it: prefer a VPN/Tailscale or SSH
                 tunnel over exposing the port directly.
               </p>

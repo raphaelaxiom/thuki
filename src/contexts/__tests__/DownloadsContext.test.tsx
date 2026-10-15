@@ -23,7 +23,7 @@ import type { ActiveDownload, DownloadEvent } from '../../types/starter';
 
 /** The cross-window progress event the backend broadcasts; mirrors
  * `models::DOWNLOAD_PROGRESS_EVENT`. */
-const DOWNLOAD_PROGRESS_EVENT = 'thuki://download-progress';
+const DOWNLOAD_PROGRESS_EVENT = 'veilura://download-progress';
 /** A vision model's two blobs (weights + mmproj). */
 const WEIGHTS_SHA = 'a'.repeat(64);
 const MMPROJ_SHA = 'b'.repeat(64);

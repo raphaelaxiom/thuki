@@ -372,7 +372,7 @@ describe('LexicalAskBarInput (integration)', () => {
       <LexicalAskBarInput
         value={overrides.value ?? ''}
         onValueChange={overrides.onValueChange ?? vi.fn()}
-        placeholder="Ask Thuki anything..."
+        placeholder="Ask Veilura anything..."
         inputRef={inputRef}
         contentEditableClassName="askbar-input"
         suggestionsOpen={overrides.suggestionsOpen ?? false}
@@ -387,12 +387,12 @@ describe('LexicalAskBarInput (integration)', () => {
     renderInput();
     expect(screen.getByTestId('askbar-input')).toBeInTheDocument();
     expect(screen.getByRole('textbox')).toBeInTheDocument();
-    expect(screen.getByText('Ask Thuki anything...')).toBeInTheDocument();
+    expect(screen.getByText('Ask Veilura anything...')).toBeInTheDocument();
   });
 
   it('exposes an accessible name independent of the placeholder', () => {
     renderInput();
-    expect(screen.getByRole('textbox', { name: 'Ask Thuki' })).toBe(
+    expect(screen.getByRole('textbox', { name: 'Ask Veilura' })).toBe(
       screen.getByTestId('askbar-input'),
     );
   });

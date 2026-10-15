@@ -25,22 +25,22 @@
 //! cargo test --test live_answer_capture -- --ignored --nocapture --test-threads=1
 //! ```
 
-use thuki_agent_lib::commands::ChatMessage;
-use thuki_agent_lib::net::reachability::DnsReachability;
-use thuki_agent_lib::net::transport::ReqwestTransport;
-use thuki_agent_lib::trace::{BoundRecorder, ConversationId};
-use thuki_agent_lib::websearch::assemble::SourceBlock;
-use thuki_agent_lib::websearch::cache::TtlSourceCache;
-use thuki_agent_lib::websearch::engine::EngineHealth;
-use thuki_agent_lib::websearch::judge::{
+use veilura_agent_lib::commands::ChatMessage;
+use veilura_agent_lib::net::reachability::DnsReachability;
+use veilura_agent_lib::net::transport::ReqwestTransport;
+use veilura_agent_lib::trace::{BoundRecorder, ConversationId};
+use veilura_agent_lib::websearch::assemble::SourceBlock;
+use veilura_agent_lib::websearch::cache::TtlSourceCache;
+use veilura_agent_lib::websearch::engine::EngineHealth;
+use veilura_agent_lib::websearch::judge::{
     InsufficiencyReason, SufficiencyJudge, SufficiencyVerdict,
 };
-use thuki_agent_lib::websearch::orchestrator::{run_search, SearchDeps, SearchOutcome};
-use thuki_agent_lib::websearch::prepass::{
+use veilura_agent_lib::websearch::orchestrator::{run_search, SearchDeps, SearchOutcome};
+use veilura_agent_lib::websearch::prepass::{
     InferenceError, PrePass, PrePassDecision, SearchDecision, SearchRoute,
 };
-use thuki_agent_lib::websearch::rank::Bm25Scorer;
-use thuki_agent_lib::websearch::serp_cache::WebCache;
+use veilura_agent_lib::websearch::rank::Bm25Scorer;
+use veilura_agent_lib::websearch::serp_cache::WebCache;
 
 use async_trait::async_trait;
 use std::fs::{self, OpenOptions};
@@ -107,10 +107,10 @@ impl SufficiencyJudge for AlwaysSufficientJudge {
 struct AlwaysGroundedSynthesizer;
 
 #[async_trait]
-impl thuki_agent_lib::websearch::orchestrator::Synthesizer for AlwaysGroundedSynthesizer {
+impl veilura_agent_lib::websearch::orchestrator::Synthesizer for AlwaysGroundedSynthesizer {
     async fn synthesize(
         &self,
-        _messages: &[thuki_agent_lib::commands::ChatMessage],
+        _messages: &[veilura_agent_lib::commands::ChatMessage],
         _cancel: &CancellationToken,
     ) -> Result<String, InferenceError> {
         Ok("reused answer [1]".to_string())
@@ -135,7 +135,7 @@ async fn live_turn(
     let recorder = BoundRecorder::noop_for(ConversationId::new("capture"));
     let cache = TtlSourceCache::new(
         std::time::Duration::from_secs(600),
-        thuki_agent_lib::config::defaults::SEARCH_CACHE_MAX_ENTRIES,
+        veilura_agent_lib::config::defaults::SEARCH_CACHE_MAX_ENTRIES,
     );
     let web_cache = WebCache::new(
         std::time::Duration::from_secs(600),
@@ -143,7 +143,7 @@ async fn live_turn(
         64,
         128,
     );
-    let timings = thuki_agent_lib::websearch::stage_timing::TimingBag::new();
+    let timings = veilura_agent_lib::websearch::stage_timing::TimingBag::new();
     let synthesizer = AlwaysGroundedSynthesizer;
     let deps = SearchDeps {
         prepass: &prepass,

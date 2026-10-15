@@ -397,7 +397,7 @@ pub fn clear_all_conversations(
 ///
 /// `count` is the number of conversation rows. `bytes` is a best-effort sum of
 /// message text lengths plus on-disk sizes of referenced image files that still
-/// exist (missing files are skipped). This is not the whole `thuki.db` size.
+/// exist (missing files are skipped). This is not the whole `veilura.db` size.
 #[derive(Debug, Serialize, PartialEq)]
 pub struct HistoryStats {
     pub count: u64,
@@ -480,7 +480,7 @@ pub fn prune_conversations_at_startup(
         .map(|d| d.as_millis() as i64)
         .unwrap_or(0);
     if let Err(e) = prune_conversations_for_retention_with_images(db, retention_days, now_ms, app) {
-        eprintln!("thuki: [history] startup prune failed: {e}");
+        eprintln!("veilura: [history] startup prune failed: {e}");
     }
 }
 
@@ -1007,7 +1007,7 @@ mod tests {
 
     #[test]
     fn remove_conversation_images_under_is_best_effort() {
-        let dir = std::env::temp_dir().join(format!("thuki-hist-img-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("veilura-hist-img-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         // Missing path must not panic.
         remove_conversation_images_under(&dir, &["missing-blob.jpg".to_string()]);
@@ -1072,7 +1072,7 @@ mod tests {
 
     #[test]
     fn history_stats_for_adds_existing_image_bytes_skips_missing() {
-        let dir = std::env::temp_dir().join(format!("thuki-hist-stats-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("veilura-hist-stats-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         let img = dir.join("blob.jpg");
         std::fs::write(&img, b"0123456789").unwrap(); // 10 bytes
@@ -1106,7 +1106,7 @@ mod tests {
 
     #[test]
     fn sum_existing_image_bytes_skips_missing_and_dirs() {
-        let dir = std::env::temp_dir().join(format!("thuki-hist-sum-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("veilura-hist-sum-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         let file = dir.join("f.bin");
         std::fs::write(&file, b"xyz").unwrap();

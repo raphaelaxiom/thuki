@@ -13,14 +13,14 @@ import {
 } from './threeDotMotionMath';
 
 /**
- * Brand coral for the middle leader (Thuki primary).
+ * Brand coral for the middle leader (Veilura primary).
  */
-const DOT_BRAND = '#ff8d5c';
+const DOT_BRAND = '#7c6cf0';
 /**
  * Soft warm cream for the outer leaders (locked design swatch).
  */
 const DOT_SOFT = '#f0d0c0';
-const DOT_BRAND_GLOW = 'rgba(255, 141, 92, 0.55)';
+const DOT_BRAND_GLOW = 'rgba(124, 108, 240, 0.55)';
 const DOT_SOFT_GLOW = 'rgba(240, 208, 192, 0.4)';
 
 /**

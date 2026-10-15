@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { invoke } from '@tauri-apps/api/core';
 
-import thukiLogo from '../../../src-tauri/icons/128x128.png';
+import veiluraLogo from '../../../src-tauri/icons/128x128.png';
 import pkg from '../../../package.json';
 import { Section, ConfirmDialog } from '../components';
 import { DrawCheckIcon } from '../../components/DrawCheckIcon';
@@ -49,8 +49,8 @@ export function AboutTab({ onSaved, onReload }: AboutTabProps) {
   const sha = import.meta.env.VITE_GIT_COMMIT_SHA?.slice(0, 7);
   const APP_VERSION = sha ? `${pkg.version}+nightly.${sha}` : pkg.version;
   const releaseUrl = sha
-    ? 'https://github.com/quiet-node/thuki/releases/tag/nightly'
-    : `https://github.com/quiet-node/thuki/releases/tag/v${pkg.version}`;
+    ? 'https://github.com/veilura/veilura/releases/tag/nightly'
+    : `https://github.com/veilura/veilura/releases/tag/v${pkg.version}`;
   const [confirmResetAll, setConfirmResetAll] = useState(false);
   const [perms, setPerms] = useState<PermissionsState>({
     accessibility: false,
@@ -116,12 +116,12 @@ export function AboutTab({ onSaved, onReload }: AboutTabProps) {
     <div className={styles.aboutBody}>
       <div className={styles.aboutHero}>
         <img
-          src={thukiLogo}
-          alt="Thuki"
+          src={veiluraLogo}
+          alt="Veilura"
           className={styles.aboutHeroLogo}
           draggable={false}
         />
-        <div className={styles.aboutHeroTitle}>Thuki</div>
+        <div className={styles.aboutHeroTitle}>Veilura</div>
         <Tooltip label={`View v${APP_VERSION} release notes on GitHub`}>
           <InlineLink
             url={releaseUrl}
@@ -146,14 +146,14 @@ export function AboutTab({ onSaved, onReload }: AboutTabProps) {
           </span>
         </div>
         <div className={styles.aboutHeroActions}>
-          <Tooltip label="View Thuki on GitHub">
+          <Tooltip label="View Veilura on GitHub">
             <button
               type="button"
               className={styles.iconLinkBtn}
-              aria-label="View Thuki on GitHub"
+              aria-label="View Veilura on GitHub"
               onClick={() =>
                 void invoke('open_url', {
-                  url: 'https://github.com/quiet-node/thuki',
+                  url: 'https://github.com/veilura/veilura',
                 })
               }
             >
@@ -181,21 +181,21 @@ export function AboutTab({ onSaved, onReload }: AboutTabProps) {
               aria-label="Open an issue or share feedback on GitHub"
               onClick={() =>
                 void invoke('open_url', {
-                  url: 'https://github.com/quiet-node/thuki/issues',
+                  url: 'https://github.com/veilura/veilura/issues',
                 })
               }
             >
               <FeedbackIcon />
             </button>
           </Tooltip>
-          <Tooltip label="Visit thuki.app — the project website.">
+          <Tooltip label="Visit veilura.online — the project website.">
             <button
               type="button"
               className={styles.iconLinkBtn}
-              aria-label="Visit thuki.app for more about Thuki"
+              aria-label="Visit veilura.online for more about Veilura"
               onClick={() =>
                 void invoke('open_url', {
-                  url: 'https://www.thuki.app/',
+                  url: 'https://veilura.online/',
                 })
               }
             >
@@ -237,8 +237,8 @@ export function AboutTab({ onSaved, onReload }: AboutTabProps) {
             )}
             <span>
               {updateAvailable
-                ? `Thuki ${updater.state.update?.version} is ready`
-                : 'Thuki is up to date'}
+                ? `Veilura ${updater.state.update?.version} is ready`
+                : 'Veilura is up to date'}
             </span>
           </div>
           <div className={styles.updateHeroMeta}>{lastCheckedLabel}</div>
@@ -347,10 +347,10 @@ export function AboutTab({ onSaved, onReload }: AboutTabProps) {
             className={`${styles.button} ${styles.buttonGhost}`}
             onClick={() => void invoke('reveal_config_in_finder')}
           >
-            Reveal Thuki app data
+            Reveal Veilura app data
           </button>
           <Tooltip
-            label="Re-read config.toml from disk and refresh this window. Use after editing the file by hand outside Thuki."
+            label="Re-read config.toml from disk and refresh this window. Use after editing the file by hand outside Veilura."
             multiline
             placement="top"
           >
@@ -424,7 +424,7 @@ function XIcon() {
   );
 }
 
-// Globe glyph for the "thuki.app" website button.
+// Globe glyph for the "veilura.online" website button.
 function GlobeIcon() {
   return (
     <svg

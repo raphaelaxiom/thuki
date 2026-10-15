@@ -32,7 +32,7 @@ describe('BuiltinAnnouncementStep', () => {
       }),
     );
     expect(invoke).toHaveBeenCalledWith('open_url', {
-      url: 'https://www.thuki.app/blog/thuki-built-in-local-ai-engine',
+      url: 'https://veilura.online/blog/veilura-built-in-local-ai-engine',
     });
   });
 
@@ -50,7 +50,9 @@ describe('BuiltinAnnouncementStep', () => {
       screen.getByText('One app, nothing else to manage'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('No more background Ollama, Thuki runs models itself.'),
+      screen.getByText(
+        'No more background Ollama, Veilura runs models itself.',
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText('Total AI model freedom')).toBeInTheDocument();
     expect(screen.getByText('Hugging Face')).toBeInTheDocument();
@@ -141,7 +143,7 @@ describe('BuiltinAnnouncementStep', () => {
     );
 
     expect(invoke).toHaveBeenCalledWith('open_url', {
-      url: 'https://www.thuki.app/blog/thuki-built-in-local-ai-engine',
+      url: 'https://veilura.online/blog/veilura-built-in-local-ai-engine',
     });
   });
 

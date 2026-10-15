@@ -9,7 +9,7 @@
  *    cancelled (pressed Escape without selecting).
  *
  * 2. `capture_full_screen_command`: silently captures all screens using
- *    CoreGraphics `CGWindowListCreateImageFromArray`, excluding Thuki's own
+ *    CoreGraphics `CGWindowListCreateImageFromArray`, excluding Veilura's own
  *    windows by PID. No window hide, no flicker. Returns the absolute file
  *    path of the saved image in `<app_data_dir>/images/`.
  *
@@ -23,10 +23,10 @@ use std::path::PathBuf;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use tauri::Manager;
 
-/// Returns a unique `/tmp/<uuid>-thuki.png` path for a single screenshot capture.
+/// Returns a unique `/tmp/<uuid>-veilura.png` path for a single screenshot capture.
 /// A new UUID is generated on every call, preventing collisions.
 pub fn temp_screenshot_path() -> PathBuf {
-    PathBuf::from(format!("/tmp/{}-thuki.png", uuid::Uuid::new_v4()))
+    PathBuf::from(format!("/tmp/{}-veilura.png", uuid::Uuid::new_v4()))
 }
 
 /// Encodes raw bytes to a standard base64 string for IPC transfer.
@@ -113,15 +113,15 @@ pub async fn capture_screenshot_command(
 
 /// Captures raw RGBA pixel bytes of the full screen using CoreGraphics.
 ///
-/// Captures all on-screen content below Thuki's own window in the Z-order,
-/// effectively excluding Thuki from the screenshot without hiding the window.
+/// Captures all on-screen content below Veilura's own window in the Z-order,
+/// effectively excluding Veilura from the screenshot without hiding the window.
 /// Returns `(width, height, rgba_bytes)` on success.
 ///
 /// `anchor` is a logical-point coordinate (Quartz space) used to pick which
 /// display to capture in multi-monitor setups: the display containing the
 /// anchor is captured. When `None` or the anchor lies outside every active
 /// display, falls back to the main (menu-bar) display. The typical anchor is
-/// the center of Thuki's own window, which is the display the user is
+/// the center of Veilura's own window, which is the display the user is
 /// actually looking at when they invoke `/screen`.
 ///
 /// MUST run on the macOS main thread. CoreGraphics APIs internally dispatch
@@ -216,7 +216,7 @@ fn capture_full_screen_raw(anchor: Option<(f64, f64)>) -> Result<(u32, u32, Vec<
         // the bounds of a specific display.
         //
         // In multi-monitor setups, capture the display containing the anchor
-        // point (typically the center of Thuki's own window). This matches the
+        // point (typically the center of Veilura's own window). This matches the
         // monitor the user is actually looking at when they invoke `/screen`.
         // If no anchor is provided or it lies outside every active display,
         // fall back to the main (menu-bar) display.
@@ -256,7 +256,7 @@ fn capture_full_screen_raw(anchor: Option<(f64, f64)>) -> Result<(u32, u32, Vec<
             CFRelease(probe);
             return Err(
                 "Screen Recording permission was just granted but needs a restart to \
-                 activate. Please quit and relaunch Thuki, then try /screen again."
+                 activate. Please quit and relaunch Veilura, then try /screen again."
                     .to_string(),
             );
         }
@@ -265,11 +265,11 @@ fn capture_full_screen_raw(anchor: Option<(f64, f64)>) -> Result<(u32, u32, Vec<
         if window_info_list.is_null() {
             // Defensive: should not happen after preflight passed, but handle gracefully.
             return Err("Screen Recording permission check failed unexpectedly. \
-                 Try restarting Thuki."
+                 Try restarting Veilura."
                 .to_string());
         }
 
-        // Find Thuki's own topmost window ID so we can capture everything
+        // Find Veilura's own topmost window ID so we can capture everything
         // below it in Z-order. The window list is front-to-back, so the
         // first entry matching our PID is the topmost.
         let count = CFArrayGetCount(window_info_list);
@@ -315,11 +315,11 @@ fn capture_full_screen_raw(anchor: Option<(f64, f64)>) -> Result<(u32, u32, Vec<
         // intentional: that flag strips the desktop window (the wallpaper layer),
         // which produces a black image on an empty desktop. Including it gives a
         // faithful "what the user sees" composite, matching macOS Screenshot.app.
-        // kCGWindowListOptionOnScreenBelowWindow already excludes Thuki itself by
+        // kCGWindowListOptionOnScreenBelowWindow already excludes Veilura itself by
         // compositing only windows lower than our_window_id in Z-order.
         //
         // Fallback (our_window_id == 0, should not occur in practice): capture all
-        // on-screen windows. Thuki is transparent so its presence in the list does
+        // on-screen windows. Veilura is transparent so its presence in the list does
         // not corrupt the image.
         let (list_option, relative_to) = if our_window_id != K_CG_NULL_WINDOW_ID {
             (
@@ -473,7 +473,7 @@ fn display_bounds_center(bounds: (f64, f64, f64, f64)) -> (f64, f64) {
     (x + w / 2.0, y + h / 2.0)
 }
 
-/// Tauri command: silently captures the full screen (excluding Thuki's own
+/// Tauri command: silently captures the full screen (excluding Veilura's own
 /// windows) and returns the absolute file path of the saved image.
 ///
 /// CoreGraphics APIs internally dispatch to the main thread, so calling them
@@ -494,7 +494,7 @@ pub async fn capture_full_screen_command(
         .app_data_dir()
         .map_err(|e| format!("failed to resolve app data dir: {e}"))?;
 
-    // Resolve the Thuki window so we can ask AppKit which display it lives on.
+    // Resolve the Veilura window so we can ask AppKit which display it lives on.
     // The handle is read here (off the main thread) but only dereferenced
     // inside the main-thread closure below: AppKit window/screen APIs are
     // strictly main-thread-only.
@@ -504,7 +504,7 @@ pub async fn capture_full_screen_command(
     // requirement). Returns (width, height, rgba_bytes).
     //
     // The anchor point steers multi-monitor capture: we look up the
-    // `CGDirectDisplayID` of the `NSScreen` the Thuki window is on, then take
+    // `CGDirectDisplayID` of the `NSScreen` the Veilura window is on, then take
     // the center of that display's bounds. Fallback chain: window missing →
     // `ns_window` unavailable → `NSScreen` nil → `None`, which downstream
     // resolves to the main (menu-bar) display.
@@ -604,8 +604,8 @@ mod tests {
         let s = path.to_str().unwrap();
         assert!(s.starts_with("/tmp/"), "expected /tmp/ prefix, got: {s}");
         assert!(
-            s.ends_with("-thuki.png"),
-            "expected -thuki.png suffix, got: {s}"
+            s.ends_with("-veilura.png"),
+            "expected -veilura.png suffix, got: {s}"
         );
     }
 

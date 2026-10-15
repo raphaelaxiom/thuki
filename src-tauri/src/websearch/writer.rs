@@ -80,7 +80,7 @@ pub(crate) fn delimiters(nonce: &str) -> (String, String) {
 /// sanitized text, and a closing delimiter. Both the title and the body are
 /// attacker-controlled fetched content, so both are run through
 /// [`sanitize_source_text`] with the request `nonce`; the domain is derived from
-/// the fetched URL by Thuki, not free text, so it is emitted as-is.
+/// the fetched URL by Veilura, not free text, so it is emitted as-is.
 pub(crate) fn build_sources_region(blocks: &[SourceBlock], nonce: &str) -> String {
     let (open, close) = delimiters(nonce);
     let mut out = open;

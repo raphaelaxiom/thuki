@@ -74,7 +74,7 @@ describe('ErrorCard', () => {
       <ErrorCard
         kind="ModelUnsupported"
         message={
-          "Unsupported model\nThuki's engine doesn't support this arch yet."
+          "Unsupported model\nVeilura's engine doesn't support this arch yet."
         }
       />,
     );
@@ -91,14 +91,14 @@ describe('ErrorCard', () => {
       <ErrorCard
         kind="ModelUnsupported"
         message={
-          "Unsupported model\nThuki's engine doesn't support this arch yet. Try another model. Engine improves over time and may support it down the road."
+          "Unsupported model\nVeilura's engine doesn't support this arch yet. Try another model. Engine improves over time and may support it down the road."
         }
       />,
     );
     expect(screen.getByText('Unsupported model')).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Thuki's engine doesn't support this arch yet. Try another model. Engine improves over time and may support it down the road.",
+        "Veilura's engine doesn't support this arch yet. Try another model. Engine improves over time and may support it down the road.",
       ),
     ).toBeInTheDocument();
   });
@@ -131,12 +131,12 @@ describe('ErrorCard', () => {
       <ErrorCard
         kind="EngineUnreachable"
         message={
-          "Thuki's engine isn't running\nSend your message again to restart it."
+          "Veilura's engine isn't running\nSend your message again to restart it."
         }
       />,
     );
     expect(
-      screen.getByText("Thuki's engine isn't running"),
+      screen.getByText("Veilura's engine isn't running"),
     ).toBeInTheDocument();
     expect(
       screen.getByText('Send your message again to restart it.'),
@@ -172,12 +172,12 @@ describe('ErrorCard', () => {
   // wrapped, scrollable block, plus a Switch model recovery action.
   describe('EngineStartFailed', () => {
     const RAW_DETAIL =
-      '0.00.032.387 E llama_model_load: error loading model: illegal split file idx: 1 (file: /Users/logan/Library/Application Support/com.quietnode.thuki/models/blobs/2b0095251d3b1cf9a4ca9d6f8a2793715422f90e9468ca2b3deef766a368a6d9), model must be loaded with the first split';
+      '0.00.032.387 E llama_model_load: error loading model: illegal split file idx: 1 (file: /Users/logan/Library/Application Support/com.veilura.app/models/blobs/2b0095251d3b1cf9a4ca9d6f8a2793715422f90e9468ca2b3deef766a368a6d9), model must be loaded with the first split';
 
     it('renders the fixed engine-start-failed title', () => {
       render(<ErrorCard kind="EngineStartFailed" message={RAW_DETAIL} />);
       expect(
-        screen.getByText("Thuki's engine couldn't start this model"),
+        screen.getByText("Veilura's engine couldn't start this model"),
       ).toBeInTheDocument();
     });
 
@@ -406,7 +406,7 @@ describe('ErrorCard', () => {
       ).toBeInTheDocument();
       // The single severity note.
       expect(screen.getByTestId('memory-freeze-note')).toHaveTextContent(
-        'That is far too tight to load on its own. Thuki always asks at this level, because loading can slow your Mac badly or freeze it.',
+        'That is far too tight to load on its own. Veilura always asks at this level, because loading can slow your Mac badly or freeze it.',
       );
       // The old fit/estimate/consequence copy is gone in this band.
       expect(

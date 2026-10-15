@@ -703,7 +703,7 @@ export function ChatBubble({
               </div>
             )}
             {content && (
-              <span className="thuki-text-base text-white/95 font-medium whitespace-pre-wrap">
+              <span className="veilura-text-base text-white/95 font-medium whitespace-pre-wrap">
                 {renderUserContent(content)}
               </span>
             )}

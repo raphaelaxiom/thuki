@@ -9,7 +9,7 @@ import type { ModelPickerState } from '../types/model';
  * Settings panel). Mirrors the Rust-side `CONFIG_UPDATED_EVENT`. Kept as a
  * string literal to avoid a Rust-codegen dependency in the frontend.
  */
-const CONFIG_UPDATED_EVENT = 'thuki://config-updated';
+const CONFIG_UPDATED_EVENT = 'veilura://config-updated';
 
 /**
  * Runtime guard for the IPC boundary. The Rust backend is trusted, but this

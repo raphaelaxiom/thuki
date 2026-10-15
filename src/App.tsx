@@ -80,17 +80,17 @@ import {
 } from './utils/conversationAutoSave';
 import './App.css';
 
-const OVERLAY_VISIBILITY_EVENT = 'thuki://visibility';
+const OVERLAY_VISIBILITY_EVENT = 'veilura://visibility';
 
 // eslint-disable-next-line no-control-regex
 const CONTROL_CHARS = /[\x00-\x08\x0b\x0c\x0e-\x1f]/g;
-const ONBOARDING_EVENT = 'thuki://onboarding';
+const ONBOARDING_EVENT = 'veilura://onboarding';
 
 /**
  * Settings › Behavior "Clear all" succeeded. Local session must drop its
  * conversation id so the UI no longer claims the wiped row is saved.
  */
-const HISTORY_CLEARED_EVENT = 'thuki://history-cleared';
+const HISTORY_CLEARED_EVENT = 'veilura://history-cleared';
 
 /**
  * Strips control characters and enforces a length cap on externally-sourced
@@ -222,7 +222,7 @@ const MINIMIZED_WINDOW_SIZE = 68;
  * in seconds. The OS window itself does NOT animate during the morph; it
  * only snap-resizes at the endpoints (`durationMs:0`) once the painted
  * content already matches. Floating-window apps (Raycast, Alfred, Spotlight,
- * Linear Cmd+K) sit at 0.15s to 0.25s for a plain close. Thuki's case is
+ * Linear Cmd+K) sit at 0.15s to 0.25s for a plain close. Veilura's case is
  * different: the chat morphs into a persistent mascot rather than just
  * vanishing, so the transition needs a touch more time and travel to read as
  * one connected morph instead of a fade followed by a separate pop-in.
@@ -304,7 +304,7 @@ type OverlayVisibilityPayload =
 type OverlayState = 'visible' | 'hidden' | 'hiding';
 
 /**
- * Main application orchestrator for Thuki.
+ * Main application orchestrator for Veilura.
  *
  * Implements an adaptive morphing UI container. It starts as a minimal spotlight-style
  * input bar (`AskBarView`), then smoothly transforms into a full chat window
@@ -1265,25 +1265,25 @@ function App() {
    * `[window]` typography knobs. Consumers (the AI markdown body, the user
    * chat bubble text, and the AskBar textarea + caret-tracking mirror) read
    * the variables directly; this is the single write path that resyncs
-   * after every Settings save (via the `thuki://config-updated` refresh in
+   * after every Settings save (via the `veilura://config-updated` refresh in
    * `ConfigContext`).
    */
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty(
-      '--thuki-text-base',
+      '--veilura-text-base',
       `${config.window.textBasePx}px`,
     );
     root.style.setProperty(
-      '--thuki-text-line-height',
+      '--veilura-text-line-height',
       `${config.window.textLineHeight}`,
     );
     root.style.setProperty(
-      '--thuki-text-letter-spacing',
+      '--veilura-text-letter-spacing',
       `${config.window.textLetterSpacingPx}px`,
     );
     root.style.setProperty(
-      '--thuki-text-font-weight',
+      '--veilura-text-font-weight',
       `${config.window.textFontWeight}`,
     );
   }, [
@@ -2450,7 +2450,7 @@ function App() {
   /**
    * Async handler for the `/screen` command path. Invokes the Rust
    * `capture_full_screen_command`, which silently captures the screen
-   * (excluding Thuki's own windows) and returns the saved file path.
+   * (excluding Veilura's own windows) and returns the saved file path.
    * On success, merges the screenshot path with any manually attached
    * images and calls ask(). On error, restores the query so no input is lost.
    */
@@ -3098,7 +3098,7 @@ function App() {
     // Single try/catch covers BOTH the serialisation step and the
     // dialog/write IPC. Serialisation runs an image-load Promise.all
     // and is awaited BEFORE the overlay hides so the perceived
-    // "preparing export" surface stays Thuki rather than a blank
+    // "preparing export" surface stays Veilura rather than a blank
     // screen. The alpha bracketing only covers the IPC window so the
     // overlay is hidden for exactly the dialog + write, never the
     // prep.
@@ -3109,13 +3109,13 @@ function App() {
         { fallbackModel: activeModel },
         now,
       );
-      // Hide Thuki via NSPanel alpha while the native save dialog is
+      // Hide Veilura via NSPanel alpha while the native save dialog is
       // on screen. The dialog's drop-shadow and vibrancy backdrop
-      // would otherwise bleed onto Thuki's transparent shadow margin
+      // would otherwise bleed onto Veilura's transparent shadow margin
       // and render as a dark "ghost" rectangle around the card.
       // Hide instantly — the dialog's own appear animation is the
       // motion the user reads, so a snap-out keeps the transition
-      // crisp from Thuki → dialog.
+      // crisp from Veilura → dialog.
       void invoke('set_overlay_alpha', { alpha: 0, durationMs: 0 });
       await invoke('prompt_and_save_chat_export', {
         content,
@@ -3126,7 +3126,7 @@ function App() {
         `Failed to export: ${err instanceof Error ? err.message : String(err)}`,
       );
     } finally {
-      // Fade back in over 150 ms so Thuki re-emerges in step with the
+      // Fade back in over 150 ms so Veilura re-emerges in step with the
       // dialog's dismiss animation instead of snapping in late. If
       // serialisation threw before the alpha:0 dispatched, this is
       // an alpha:1 → alpha:1 no-op rather than a wasted state change.
@@ -3714,7 +3714,7 @@ function App() {
    *
    * On open we re-pull both the installed-model list and the per-model
    * capability map so newly-pulled models (e.g. user ran `ollama pull
-   * deepseek-r1:1.5b` while Thuki was running) appear with their full
+   * deepseek-r1:1.5b` while Veilura was running) appear with their full
    * capability label without needing an app restart. Backend
    * `reconcile_capabilities` honors its cache for already-known slugs and
    * only fetches `/api/show` for genuinely new entries, so this is cheap.
@@ -4154,7 +4154,7 @@ function App() {
     opacity: { duration: morphDuration * 0.55, ease: MORPH_EASE },
   };
   // The mascot's own entrance/exit animation is CSS-driven (see the
-  // `.thuki-mascot*` rules in App.css and the portal JSX below), not Framer
+  // `.veilura-mascot*` rules in App.css and the portal JSX below), not Framer
   // Motion, so it is painted by the compositor even when the nonactivating
   // panel loses key focus and rAF is throttled.
 
@@ -4539,7 +4539,7 @@ function App() {
                   snaps on collapse, so the icon and the window frame coincide
                   by construction and the icon can never be clipped/vanish.
 
-                  Opacity/scale are driven by CSS (see `.thuki-mascot*` in
+                  Opacity/scale are driven by CSS (see `.veilura-mascot*` in
                   App.css), NOT Framer Motion. This is load-bearing: the panel
                   is a nonactivating NSPanel, and when it is not the key window
                   WKWebView throttles requestAnimationFrame. A Framer rAF tween
@@ -4553,10 +4553,12 @@ function App() {
                 createPortal(
                   <div
                     key="morph-mascot"
-                    className={`thuki-mascot fixed ${mascotCornerClass}${
+                    className={`veilura-mascot fixed ${mascotCornerClass}${
                       isSettledMinimized ? '' : ' pointer-events-none'
-                    }${morphPhase === 'collapsing' ? ' thuki-mascot-bloom' : ''}${
-                      morphPhase === 'expanding' ? ' thuki-mascot-leaving' : ''
+                    }${morphPhase === 'collapsing' ? ' veilura-mascot-bloom' : ''}${
+                      morphPhase === 'expanding'
+                        ? ' veilura-mascot-leaving'
+                        : ''
                     }`}
                     style={{
                       width: MINIMIZED_WINDOW_SIZE,

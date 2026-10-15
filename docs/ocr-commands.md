@@ -1,8 +1,8 @@
 # OCR-Supported Commands
 
-Thuki has a class of slash commands that read text out of attached images locally using the **macOS Vision framework**. No network calls, no LLM round-trip, and crucially: **no vision-capable model required**. The OCR engine extracts text on-device; the resulting text is what the active model sees.
+Veilura has a class of slash commands that read text out of attached images locally using the **macOS Vision framework**. No network calls, no LLM round-trip, and crucially: **no vision-capable model required**. The OCR engine extracts text on-device; the resulting text is what the active model sees.
 
-See [thuki.app](https://www.thuki.app/) for project info, downloads, and documentation.
+See [veilura.online](https://veilura.online/) for project info, downloads, and documentation.
 
 ## Which commands use OCR
 
@@ -50,7 +50,7 @@ The OCR commands bypass all of this. They call `VNRecognizeTextRequest` directly
 
 ## How it works
 
-When you submit any OCR-supported command, Thuki:
+When you submit any OCR-supported command, Veilura:
 
 1. Waits for every attached image to finish backend processing (pending-image gate).
 2. Collects all attached images plus any fresh `/screen` capture.
@@ -64,7 +64,7 @@ If every image is blank (no readable text detected), `/extract` returns `[No tex
 
 ### Fallback to a vision-capable model (/extract only)
 
-If Vision OCR fails on `/extract` (e.g., an unsupported image format), Thuki falls back to your active model only if it has vision capability, whichever provider serves it. The fallback prompt asks the model to extract text verbatim. If the active model has no vision capability, Thuki surfaces an error instead of silently doing nothing. Utility commands do not currently fall back; their OCR failure surfaces as a capture error.
+If Vision OCR fails on `/extract` (e.g., an unsupported image format), Veilura falls back to your active model only if it has vision capability, whichever provider serves it. The fallback prompt asks the model to extract text verbatim. If the active model has no vision capability, Veilura surfaces an error instead of silently doing nothing. Utility commands do not currently fall back; their OCR failure surfaces as a capture error.
 
 ## Performance
 
@@ -85,7 +85,7 @@ By contrast, sending the same screenshot to a vision model typically takes 2-10 
 ### Extract raw text
 
 1. Copy any image to your clipboard.
-2. Summon Thuki and paste the image.
+2. Summon Veilura and paste the image.
 3. Type `/extract` and press Enter.
 4. Raw text appears in the chat, ready to copy.
 
@@ -102,7 +102,7 @@ Takes a screenshot and immediately runs OCR on it. Useful for grabbing terminal 
 1. Switch to `llama3.2:3b` (or any text-only model) in the model picker.
 2. Paste a screenshot.
 3. Type `/tldr` and press Enter.
-4. Thuki OCRs the screenshot locally, then sends only the recognized text to the model, which returns a 1-3 sentence summary.
+4. Veilura OCRs the screenshot locally, then sends only the recognized text to the model, which returns a 1-3 sentence summary.
 
 The same pattern works for `/translate`, `/rewrite`, `/refine`, `/bullets`, `/todos`, and `/explain`.
 

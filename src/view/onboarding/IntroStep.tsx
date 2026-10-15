@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { invoke } from '@tauri-apps/api/core';
-import thukiLogo from '../../../src-tauri/icons/128x128.png';
+import veiluraLogo from '../../../src-tauri/icons/128x128.png';
 import { useFitOnboardingWindow } from '../../hooks/useFitOnboardingWindow';
 import {
   DownloadStatusStrip,
@@ -21,7 +21,7 @@ interface Props {
 export function IntroStep({ onComplete, downloadStatus }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
   // Match the transparent window to the card so its empty area never blocks
-  // clicks to the apps behind Thuki. Re-fit when the ambient strip appears or
+  // clicks to the apps behind Veilura. Re-fit when the ambient strip appears or
   // changes height (the verifying line, the ready line) by keying on
   // `downloadStatus`.
   useFitOnboardingWindow(cardRef, downloadStatus);
@@ -63,8 +63,8 @@ export function IntroStep({ onComplete, downloadStatus }: Props) {
           // during a mid-resize measure (see the picker card in ModelCheckStep).
           flexShrink: 0,
           background:
-            'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(255,141,92,0.14) 0%, rgba(28,24,20,0.97) 60%), rgba(28,24,20,0.97)',
-          border: '1px solid rgba(255, 141, 92, 0.2)',
+            'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(124,108,240,0.14) 0%, rgba(28,26,58,0.97) 60%), rgba(28,26,58,0.97)',
+          border: '1px solid rgba(124, 108, 240, 0.2)',
           borderRadius: 24,
           padding: '32px 26px 26px',
           boxShadow: '0 0 40px rgba(255,100,40,0.07)',
@@ -79,10 +79,10 @@ export function IntroStep({ onComplete, downloadStatus }: Props) {
           style={{ textAlign: 'center', cursor: 'grab' }}
         >
           <img
-            src={thukiLogo}
+            src={veiluraLogo}
             width={44}
             height={44}
-            alt="Thuki"
+            alt="Veilura"
             style={{
               objectFit: 'contain',
               display: 'block',
@@ -184,7 +184,7 @@ export function IntroStep({ onComplete, downloadStatus }: Props) {
             display: 'block',
             width: '100%',
             padding: '12px',
-            background: 'linear-gradient(135deg, #ff8d5c 0%, #d45a1e 100%)',
+            background: 'linear-gradient(135deg, #7c6cf0 0%, #4f46e5 100%)',
             color: 'white',
             fontSize: 14,
             fontWeight: 600,
@@ -254,7 +254,7 @@ function Fact({ icon, title, desc, last = false }: FactProps) {
           justifyContent: 'center',
           flexShrink: 0,
           paddingTop: 1,
-          color: 'rgba(255,141,92,0.65)',
+          color: 'rgba(124,108,240,0.65)',
         }}
       >
         {icon}
@@ -316,11 +316,11 @@ function MonoChip({ children }: { children: React.ReactNode }) {
       style={{
         display: 'inline-block',
         padding: '1px 6px',
-        background: 'rgba(255,141,92,0.08)',
-        border: '1px solid rgba(255,141,92,0.15)',
+        background: 'rgba(124,108,240,0.08)',
+        border: '1px solid rgba(124,108,240,0.15)',
         borderRadius: 4,
         fontSize: 11,
-        color: 'rgba(255,141,92,0.75)',
+        color: 'rgba(124,108,240,0.75)',
         fontFamily: "'SF Mono', 'Fira Mono', monospace",
         lineHeight: 1.5,
         verticalAlign: 'middle',
