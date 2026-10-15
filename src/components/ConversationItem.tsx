@@ -70,12 +70,14 @@ export const ConversationItem = memo(function ConversationItem({
       </button>
 
       {/* Delete: absolute overlay revealed on row hover, so it never reserves a
-          layout column that would permanently narrow every title. */}
+          layout column that would permanently narrow every title.
+          Keyboard/touch users have no hover: the button also appears on
+          focus-within (Tab reaches it) so it is never invisibly focused. */}
       <button
         type="button"
         onClick={() => onDelete(conversation.id)}
         aria-label="Delete conversation"
-        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded text-text-secondary opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-500/10 transition-opacity duration-150 cursor-pointer"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded text-text-secondary opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 hover:text-red-400 hover:bg-red-500/10 transition-opacity duration-150 cursor-pointer"
       >
         {DELETE_ICON}
       </button>

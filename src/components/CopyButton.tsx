@@ -40,6 +40,7 @@ export function CopyButton({ content, align }: CopyButtonProps) {
       className={`flex w-full ${align === 'right' ? 'justify-end' : 'justify-start'}`}
     >
       <button
+        type="button"
         onClick={handleCopy}
         className="transition-opacity duration-150 text-white/40 hover:text-white/70 p-0.5 rounded cursor-pointer"
         aria-label={copied ? 'Copied' : 'Copy message'}

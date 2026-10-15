@@ -2,6 +2,10 @@
 @source "../node_modules/streamdown/dist";
 @import 'streamdown/styles.css';
 @import 'katex/dist/katex.min.css';
+/* Design-system tokens: spacing, type, radii, shadows, motion, focus ring,
+ * dark/light theme surfaces. Imported first so @theme + rules below can
+ * build on it. See src/styles/tokens.css. */
+@import './styles/tokens.css';
 
 /* Nunito: single typeface for both UI chrome and AI prose. */
 @import '@fontsource/nunito/400.css';
@@ -106,6 +110,11 @@ body {
 /* ─── Chat Bubble Styles ─── */
 .chat-bubble {
   word-break: break-word;
+  /* Long unbroken strings (URLs, pasted tokens, base64) must wrap inside
+   * the bubble instead of forcing the 600px window wider. break-word alone
+   * misses some WebKit cases; anywhere is the backstop. */
+  overflow-wrap: anywhere;
+  min-width: 0;
   position: relative;
 }
 
@@ -388,7 +397,9 @@ body {
  * text reflow is zero.
  */
 .citation-link {
-  color: rgba(232, 131, 90, 0.75);
+  /* #f2a38a on the indigo bubble clears 4.5:1 for small text; the previous
+   * rgba(232,131,90,0.75) did not. Hover keeps the violet brand treatment. */
+  color: #f2a38a;
   text-decoration: none;
   cursor: pointer;
   font-size: 0.85em;

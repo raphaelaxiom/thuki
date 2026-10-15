@@ -1,6 +1,15 @@
 /* ─────────────────────────────────────────────────────────────────────────
  * Veilura Settings panel — chat-app aesthetic.
  *
+ * Design tokens: shared scale (spacing, type, radii, shadows, motion,
+ * focus ring) lives in `./tokens.css`, imported below; the scoped
+ * `--base/--rail/--t1…` palette below is the Settings window's indigo
+ * surface ramp, retokenized in Phase 2A from the pre-rebrand warm
+ * neutrals (#100e0d / #eceae7) to the Veilura indigo/violet system.
+ * ───────────────────────────────────────────────────────────────────────── */
+@import './tokens.css';
+
+/* The settings webview is decorations:false + transparent:true. The
  * Visual language matches the Veilura chat overlay (App.css): indigo-tinted dark
  * surface (var(--color-surface-base)), faint radial-violet aura at the
  * top, a single hairline glow line at the very top edge (like
@@ -29,21 +38,21 @@
    * Scoped to the Settings window so every settings surface (sidebar,
    * Models segmented panes, reskinned standard tabs) reads one set of
    * values. Mirrors the locked design tokens. */
-  --base: #100e0d;
-  --rail: #0b0a09;
+  --base: #181630;
+  --rail: #12102a;
   --elev-1: rgba(255, 255, 255, 0.03);
   --elev-2: rgba(255, 255, 255, 0.055);
   --hair: rgba(255, 255, 255, 0.075);
   --hair-soft: rgba(255, 255, 255, 0.045);
-  --t1: #eceae7;
-  --t2: rgba(236, 234, 231, 0.54);
-  --t3: rgba(236, 234, 231, 0.34);
+  --t1: #f2f1fb;
+  --t2: rgba(242, 241, 251, 0.6);
+  --t3: rgba(242, 241, 251, 0.38);
   --accent: #7c6cf0;
   --accent-soft: rgba(124, 108, 240, 0.14);
   /* Capability-pill text colours: a calm trio, each distinct and none
-   * reusing a status colour or the brand violet. Text = stone, Vision =
-   * dusty rose, Thinking = wheat gold. */
-  --cap-text: #b8aa9a;
+   * reusing a status colour or the brand violet. Text = lavender stone,
+   * Vision = dusty rose, Thinking = wheat gold. */
+  --cap-text: #c9c4e8;
   --cap-vision: #d59aad;
   --cap-think: #d9c27e;
   --ok: #79c08e;
@@ -105,7 +114,7 @@
   gap: 12px;
   padding: 10px 14px;
   margin: 8px 16px 0;
-  background: rgba(36, 30, 26, 0.95);
+  background: rgba(28, 26, 58, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-top-color: rgba(230, 156, 5, 0.32);
   border-radius: 10px;
@@ -492,7 +501,7 @@
   width: 86px;
   height: 30px;
   text-align: right;
-  background: rgba(36, 30, 26, 0.6);
+  background: rgba(28, 26, 58, 0.6);
   border: 1px solid rgba(124, 108, 240, 0.3);
   border-radius: 8px;
   padding: 0 10px;
@@ -736,7 +745,7 @@
 .input,
 .textarea {
   width: 100%;
-  background: rgba(36, 30, 26, 0.6);
+  background: rgba(28, 26, 58, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-top-color: rgba(124, 108, 240, 0.1);
   border-radius: 8px;
@@ -761,14 +770,14 @@
 }
 .input:hover,
 .textarea:hover {
-  background: rgba(36, 30, 26, 0.8);
+  background: rgba(28, 26, 58, 0.8);
   border-color: rgba(255, 255, 255, 0.1);
   border-top-color: rgba(124, 108, 240, 0.18);
 }
 .input:focus-visible,
 .textarea:focus-visible {
   outline: none;
-  background: rgba(36, 30, 26, 0.95);
+  background: rgba(28, 26, 58, 0.95);
   border-color: rgba(124, 108, 240, 0.42);
   box-shadow:
     0 0 0 3px rgba(124, 108, 240, 0.1),
@@ -784,7 +793,7 @@
   align-items: center;
   gap: 8px;
   height: 32px;
-  background: rgba(36, 30, 26, 0.6);
+  background: rgba(28, 26, 58, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-top-color: rgba(124, 108, 240, 0.1);
   border-radius: 8px;
@@ -798,7 +807,7 @@
     border-color 150ms ease;
 }
 .dropdown:hover {
-  background: rgba(36, 30, 26, 0.8);
+  background: rgba(28, 26, 58, 0.8);
   border-color: rgba(255, 255, 255, 0.1);
 }
 .dropdown:focus-visible {
@@ -812,7 +821,7 @@
  *    buttons used sparingly, like Reveal/Dismiss in the banner are ghost). */
 
 .button {
-  background: rgba(36, 30, 26, 0.95);
+  background: rgba(28, 26, 58, 0.95);
   color: var(--t1);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-top-color: rgba(124, 108, 240, 0.1);
@@ -865,7 +874,7 @@
   border-color: rgba(255, 255, 255, 0.1);
 }
 .buttonDestructive {
-  background: rgba(36, 30, 26, 0.95);
+  background: rgba(28, 26, 58, 0.95);
   border-color: rgba(255, 138, 128, 0.3);
   border-top-color: rgba(255, 138, 128, 0.3);
   color: #ff8a80;
@@ -950,7 +959,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 .valChip {
-  background: rgba(36, 30, 26, 0.95);
+  background: rgba(28, 26, 58, 0.95);
   color: var(--t1);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-top-color: rgba(124, 108, 240, 0.1);
@@ -984,7 +993,7 @@
   gap: 5px;
 }
 .ctxChipInput {
-  background: rgba(36, 30, 26, 0.95);
+  background: rgba(28, 26, 58, 0.95);
   border: 1px solid rgba(124, 108, 240, 0.3);
   border-radius: 6px;
   color: var(--accent);
@@ -1178,7 +1187,7 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-top-color: rgba(124, 108, 240, 0.1);
   border-radius: 8px;
-  background: rgba(36, 30, 26, 0.6);
+  background: rgba(28, 26, 58, 0.6);
   overflow: hidden;
 }
 .stepperBtn {
@@ -1311,7 +1320,7 @@
   animation: dialogBackdropIn 180ms ease-out;
 }
 .dialog {
-  background: rgba(36, 30, 26, 0.98);
+  background: rgba(28, 26, 58, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-top-color: rgba(124, 108, 240, 0.18);
   border-radius: 14px;
@@ -1520,7 +1529,7 @@
   height: 20px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(36, 30, 26, 0.8);
+  background: rgba(28, 26, 58, 0.8);
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
@@ -1878,7 +1887,7 @@
   gap: 12px;
   padding: 11px 14px;
   margin: 8px 16px 0;
-  background: rgba(36, 30, 26, 0.95);
+  background: rgba(28, 26, 58, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-top-color: rgba(230, 156, 5, 0.4);
   border-radius: 10px;

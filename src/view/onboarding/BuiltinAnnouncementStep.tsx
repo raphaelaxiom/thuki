@@ -217,6 +217,7 @@ export function BuiltinAnnouncementStep() {
         />
 
         <button
+          type="button"
           onClick={() => void handleTryBuiltin()}
           aria-label="Try Built-in Engine"
           style={{

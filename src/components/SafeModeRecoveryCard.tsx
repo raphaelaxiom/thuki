@@ -209,6 +209,7 @@ export function SafeModeRecoveryCard({
 
         {/* Primary CTA */}
         <button
+          type="button"
           ref={primaryButtonRef}
           onClick={onChooseDifferentModel}
           onPointerDown={markUserInteracted}
@@ -233,6 +234,7 @@ export function SafeModeRecoveryCard({
 
         {/* Secondary, quiet CTA - no fill, so it reads as the lower-emphasis choice. */}
         <button
+          type="button"
           ref={secondaryButtonRef}
           onClick={onLoadAnyway}
           onPointerDown={markUserInteracted}

@@ -385,7 +385,7 @@ export function ModelSelect({
                     </span>
                     {item.fit ? (
                       // Native title (not the Tooltip component): the row is a
-                      // <button>, so a Tooltip's wrapper <div> would be invalid
+                      // <button type="button">, so a Tooltip's wrapper <div> would be invalid
                       // phrasing content nested inside it.
                       <span
                         className={`${styles.fit} ${FIT_CLASS[item.fit]}`}

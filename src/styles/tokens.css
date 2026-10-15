@@ -1,0 +1,159 @@
+/* ─────────────────────────────────────────────────────────────────────────
+ * Veilura design-system tokens — single source of truth for spacing,
+ * typography, radii, shadows, motion, z-index, focus, and theme surfaces.
+ *
+ * Imported by `src/App.css` (main overlay) and by
+ * `src/styles/settings.module.css` (Settings window), so both windows read
+ * the same values. This file MUST contain only :root / attribute /
+ * element / pseudo selectors — no class selectors — so inlining it into a
+ * CSS Modules file never hashes anything.
+ *
+ * Theme model: the app ships dark by default (the overlay is a dark
+ * indigo surface). `[data-veilura-theme="light"]` on <html> overrides the
+ * surface/text tokens with the warm off-white Paper theme; no toggle wires
+ * it yet (see AUDIT.md F-07) — until then the dark values are the live UI
+ * and the light block is the contract a future toggle must satisfy.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/* ─── Spacing scale (4px base, Tailwind-compatible steps) ─── */
+:root {
+  --veilura-space-0: 0;
+  --veilura-space-1: 4px;
+  --veilura-space-2: 8px;
+  --veilura-space-3: 12px;
+  --veilura-space-4: 16px;
+  --veilura-space-5: 20px;
+  --veilura-space-6: 24px;
+  --veilura-space-8: 32px;
+  --veilura-space-10: 40px;
+  --veilura-space-12: 48px;
+
+  /* ─── Typography scale ─── */
+  --veilura-font-sans:
+    'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --veilura-font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --veilura-text-xs: 11px;
+  --veilura-text-sm: 13px;
+  --veilura-text-base: 14px;
+  --veilura-text-md: 15px;
+  --veilura-text-lg: 16.5px;
+  --veilura-text-xl: 20px;
+  --veilura-text-2xl: 24px;
+  --veilura-text-3xl: 32px;
+  --veilura-line-tight: 1.25;
+  --veilura-line-normal: 1.5;
+  --veilura-line-loose: 1.7;
+  --veilura-weight-regular: 400;
+  --veilura-weight-medium: 500;
+  --veilura-weight-semibold: 600;
+  --veilura-weight-bold: 700;
+
+  /* ─── Radii ─── */
+  --veilura-radius-sm: 6px;
+  --veilura-radius-md: 8px;
+  --veilura-radius-lg: 10px;
+  --veilura-radius-xl: 12px;
+  --veilura-radius-window: 16px;
+  --veilura-radius-pill: 999px;
+
+  /* ─── Shadows (mirror App.css --shadow-bar / --shadow-chat) ─── */
+  --veilura-shadow-bar:
+    0 6px 20px -6px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(124, 108, 240, 0.16);
+  --veilura-shadow-chat:
+    0 4px 14px -3px rgba(0, 0, 0, 0.5), 0 1px 4px -1px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(124, 108, 240, 0.16);
+  --veilura-shadow-popover:
+    0 12px 32px -8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(124, 108, 240, 0.16);
+
+  /* ─── Motion ─── */
+  --veilura-duration-fast: 150ms;
+  --veilura-duration-normal: 250ms;
+  --veilura-duration-slow: 420ms;
+  --veilura-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --veilura-ease-spring: cubic-bezier(0.12, 0.8, 0.2, 1.18);
+
+  /* ─── Z-index (overlay-local stacking; the OS window itself is topmost) ─── */
+  --veilura-z-base: 0;
+  --veilura-z-popover: 10;
+  --veilura-z-tooltip: 20;
+  --veilura-z-modal: 30;
+
+  /* ─── Focus ring (one ring everywhere; see the :focus-visible rule below) ─── */
+  --veilura-focus-ring: 0 0 0 2px rgba(124, 108, 240, 0.55);
+  --veilura-focus-ring-offset: 1px;
+
+  /* ─── Dark theme (live default) ─── */
+  color-scheme: dark;
+  --veilura-bg: rgba(24, 22, 48, 0.98);
+  --veilura-bg-elevated: rgba(40, 36, 74, 0.6);
+  --veilura-bg-card: rgba(32, 29, 60, 0.95);
+  --veilura-border: rgba(124, 108, 240, 0.16);
+  --veilura-border-strong: rgba(124, 108, 240, 0.32);
+  --veilura-text: #f2f1fb;
+  --veilura-text-muted: #b9b6d6;
+  --veilura-text-faint: #9a97b8;
+  --veilura-hover-overlay: rgba(255, 255, 255, 0.05);
+  --veilura-code-bg: rgba(18, 18, 22, 0.95);
+}
+
+/* ─── Light theme (Paper) — opt-in via [data-veilura-theme="light"] ───
+ * Warm off-white surfaces, deep indigo text. Hover overlays go dark-on-light.
+ * Brand accents (violet / teal) are unchanged between themes. */
+[data-veilura-theme='light'] {
+  color-scheme: light;
+  --veilura-bg: #faf7f2;
+  --veilura-bg-elevated: #ffffff;
+  --veilura-bg-card: #ffffff;
+  --veilura-border: rgba(49, 46, 129, 0.16);
+  --veilura-border-strong: rgba(49, 46, 129, 0.32);
+  --veilura-text: #1b1838;
+  --veilura-text-muted: #4a4780;
+  --veilura-text-faint: #6f6b9e;
+  --veilura-hover-overlay: rgba(27, 24, 56, 0.05);
+  --veilura-code-bg: #1b1838;
+}
+
+/* ─── One visible focus ring everywhere ───
+ * Keyboard-only (:focus-visible): mouse clicks never show the ring.
+ * Covers native controls, links, and ARIA widgets alike. Components that
+ * paint their own ring must match these values, not invent a second ring. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role='button']:focus-visible,
+[role='option']:focus-visible,
+[role='menuitem']:focus-visible,
+[role='tab']:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: var(--veilura-focus-ring);
+}
+
+/* Never hide the outline without a replacement: a bare `outline: none`
+ * on :focus leaves keyboard users with no position cue. The rule above
+ * replaces it with the ring; this guard catches `*:focus { outline: none }`
+ * stragglers by restoring the ring on keyboard focus. */
+*:focus-visible {
+  outline: none;
+  box-shadow: var(--veilura-focus-ring);
+}
+
+/* ─── Reduced motion: global kill-switch for CSS animation ───
+ * Framer Motion / JS-driven tweens are out of CSS reach; components that
+ * animate in JS must check matchMedia themselves (ThreeDotMotion already
+ * does). Everything CSS-animated freezes here, including the mascot
+ * wobble, shimmer labels, and indeterminate download fill. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

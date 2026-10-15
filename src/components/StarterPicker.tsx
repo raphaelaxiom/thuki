@@ -163,6 +163,7 @@ export function StarterPicker({
       ))}
       {ollamaDetected && onUseOllama ? (
         <button
+          type="button"
           onClick={onUseOllama}
           style={{
             background: 'transparent',
@@ -414,6 +415,7 @@ interface ActionButtonProps {
 function ActionButton({ label, onClick, muted = false }: ActionButtonProps) {
   return (
     <button
+      type="button"
       onClick={(e) => {
         e.stopPropagation();
         onClick();
