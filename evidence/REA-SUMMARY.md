@@ -33,8 +33,23 @@ Hopper, no Ghidra, no unrelated installs.
   Evidence ID `ev_b41da58bf2fa9b1d5d020cb3f23429040f39cd906dd770a4f51dc950c980f31b`,
   inventory `agm_e8b2a6aa19d77aa013db64c233cc15cca0d82636ef5332f74f80e018fb7891cc`,
   integrity contradictions **0**.
-- Run 2 (final Intel tree): `evidence/rea-js-intel.json`,
-  Evidence ID recorded in `evidence/LEDGER.md` after the run.
+- Run 2 (final Intel tree): **failed, recorded** — see below.
+  The canonical JS Evidence therefore remains run 1: the final tree
+  differs from run 1's tree only in `scripts/` (2 small files,
+  verified by `tsc` + direct execution), `src-tauri/src/lib.rs`
+  (verified by `rustfmt --check`), `README.md`, `docs/`, `evidence/`,
+  and the CI workflow — the `src/` React frontend analysed by REA
+  is byte-identical. Run 2 failure: `execution_failure`,
+  `retryable: false` — the projection worker got `SIGTERM` while
+  projecting a `node_modules` file (`node_modules/@asamuzakjp/
+  dom-selector/...`) that the analyser reached despite the target
+  tree having no `node_modules` of its own; partial observation
+  `ev_73a994a9d22bd2f8050cba233ca495f373c4494fc20d7952759d8afd165d5e36`.
+  Excerpt saved as `evidence/rea-js-intel-failure.json`
+  (the full 466 MB error envelope was deleted as it contained no
+  Evidence). The failure does not affect any conclusion: no
+  conclusion in this document depends on re-analysing the final
+  tree's JS.
 - Coverage (run 1): 276 relevant files, 264 JS files parsed
   (330,019 AST nodes), 1 parse failure, parsed as inert text
   (nothing executed).

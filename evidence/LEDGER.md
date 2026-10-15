@@ -11,7 +11,14 @@ Source: https://github.com/quiet-node/thuki @ `f3577592ea832bd46b4ae69a15661dced
   JS/Electron-tree target per the REA skill). Full setup/analyze flow
   (doctor, setup dry-run, DMG + .app analysis) is documented in
   `evidence/REA-SUMMARY.md`.
-- Raw Evidence: `evidence/rea-js.json` (116 MB)
+- Raw Evidence: `evidence/rea-js.json` (116 MB) — run 1, canonical.
+  A re-run on the final tree failed (`execution_failure`,
+  `retryable: false`, worker SIGTERM on a `node_modules` file);
+  recorded with partial observation ID in
+  `evidence/REA-SUMMARY.md` + excerpt
+  `evidence/rea-js-intel-failure.json`. The final tree's JS differs
+  from run 1's tree only in two small verified scripts, so no
+  conclusion depends on the re-run.
 - Evidence ID: `ev_b41da58bf2fa9b1d5d020cb3f23429040f39cd906dd770a4f51dc950c980f31b`
 - Inventory manifest: `agm_e8b2a6aa19d77aa013db64c233cc15cca0d82636ef5332f74f80e018fb7891cc`
 - Root artifact SHA-256: `39dc09503ca1067d979667a3393a484c8d95e2e6d22861bef67ae17ab69ac804`
