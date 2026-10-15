@@ -1,0 +1,174 @@
+name: Build Intel DMG
+
+# One-shot Intel (x86_64) build of Thuki. The shipped app is Apple Silicon
+# only: scripts/ensure-llama-server.ts builds the llama.cpp sidecar for the
+# host arch, src-tauri/src/lib.rs resolves the matching triple-suffixed
+# sidecar, and this workflow runs on the last GitHub-hosted Intel runner
+# (macos-15-intel, available until ~Aug 2027).
+#
+# Manual trigger only (workflow_dispatch) — it never runs on push/PR, so it
+# cannot interfere with the upstream arm64 release pipeline.
+#
+# Output: a single uploaded artifact, Thuki-<version>-Intel-x64.dmg,
+# containing Thuki.app with x86_64 Mach-O binaries throughout (app binary,
+# llama-server sidecar, all bundled dylibs), verified in-workflow with lipo.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # upload-artifact + cache need to write Actions state.
+  actions: write
+
+jobs:
+  build-intel-dmg:
+    name: Build + verify Intel DMG
+    runs-on: macos-15-intel
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.11
+
+      - name: Install stable Rust toolchain + x86_64 target
+        run: |
+          rustup toolchain install stable --no-self-update
+          rustup target add x86_64-apple-darwin
+
+      - name: Install frontend dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Cache llama.cpp sidecar (Intel)
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: src-tauri/binaries
+          key: llama-cpp-intel-${{ hashFiles('scripts/ensure-llama-server.ts') }}
+
+      - name: Build llama-server sidecar (x86_64)
+        run: bun run engine:ensure
+
+      - name: Verify sidecar arch + signatures
+        run: |
+          set -euo pipefail
+          bin=src-tauri/binaries/llama-server-x86_64-apple-darwin
+          test -f "$bin" || { echo "missing Intel sidecar: $bin"; exit 1; }
+          archs=$(lipo -archs "$bin")
+          echo "llama-server archs: $archs"
+          test "$archs" = "x86_64" || { echo "sidecar is not x86_64"; exit 1; }
+          codesign -vv "$bin"
+          for dylib in src-tauri/binaries/*.dylib; do
+            darchs=$(lipo -archs "$dylib")
+            echo "$(basename "$dylib"): $darchs"
+            test "$darchs" = "x86_64" || { echo "$dylib is not x86_64"; exit 1; }
+            codesign -vv "$dylib"
+          done
+
+      - name: Lint and format check
+        run: bun run lint && bun run format:check
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Frontend tests
+        run: bun run test
+
+      - name: Backend tests
+        run: cd src-tauri && cargo test --target x86_64-apple-darwin
+
+      # The upstream updater endpoint (latest.json) serves arm64-only
+      # artifacts. An Intel build must NOT self-update into an arm64 build
+      # it cannot execute, so the updater is off in this build — same
+      # approach as the nightly workflow. Product name/identifier stay
+      # "Thuki" / com.quietnode.thuki so the app installs as Thuki.app.
+      - name: Disable updater for Intel build
+        run: |
+          command -v jq >/dev/null 2>&1 || brew install jq
+          tmp="$(mktemp)"
+          jq '.plugins.updater.active = false' src-tauri/tauri.conf.json > "$tmp"
+          mv "$tmp" src-tauri/tauri.conf.json
+          jq '{updater: .plugins.updater.active}' src-tauri/tauri.conf.json
+
+      - name: Build Tauri app (x86_64)
+        env:
+          VITE_GIT_COMMIT_SHA: ${{ github.sha }}
+        run: bun run tauri build --target x86_64-apple-darwin --bundles app
+
+      - name: Verify .app bundle is x86_64 throughout
+        run: |
+          set -euo pipefail
+          APP='src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Thuki.app'
+          test -d "$APP" || { echo "missing .app: $APP"; exit 1; }
+          echo "--- app binary ---"
+          lipo -archs "$APP/Contents/MacOS/thuki"
+          test "$(lipo -archs "$APP/Contents/MacOS/thuki")" = "x86_64"
+          echo "--- sidecar ---"
+          lipo -archs "$APP/Contents/MacOS/llama-server"
+          test "$(lipo -archs "$APP/Contents/MacOS/llama-server")" = "x86_64"
+          echo "--- frameworks ---"
+          for dylib in "$APP"/Contents/Frameworks/*.dylib; do
+            darchs=$(lipo -archs "$dylib")
+            echo "$(basename "$dylib"): $darchs"
+            test "$darchs" = "x86_64" || { echo "$dylib is not x86_64"; exit 1; }
+          done
+          echo "--- Info.plist ---"
+          /usr/libexec/PlistBuddy -c "Print CFBundleExecutable" "$APP/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP/Contents/Info.plist"
+          codesign --verify --verbose "$APP"
+
+      - name: Ad-hoc sign the app
+        run: |
+          APP_BUNDLE='src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Thuki.app'
+          codesign --deep --force --sign - "$APP_BUNDLE"
+          codesign --verify --verbose "$APP_BUNDLE"
+
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - name: Create Intel DMG installer
+        run: |
+          set -euo pipefail
+          VERSION=$(jq -r .version src-tauri/tauri.conf.json)
+          DMG_NAME="Thuki-${VERSION}-Intel-x64.dmg"
+          echo "DMG_NAME=$DMG_NAME" >> "$GITHUB_ENV"
+          mkdir -p /tmp/thuki-dmg-src
+          cp -R "src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Thuki.app" /tmp/thuki-dmg-src/
+          mkdir -p dist-intel
+          create-dmg \
+            --volname "Thuki" \
+            --background "src-tauri/assets/dmg-background.png" \
+            --window-pos 200 120 \
+            --window-size 600 380 \
+            --icon-size 128 \
+            --icon "Thuki.app" 170 170 \
+            --hide-extension "Thuki.app" \
+            --app-drop-link 430 170 \
+            "dist-intel/$DMG_NAME" \
+            "/tmp/thuki-dmg-src"
+          rm -rf /tmp/thuki-dmg-src
+          ls -la dist-intel/
+
+      - name: Verify DMG mounts and contains Thuki.app
+        run: |
+          set -euo pipefail
+          DMG="dist-intel/$DMG_NAME"
+          shasum -a 256 "$DMG"
+          hdiutil verify "$DMG"
+          MOUNT=$(hdiutil attach -nobrowse -readonly "$DMG" | awk '/\/Volumes\// {print $NF}')
+          echo "mounted at: $MOUNT"
+          test -d "$MOUNT/Thuki.app" || { echo "Thuki.app missing in DMG"; hdiutil detach "$MOUNT"; exit 1; }
+          lipo -archs "$MOUNT/Thuki.app/Contents/MacOS/thuki"
+          hdiutil detach "$MOUNT"
+
+      - name: Upload Intel DMG artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: Thuki-Intel-x64-dmg
+          path: dist-intel/*.dmg
+          if-no-files-found: error
+          retention-days: 30
