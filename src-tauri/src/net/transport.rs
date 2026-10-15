@@ -132,10 +132,17 @@ pub(crate) enum RedirectVerdict {
     Reject(TransportError),
 }
 
-/// Decides a single redirect hop: reject once the hop cap is passed, otherwise
-/// re-run the SSRF validation on the target.
+/// Decides a single redirect hop: reject once the hop cap is reached,
+/// otherwise re-run the SSRF validation on the target.
+///
+/// `hops` is the number of redirects already followed (`attempt.previous()
+/// .len()`). With `max_redirects = 5`, following a hop when `hops == 5`
+/// would be the 6th redirect, so `hops >= max` rejects: the chain is
+/// allowed at most `max` hops, never `max + 1`. This is the redirect-loop
+/// bound: a self-redirecting URL exhausts the cap and fails with
+/// [`TransportError::TooManyRedirects`] instead of looping.
 pub(crate) fn redirect_decision(next: &Url, hops: usize, max_redirects: usize) -> RedirectVerdict {
-    if hops > max_redirects {
+    if hops >= max_redirects {
         return RedirectVerdict::Reject(TransportError::TooManyRedirects { max: max_redirects });
     }
     match super::ssrf::validate_request_url(next) {
@@ -464,6 +471,94 @@ mod tests {
         assert!(matches!(
             redirect_decision(&url, 1, 5),
             RedirectVerdict::Reject(TransportError::Ssrf(SsrfError::BlockedAddress(_)))
+        ));
+    }
+
+    #[test]
+    fn redirect_decision_rejects_at_exact_cap() {
+        // At the cap, following one more hop would be max+1 redirects:
+        // reject. (This is the off-by-one the old `hops > max` check missed.)
+        let url = Url::parse("https://example.com/next").unwrap();
+        assert!(matches!(
+            redirect_decision(&url, 5, 5),
+            RedirectVerdict::Reject(TransportError::TooManyRedirects { max: 5 })
+        ));
+    }
+
+    #[test]
+    fn redirect_decision_follows_one_below_cap() {
+        let url = Url::parse("https://example.com/next").unwrap();
+        assert!(matches!(
+            redirect_decision(&url, 4, 5),
+            RedirectVerdict::Follow
+        ));
+    }
+
+    #[test]
+    fn redirect_loop_exhausts_cap() {
+        // Simulates a self-redirecting URL: each hop is a valid public URL,
+        // so only the hop cap can stop it. The first `max` hops follow;
+        // every hop after that rejects with TooManyRedirects.
+        let url = Url::parse("https://example.com/loop").unwrap();
+        for hops in 0..5 {
+            assert!(
+                matches!(redirect_decision(&url, hops, 5), RedirectVerdict::Follow),
+                "hop {hops} should follow"
+            );
+        }
+        for hops in [5, 6, 100] {
+            assert!(
+                matches!(
+                    redirect_decision(&url, hops, 5),
+                    RedirectVerdict::Reject(TransportError::TooManyRedirects { max: 5 })
+                ),
+                "hop {hops} should reject"
+            );
+        }
+    }
+
+    #[test]
+    fn redirect_decision_rejects_private_ip_targets() {
+        // A redirect to any non-global literal is an SSRF attempt even when
+        // the original URL was public: each hop is re-validated.
+        for s in [
+            "http://127.0.0.1/admin",
+            "http://10.0.0.5/",
+            "http://192.168.1.1/",
+            "http://0.0.0.0/",
+            "http://[::1]/",
+            "http://[fe80::1]/",
+            "http://user:pass@example.com/",
+        ] {
+            let url = Url::parse(s).unwrap();
+            assert!(
+                matches!(
+                    redirect_decision(&url, 1, 5),
+                    RedirectVerdict::Reject(TransportError::Ssrf(_))
+                ),
+                "{s} should be rejected on redirect"
+            );
+        }
+    }
+
+    #[test]
+    fn oversize_body_rejected_by_accumulated_cap() {
+        // Simulates chunked streaming against the production byte cap: the
+        // sum of chunks, not any single chunk, trips the guard (gzip-bomb
+        // defence). Uses the real `MAX_HTTP_RESPONSE_BYTES` constant.
+        use crate::config::defaults::MAX_HTTP_RESPONSE_BYTES;
+        let mut current = 0usize;
+        let chunk = 1024 * 1024;
+        while current + chunk <= MAX_HTTP_RESPONSE_BYTES {
+            cap_check(current, chunk, MAX_HTTP_RESPONSE_BYTES).unwrap();
+            current += chunk;
+        }
+        let err = cap_check(current, chunk, MAX_HTTP_RESPONSE_BYTES).unwrap_err();
+        assert!(matches!(
+            err,
+            TransportError::ResponseTooLarge {
+                limit: MAX_HTTP_RESPONSE_BYTES
+            }
         ));
     }
 
