@@ -613,6 +613,7 @@ function OllamaModelCheck() {
         ) : null}
 
         <button
+          type="button"
           onClick={() => void handleRecheck()}
           aria-label="Verify setup"
           disabled={isRechecking}
@@ -1075,6 +1076,7 @@ function TabButton({ label, selected, onClick }: TabButtonProps) {
 
   return (
     <button
+      type="button"
       onClick={onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
@@ -1153,6 +1155,7 @@ function CopyButton({
 
   return (
     <button
+      type="button"
       onClick={() => void handleClick()}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}

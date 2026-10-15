@@ -214,6 +214,7 @@ export function StarterMatrix({
         >
           Downloading in the background.{' '}
           <button
+            type="button"
             onClick={onContinue}
             style={{
               background: 'transparent',
@@ -241,6 +242,7 @@ export function StarterMatrix({
         >
           Looks like Ollama&apos;s also running here on this machine.{' '}
           <button
+            type="button"
             onClick={onUseOllama}
             style={{
               background: 'transparent',
@@ -338,7 +340,9 @@ function TierColumn({
       style={{
         flex: 1,
         minWidth: 0,
-        opacity: dimmed ? 0.32 : 1,
+        /* Dimmed (non-recommended) tiers stay readable: 0.55 keeps the text
+         * above the contrast floor; the previous 0.32 washed it out. */
+        opacity: dimmed ? 0.55 : 1,
         transition: 'opacity 0.2s ease',
         boxShadow: 'none',
         background: 'transparent',
@@ -619,6 +623,7 @@ function DownloadCell({
           }`;
     return (
       <button
+        type="button"
         onClick={onCancel}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
@@ -842,6 +847,7 @@ function ActionButton({
   const showHover = hover && !disabled;
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       onMouseEnter={() => setHover(true)}
@@ -910,6 +916,7 @@ function ResumeButton({
   const showHover = hover && !disabled;
   return (
     <button
+      type="button"
       onClick={() => onResume(tier, partialBytes, sizeBytes)}
       disabled={disabled}
       onMouseEnter={() => setHover(true)}
@@ -982,6 +989,7 @@ function ResumeButton({
 function DiscardLink({ onClick }: { onClick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       style={{
         display: 'block',

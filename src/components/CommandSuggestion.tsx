@@ -416,6 +416,7 @@ export function CommandSuggestion({
             return (
               <li
                 key={cmd.trigger}
+                id={`cmd-option-${cmd.trigger}`}
                 ref={(node) => {
                   optionElementsRef.current[index] = node;
                 }}

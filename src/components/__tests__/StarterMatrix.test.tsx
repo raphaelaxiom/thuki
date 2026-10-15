@@ -268,7 +268,9 @@ describe('StarterMatrix (picker)', () => {
     // No measurable rate yet -> just the byte counts, no speed or ETA.
     expect(screen.getByText('1.4 / 3.3 GB')).toBeInTheDocument();
     const balanced = container.querySelector('[data-tier="balanced"]');
-    expect(balanced?.getAttribute('style')).toContain('opacity: 0.32');
+    // Dimmed but still readable: 0.55 keeps dimmed-column text above the
+    // contrast floor (Phase 2A audit fix; was 0.32).
+    expect(balanced?.getAttribute('style')).toContain('opacity: 0.55');
     const downloads = screen.getAllByRole('button', { name: 'Download' });
     downloads.forEach((b) => expect(b).toBeDisabled());
     fireEvent.click(downloads[0]);

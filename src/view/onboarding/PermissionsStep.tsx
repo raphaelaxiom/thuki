@@ -571,6 +571,7 @@ function CTAButton({
 
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={isDisabled}
       aria-label={ariaLabel}

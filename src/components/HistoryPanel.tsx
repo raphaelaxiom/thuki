@@ -285,6 +285,7 @@ export function HistoryPanel({
                 value={search}
                 onChange={handleSearchChange}
                 placeholder="Search past chats…"
+                aria-label="Search past chats"
                 autoFocus
                 className="flex-1 min-w-0 bg-transparent text-xs text-text-primary placeholder:text-text-secondary outline-none"
               />
@@ -309,9 +310,18 @@ export function HistoryPanel({
       ) : (
         <div className="overflow-y-auto px-1.5 py-1 max-h-[280px]">
           {loadError && (
-            <p className="px-3 py-4 text-xs text-text-secondary text-center">
-              Couldn&apos;t load history - try again.
-            </p>
+            <div className="px-3 py-4 text-center">
+              <p className="text-xs text-text-secondary">
+                Couldn&apos;t load history - try again.
+              </p>
+              <button
+                type="button"
+                onClick={() => void fetchList(search || undefined)}
+                className="mt-2 px-3 py-1.5 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors duration-150 cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
           )}
 
           {isEmpty && !loadError && (

@@ -45,6 +45,7 @@ export function ReplaceButton({ content, onReplace }: ReplaceButtonProps) {
   return (
     <Tooltip label="Replace selection">
       <button
+        type="button"
         onClick={handleReplace}
         className="transition-opacity duration-150 text-white/40 hover:text-white/70 p-0.5 rounded cursor-pointer shrink-0 flex"
         aria-label={replaced ? 'Replaced' : 'Replace selection in source app'}

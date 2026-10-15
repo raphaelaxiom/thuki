@@ -178,6 +178,7 @@ export function IntroStep({ onComplete, downloadStatus }: Props) {
 
         {/* CTA */}
         <button
+          type="button"
           onClick={() => void handleGetStarted()}
           aria-label="Get Started"
           style={{

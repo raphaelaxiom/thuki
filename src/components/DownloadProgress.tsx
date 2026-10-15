@@ -493,6 +493,7 @@ function GhostButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       style={{
         background: 'transparent',
@@ -541,6 +542,7 @@ function StatusText({
 function CancelX({ onClick }: { onClick: () => void }) {
   return (
     <button
+      type="button"
       aria-label="Cancel"
       onClick={onClick}
       style={{
@@ -572,6 +574,7 @@ export function FlowButton({
 }: FlowButtonProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
       style={{
         padding: '6px 12px',
