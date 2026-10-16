@@ -1515,7 +1515,9 @@ fn backstop_mark_reasoning_always(
     if should_backstop_mark(think, reasoning_seen, row.reasoning_always, is_curated) {
         match crate::models::manifest::mark_reasoning_always(&conn, model_id) {
             Ok(()) => {
-                eprintln!("veilura: [models] reasoning backstop: marked {model_id} always-reasoning")
+                eprintln!(
+                    "veilura: [models] reasoning backstop: marked {model_id} always-reasoning"
+                )
             }
             Err(e) => {
                 eprintln!("veilura: [models] reasoning backstop: failed to mark {model_id}: {e}")
@@ -3284,8 +3286,11 @@ mod tests {
 
     #[test]
     fn system_prompt_with_datetime_appends_context_line() {
-        let got =
-            system_prompt_with_datetime("You are Veilura.", "Friday, 2026-07-10, 01:15 (UTC)", None);
+        let got = system_prompt_with_datetime(
+            "You are Veilura.",
+            "Friday, 2026-07-10, 01:15 (UTC)",
+            None,
+        );
         assert_eq!(
             got,
             "You are Veilura.\n\nCurrent local date and time: Friday, 2026-07-10, 01:15 (UTC).\n\

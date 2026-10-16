@@ -69,11 +69,7 @@ fn prefix_spans(text: &str, prefix: &str, kind: &'static str, min_token: usize) 
             end += 1;
         }
         if end - token_start >= min_token {
-            out.push(Span {
-                start,
-                end,
-                kind,
-            });
+            out.push(Span { start, end, kind });
         }
     }
     out
@@ -173,7 +169,14 @@ fn find_key_positions(text: &str, key: &str) -> Vec<usize> {
 /// like "the token is…" is not redacted) and a value of at least 4 chars.
 fn assignment_spans(text: &str) -> Vec<Span> {
     const KEYS: [&str; 8] = [
-        "api_key", "apikey", "api-key", "secret", "token", "password", "passwd", "auth_token",
+        "api_key",
+        "apikey",
+        "api-key",
+        "secret",
+        "token",
+        "password",
+        "passwd",
+        "auth_token",
     ];
     let bytes = text.as_bytes();
     let mut out = Vec::new();
@@ -181,7 +184,8 @@ fn assignment_spans(text: &str) -> Vec<Span> {
         for pos in find_key_positions(text, key) {
             let mut i = pos + key.len();
             // Optional whitespace / quote between key and `=` / `:`.
-            while i < bytes.len() && (bytes[i] == b' ' || bytes[i] == b'\t' || bytes[i] == b'"' || bytes[i] == b'\'')
+            while i < bytes.len()
+                && (bytes[i] == b' ' || bytes[i] == b'\t' || bytes[i] == b'"' || bytes[i] == b'\'')
             {
                 i += 1;
             }
@@ -211,7 +215,16 @@ fn assignment_spans(text: &str) -> Vec<Span> {
                 while value_end < bytes.len()
                     && !matches!(
                         bytes[value_end],
-                        b' ' | b'\t' | b'\n' | b'\r' | b',' | b';' | b'}' | b']' | b')' | b'"' | b'\''
+                        b' ' | b'\t'
+                            | b'\n'
+                            | b'\r'
+                            | b','
+                            | b';'
+                            | b'}'
+                            | b']'
+                            | b')'
+                            | b'"'
+                            | b'\''
                     )
                 {
                     value_end += 1;
@@ -357,7 +370,10 @@ pub fn validate_backup_json(json: &str) -> BackupValidation {
         None => return invalid(vec!["backup must be a JSON object".to_string()], None),
     };
     let mut errors: Vec<String> = Vec::new();
-    let version = obj.get("version").and_then(|v| v.as_u64()).map(|v| v as u32);
+    let version = obj
+        .get("version")
+        .and_then(|v| v.as_u64())
+        .map(|v| v as u32);
     match version {
         Some(1) => {}
         Some(other) => errors.push(format!("unsupported backup version: {other} (expected 1)")),
@@ -365,7 +381,9 @@ pub fn validate_backup_json(json: &str) -> BackupValidation {
     }
     match obj.get("app").and_then(|v| v.as_str()) {
         Some("veilura") => {}
-        Some(other) => errors.push(format!("wrong backup `app`: {other} (expected \"veilura\")")),
+        Some(other) => errors.push(format!(
+            "wrong backup `app`: {other} (expected \"veilura\")"
+        )),
         None => errors.push("missing backup `app` field".to_string()),
     }
     if obj.get("exported_at").and_then(|v| v.as_str()).is_none() {
@@ -708,7 +726,8 @@ mod tests {
 
     #[test]
     fn redact_private_key_block() {
-        let block = "-----BEGIN RSA PRIVATE KEY-----\nMIIBOgIBAAJBAK\n-----END RSA PRIVATE KEY-----";
+        let block =
+            "-----BEGIN RSA PRIVATE KEY-----\nMIIBOgIBAAJBAK\n-----END RSA PRIVATE KEY-----";
         let out = redact_text(&format!("key:\n{block}\ndone"), true);
         assert!(out.redacted);
         assert!(!out.text.contains("MIIBOgIBAAJBAK"));

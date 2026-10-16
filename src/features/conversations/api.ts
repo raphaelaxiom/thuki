@@ -40,7 +40,10 @@ export interface ImportConversationPayload {
   readonly messages: readonly { role: string; content: string }[];
 }
 
-async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+async function call<T>(
+  cmd: string,
+  args?: Record<string, unknown>,
+): Promise<T> {
   return invoke(cmd, args) as Promise<T>;
 }
 

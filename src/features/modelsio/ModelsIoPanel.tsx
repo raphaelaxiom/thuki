@@ -93,7 +93,8 @@ export function ModelsIoPanel({
     <div>
       <h1>Models, Input &amp; Output</h1>
       <p>
-        Draft: {draft === '' ? '(empty)' : draft} · Attached: {attached.length} file(s)
+        Draft: {draft === '' ? '(empty)' : draft} · Attached: {attached.length}{' '}
+        file(s)
       </p>
       <ModelsSection initialModels={models} />
       <InputSection

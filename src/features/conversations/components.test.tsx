@@ -48,9 +48,7 @@ describe('ConversationsPanel', () => {
     fireEvent.change(screen.getByLabelText('Search conversations'), {
       target: { value: '' },
     });
-    fireEvent.click(
-      screen.getByLabelText('Select conversation Pasta night'),
-    );
+    fireEvent.click(screen.getByLabelText('Select conversation Pasta night'));
     expect(screen.getByLabelText('Bulk actions')).toBeTruthy();
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Archive' }));
@@ -86,19 +84,14 @@ describe('ConversationsPanel', () => {
       target: { value: 'Work' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
-    expect(
-      screen.getByRole('button', { name: 'Work' }),
-    ).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Work' })).toBeTruthy();
 
     fireEvent.click(screen.getByLabelText('Actions for Pasta night'));
-    fireEvent.change(
-      screen.getByLabelText('Move Pasta night to folder'),
-      { target: { value: 'x' } },
-    );
+    fireEvent.change(screen.getByLabelText('Move Pasta night to folder'), {
+      target: { value: 'x' },
+    });
     // Selecting the real folder id moves it; the select lists the folder.
-    expect(
-      screen.getByLabelText('Move Pasta night to folder'),
-    ).toBeTruthy();
+    expect(screen.getByLabelText('Move Pasta night to folder')).toBeTruthy();
   });
 
   it('exports a conversation as Markdown and reports it', async () => {
@@ -141,9 +134,7 @@ describe('PromptsPanel', () => {
     fireEvent.change(screen.getByLabelText('Prompt body'), {
       target: { value: 'Do {{thing}} please' },
     });
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Create prompt' }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: 'Create prompt' }));
     expect(screen.getByText('My prompt')).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Favourite My prompt'));
     expect(screen.getByLabelText('Unfavourite My prompt')).toBeTruthy();
@@ -173,7 +164,9 @@ describe('SystemActionsBar', () => {
     fireEvent.change(screen.getByLabelText('System action'), {
       target: { value: 'open Calculator' },
     });
-    expect(screen.getAllByText('Open Calculator').length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByText('Open Calculator').length,
+    ).toBeGreaterThanOrEqual(1);
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Run' }));
     });

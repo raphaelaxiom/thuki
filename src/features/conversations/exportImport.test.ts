@@ -87,9 +87,9 @@ describe('parseConversationImport', () => {
 
 describe('exportFilename', () => {
   it('builds a slug filename with the date', () => {
-    expect(
-      exportFilename('My Chat! v2', 'md', new Date(2026, 9, 16)),
-    ).toBe('veilura-chat-my-chat-v2-2026-10-16.md');
+    expect(exportFilename('My Chat! v2', 'md', new Date(2026, 9, 16))).toBe(
+      'veilura-chat-my-chat-v2-2026-10-16.md',
+    );
   });
 
   it('falls back when the title is empty', () => {

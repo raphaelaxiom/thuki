@@ -7,14 +7,18 @@
 
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { ConversationsPanel, type ConversationsPanelProps } from './ConversationsPanel';
+import {
+  ConversationsPanel,
+  type ConversationsPanelProps,
+} from './ConversationsPanel';
 import { PromptsPanel, type PromptsPanelProps } from './PromptsPanel';
-import { SystemActionsBar, type SystemActionsBarProps } from './SystemActionsBar';
+import {
+  SystemActionsBar,
+  type SystemActionsBarProps,
+} from './SystemActionsBar';
 
 export interface ConversationsFeatureProps
-  extends ConversationsPanelProps,
-    PromptsPanelProps,
-    SystemActionsBarProps {}
+  extends ConversationsPanelProps, PromptsPanelProps, SystemActionsBarProps {}
 
 type Tab = 'conversations' | 'prompts' | 'system-actions';
 
@@ -29,7 +33,11 @@ export function ConversationsFeature(props: ConversationsFeatureProps) {
   const { onInsertPrompt, onResult, ...panelProps } = props;
   return (
     <div data-testid="conversations-feature">
-      <div role="tablist" aria-label="Conversation features" style={{ display: 'flex', gap: 8, padding: '12px 16px 0' }}>
+      <div
+        role="tablist"
+        aria-label="Conversation features"
+        style={{ display: 'flex', gap: 8, padding: '12px 16px 0' }}
+      >
         {TABS.map((t) => (
           <button
             key={t.id}

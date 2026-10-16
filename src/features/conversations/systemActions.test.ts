@@ -56,12 +56,16 @@ describe('parseSystemActionText', () => {
   });
 
   it('parses create note with colon and with-content forms', () => {
-    expect(parseSystemActionText('create note Shopping list: milk, eggs')).toEqual({
+    expect(
+      parseSystemActionText('create note Shopping list: milk, eggs'),
+    ).toEqual({
       kind: 'create_note',
       title: 'Shopping list',
       content: 'milk, eggs',
     });
-    expect(parseSystemActionText('create note Idea with brainstorm later')).toEqual({
+    expect(
+      parseSystemActionText('create note Idea with brainstorm later'),
+    ).toEqual({
       kind: 'create_note',
       title: 'Idea',
       content: 'brainstorm later',
@@ -77,7 +81,9 @@ describe('parseSystemActionText', () => {
     expect(
       parseSystemActionText('reveal ~/Desktop/report.pdf in Finder'),
     ).toEqual({ kind: 'reveal_in_finder', path: '~/Desktop/report.pdf' });
-    expect(parseSystemActionText('open ~/Desktop/report.pdf in Finder')).toEqual({
+    expect(
+      parseSystemActionText('open ~/Desktop/report.pdf in Finder'),
+    ).toEqual({
       kind: 'reveal_in_finder',
       path: '~/Desktop/report.pdf',
     });
@@ -139,7 +145,12 @@ describe('describeSystemAction', () => {
   it('labels every action kind', () => {
     const actions: SystemActionRequest[] = [
       { kind: 'open_app', app: 'Calculator' },
-      { kind: 'create_file', filename: 'a.txt', content: '', location: 'desktop' },
+      {
+        kind: 'create_file',
+        filename: 'a.txt',
+        content: '',
+        location: 'desktop',
+      },
       { kind: 'open_url', url: 'https://example.com' },
       { kind: 'reveal_in_finder', path: '/tmp/x' },
       { kind: 'create_note', title: 'N', content: '' },

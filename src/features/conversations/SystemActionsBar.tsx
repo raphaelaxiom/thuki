@@ -85,24 +85,29 @@ export function SystemActionsBar(props: SystemActionsBarProps) {
     >
       <h2 style={{ margin: 0 }}>System actions</h2>
       <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>
-        Type an action and Veilura really runs it — opening apps, creating
-        files on your Desktop, opening URLs, revealing files in Finder, or
-        creating notes. Actions are validated before they run, and the
-        result below reports exactly what happened.
+        Type an action and Veilura really runs it — opening apps, creating files
+        on your Desktop, opening URLs, revealing files in Finder, or creating
+        notes. Actions are validated before they run, and the result below
+        reports exactly what happened.
       </p>
 
       <div style={{ display: 'flex', gap: 8 }}>
         <input
           type="text"
           aria-label="System action"
-          placeholder='Try: open Calculator, or create file notes.txt on Desktop…'
+          placeholder="Try: open Calculator, or create file notes.txt on Desktop…"
           value={text}
           disabled={busy}
           onChange={(e) => handleTextChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleSubmit();
           }}
-          style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(128,128,128,0.4)' }}
+          style={{
+            flex: 1,
+            padding: '8px 10px',
+            borderRadius: 8,
+            border: '1px solid rgba(128,128,128,0.4)',
+          }}
         />
         <button type="button" disabled={busy} onClick={handleSubmit}>
           {busy ? 'Running…' : 'Run'}
@@ -115,7 +120,10 @@ export function SystemActionsBar(props: SystemActionsBarProps) {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} aria-label="Quick actions">
+      <div
+        style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}
+        aria-label="Quick actions"
+      >
         {QUICK_ACTIONS.map((item) => (
           <button
             key={item.label}

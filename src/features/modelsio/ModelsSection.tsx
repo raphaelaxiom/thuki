@@ -65,12 +65,16 @@ interface ModelsSectionProps {
 
 export function ModelsSection({ initialModels }: ModelsSectionProps) {
   const [models, setModels] = useState<ModelMeta[]>(initialModels);
-  const [favourites, setFavourites] = useState<string[]>(() => loadFavourites());
-  const [onlyFavourites, setOnlyFavourites] = useState(false);
-  const [notes, setNotes] = useState<Record<string, string>>(() => loadModelNotes());
-  const [settingsByModel, setSettingsByModel] = useState<Record<string, PerModelSettings>>(
-    () => loadPerModelSettings(),
+  const [favourites, setFavourites] = useState<string[]>(() =>
+    loadFavourites(),
   );
+  const [onlyFavourites, setOnlyFavourites] = useState(false);
+  const [notes, setNotes] = useState<Record<string, string>>(() =>
+    loadModelNotes(),
+  );
+  const [settingsByModel, setSettingsByModel] = useState<
+    Record<string, PerModelSettings>
+  >(() => loadPerModelSettings());
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [settingsModelId, setSettingsModelId] = useState<string | null>(null);
   const [queue, setQueue] = useState<DownloadQueueItem[]>([]);
@@ -91,7 +95,10 @@ export function ModelsSection({ initialModels }: ModelsSectionProps) {
         .map((m) => ({ ...m, notes: notes[m.id] ?? m.notes })),
     [compareIds, models, notes],
   );
-  const compareRows = useMemo(() => buildCompareRows(compareModels), [compareModels]);
+  const compareRows = useMemo(
+    () => buildCompareRows(compareModels),
+    [compareModels],
+  );
 
   const onToggleFavourite = useCallback((modelId: string) => {
     setFavourites((prev) => {
@@ -107,7 +114,9 @@ export function ModelsSection({ initialModels }: ModelsSectionProps) {
       saveModelNotes(next);
       return next;
     });
-    setModels((prev) => prev.map((m) => (m.id === modelId ? { ...m, notes: note } : m)));
+    setModels((prev) =>
+      prev.map((m) => (m.id === modelId ? { ...m, notes: note } : m)),
+    );
   }, []);
 
   const onSaveSettings = useCallback(
@@ -121,29 +130,34 @@ export function ModelsSection({ initialModels }: ModelsSectionProps) {
       void savePerModelSettingsBackend(modelId, resolved).catch(() => {
         // Backend not wired yet: localStorage already holds the settings.
       });
-      setStatus(`Settings saved for ${modelId}. They will be passed to inference on the next turn.`);
+      setStatus(
+        `Settings saved for ${modelId}. They will be passed to inference on the next turn.`,
+      );
     },
     [],
   );
 
   const onToggleCompare = useCallback((modelId: string) => {
     setCompareIds((prev) =>
-      prev.includes(modelId) ? prev.filter((id) => id !== modelId) : [...prev, modelId].slice(0, 4),
+      prev.includes(modelId)
+        ? prev.filter((id) => id !== modelId)
+        : [...prev, modelId].slice(0, 4),
     );
   }, []);
 
-  const onEnqueue = useCallback(
-    (model: ModelMeta) => {
-      const item = createQueueItem(model.id, `${model.displayName}.gguf`, model.sizeBytes);
-      setQueue((prev) => [...prev, item]);
-      void enqueueDownloadBackend(item).catch(() => {
-        setStatus(
-          `“${model.displayName}” queued locally. Real transfer starts once the parent wires the models_io download commands (see INTEGRATION-modelsio.md).`,
-        );
-      });
-    },
-    [],
-  );
+  const onEnqueue = useCallback((model: ModelMeta) => {
+    const item = createQueueItem(
+      model.id,
+      `${model.displayName}.gguf`,
+      model.sizeBytes,
+    );
+    setQueue((prev) => [...prev, item]);
+    void enqueueDownloadBackend(item).catch(() => {
+      setStatus(
+        `“${model.displayName}” queued locally. Real transfer starts once the parent wires the models_io download commands (see INTEGRATION-modelsio.md).`,
+      );
+    });
+  }, []);
 
   const onCancelItem = useCallback((id: string) => {
     setQueue((prev) => cancelQueueItem(prev, id));
@@ -161,17 +175,31 @@ export function ModelsSection({ initialModels }: ModelsSectionProps) {
       if (!item) return prev;
       const decision = decideResume(item);
       if (decision.action === 'already-complete') {
-        return prev.map((i) => (i.id === id ? { ...i, status: 'done' as const } : i));
+        return prev.map((i) =>
+          i.id === id ? { ...i, status: 'done' as const } : i,
+        );
       }
       if (decision.action === 'restart') {
         return prev.map((i) =>
           i.id === id
-            ? { ...i, status: 'downloading' as const, downloadedBytes: 0, resumedFrom: 0, error: decision.note }
+            ? {
+                ...i,
+                status: 'downloading' as const,
+                downloadedBytes: 0,
+                resumedFrom: 0,
+                error: decision.note,
+              }
             : i,
         );
       }
       return prev.map((i) =>
-        i.id === id ? { ...i, status: 'downloading' as const, resumedFrom: i.downloadedBytes } : i,
+        i.id === id
+          ? {
+              ...i,
+              status: 'downloading' as const,
+              resumedFrom: i.downloadedBytes,
+            }
+          : i,
       );
     });
     void resumeDownloadBackend(id)
@@ -185,7 +213,11 @@ export function ModelsSection({ initialModels }: ModelsSectionProps) {
       setStatus('Nothing queued, or a download is already in flight.');
       return;
     }
-    setQueue((prev) => prev.map((i) => (i.id === next.id ? { ...i, status: 'downloading' as const } : i)));
+    setQueue((prev) =>
+      prev.map((i) =>
+        i.id === next.id ? { ...i, status: 'downloading' as const } : i,
+      ),
+    );
     setStatus(`Started “${next.fileName}”.`);
   }, [queue]);
 
@@ -214,10 +246,16 @@ export function ModelsSection({ initialModels }: ModelsSectionProps) {
           `Model store: ${rows.length} blob(s), ${formatBytes(total)} on disk (blobs + partials).`,
         );
       })
-      .catch(() => setStatus('Backend disk usage not wired — showing local model list sizes.'));
+      .catch(() =>
+        setStatus(
+          'Backend disk usage not wired — showing local model list sizes.',
+        ),
+      );
   }, []);
 
-  const settingsModel = settingsModelId ? models.find((m) => m.id === settingsModelId) : undefined;
+  const settingsModel = settingsModelId
+    ? models.find((m) => m.id === settingsModelId)
+    : undefined;
   const settingsDraft = settingsModel
     ? resolvePerModelSettings(settingsByModel[settingsModel.id])
     : DEFAULT_PER_MODEL_SETTINGS;
@@ -227,7 +265,9 @@ export function ModelsSection({ initialModels }: ModelsSectionProps) {
       <h2>Models</h2>
       {status && <p role="status">{status}</p>}
       {freedBytes !== null && (
-        <p role="status">Deleted model — freed {formatBytes(freedBytes)} of disk space.</p>
+        <p role="status">
+          Deleted model — freed {formatBytes(freedBytes)} of disk space.
+        </p>
       )}
 
       <label>
@@ -247,14 +287,19 @@ export function ModelsSection({ initialModels }: ModelsSectionProps) {
             <li key={model.id}>
               <button
                 type="button"
-                aria-label={fav ? `Unfavourite ${model.displayName}` : `Favourite ${model.displayName}`}
+                aria-label={
+                  fav
+                    ? `Unfavourite ${model.displayName}`
+                    : `Favourite ${model.displayName}`
+                }
                 aria-pressed={fav}
                 onClick={() => onToggleFavourite(model.id)}
               >
                 {fav ? '★' : '☆'}
               </button>{' '}
-              <strong>{model.displayName}</strong> — {formatBytes(model.sizeBytes)} ·{' '}
-              {model.quant} · {model.downloaded ? 'Downloaded' : 'Not downloaded'} ·{' '}
+              <strong>{model.displayName}</strong> —{' '}
+              {formatBytes(model.sizeBytes)} · {model.quant} ·{' '}
+              {model.downloaded ? 'Downloaded' : 'Not downloaded'} ·{' '}
               {model.vision ? 'Vision' : 'Text-only'}
               <label>
                 {' '}
@@ -265,7 +310,10 @@ export function ModelsSection({ initialModels }: ModelsSectionProps) {
                   onChange={() => onToggleCompare(model.id)}
                 />
               </label>{' '}
-              <button type="button" onClick={() => setSettingsModelId(model.id)}>
+              <button
+                type="button"
+                onClick={() => setSettingsModelId(model.id)}
+              >
                 Settings
               </button>{' '}
               {!model.downloaded && (
@@ -335,7 +383,8 @@ export function ModelsSection({ initialModels }: ModelsSectionProps) {
               <li key={item.id}>
                 {item.fileName} — {item.status} —{' '}
                 {Math.round(queueItemProgress(item) * 100)}% (
-                {formatBytes(item.downloadedBytes)} / {formatBytes(item.totalBytes)})
+                {formatBytes(item.downloadedBytes)} /{' '}
+                {formatBytes(item.totalBytes)})
                 {item.error && <> — {item.error}</>}
                 {item.status === 'downloading' && (
                   <button type="button" onClick={() => onPauseItem(item.id)}>
@@ -404,7 +453,9 @@ function PerModelSettingsForm({
   const [temperature, setTemperature] = useState(initial.temperature);
   const [topP, setTopP] = useState(initial.topP);
   const [contextLength, setContextLength] = useState(initial.contextLength);
-  const [systemPrompt, setSystemPrompt] = useState(initial.systemPromptOverride);
+  const [systemPrompt, setSystemPrompt] = useState(
+    initial.systemPromptOverride,
+  );
   const promptError = validateSystemPromptOverride(systemPrompt);
   // Shared by form submit AND the Save button's onClick: jsdom does not
   // perform implicit form submission on submit-button clicks, so the

@@ -43,7 +43,9 @@ export function PromptsPanel(props: PromptsPanelProps) {
   const [bodyDraft, setBodyDraft] = useState('');
   const [formError, setFormError] = useState('');
   const [usingPrompt, setUsingPrompt] = useState<PromptItem | null>(null);
-  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+  const [variableValues, setVariableValues] = useState<Record<string, string>>(
+    {},
+  );
   const [status, setStatus] = useState('');
 
   const updateExt = (next: ExtState) => {
@@ -161,7 +163,12 @@ export function PromptsPanel(props: PromptsPanelProps) {
           placeholder="Search prompts…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(128,128,128,0.4)', flex: 1 }}
+          style={{
+            padding: '8px 10px',
+            borderRadius: 8,
+            border: '1px solid rgba(128,128,128,0.4)',
+            flex: 1,
+          }}
         />
         <button
           type="button"
@@ -176,7 +183,16 @@ export function PromptsPanel(props: PromptsPanelProps) {
       </div>
 
       {editingId && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid rgba(128,128,128,0.4)', borderRadius: 8, padding: 12 }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            border: '1px solid rgba(128,128,128,0.4)',
+            borderRadius: 8,
+            padding: 12,
+          }}
+        >
           <input
             aria-label="Prompt title"
             placeholder="Title"
@@ -207,17 +223,29 @@ export function PromptsPanel(props: PromptsPanelProps) {
       {visible.map((prompt) => (
         <div
           key={prompt.id}
-          style={{ border: '1px solid rgba(128,128,128,0.35)', borderRadius: 8, padding: 10 }}
+          style={{
+            border: '1px solid rgba(128,128,128,0.35)',
+            borderRadius: 8,
+            padding: 10,
+          }}
         >
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <strong>{prompt.title}</strong>
-            {prompt.builtin && <span style={{ fontSize: 12, opacity: 0.7 }}>(built-in)</span>}
+            {prompt.builtin && (
+              <span style={{ fontSize: 12, opacity: 0.7 }}>(built-in)</span>
+            )}
             <span style={{ flex: 1 }} />
             <button
               type="button"
-              aria-label={prompt.favourite ? `Unfavourite ${prompt.title}` : `Favourite ${prompt.title}`}
+              aria-label={
+                prompt.favourite
+                  ? `Unfavourite ${prompt.title}`
+                  : `Favourite ${prompt.title}`
+              }
               aria-pressed={prompt.favourite}
-              onClick={() => updateExt(setPromptFavourite(ext, prompt, !prompt.favourite))}
+              onClick={() =>
+                updateExt(setPromptFavourite(ext, prompt, !prompt.favourite))
+              }
             >
               {prompt.favourite ? '★' : '☆'}
             </button>
@@ -241,7 +269,9 @@ export function PromptsPanel(props: PromptsPanelProps) {
               </>
             )}
           </div>
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, margin: '8px 0 0' }}>
+          <pre
+            style={{ whiteSpace: 'pre-wrap', fontSize: 13, margin: '8px 0 0' }}
+          >
             {prompt.body}
           </pre>
         </div>
@@ -252,28 +282,43 @@ export function PromptsPanel(props: PromptsPanelProps) {
           role="dialog"
           aria-modal="true"
           aria-label={`Fill in ${usingPrompt.title}`}
-          style={{ border: '2px solid rgba(128,128,128,0.6)', borderRadius: 8, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}
+          style={{
+            border: '2px solid rgba(128,128,128,0.6)',
+            borderRadius: 8,
+            padding: 12,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}
         >
           <strong>Use “{usingPrompt.title}”</strong>
           {variables.length === 0 && (
-            <p style={{ margin: 0 }}>This prompt has no variables — insert it as-is.</p>
+            <p style={{ margin: 0 }}>
+              This prompt has no variables — insert it as-is.
+            </p>
           )}
           {variables.map((name) => (
-            <label key={name} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label
+              key={name}
+              style={{ display: 'flex', flexDirection: 'column', gap: 4 }}
+            >
               {name}
               <input
                 aria-label={`Value for ${name}`}
                 value={variableValues[name] ?? ''}
                 onChange={(e) =>
-                  setVariableValues((prev) => ({ ...prev, [name]: e.target.value }))
+                  setVariableValues((prev) => ({
+                    ...prev,
+                    [name]: e.target.value,
+                  }))
                 }
               />
             </label>
           ))}
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, margin: 0 }}>{filled}</pre>
-          {missing.length > 0 && (
-            <span>Missing: {missing.join(', ')}</span>
-          )}
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, margin: 0 }}>
+            {filled}
+          </pre>
+          {missing.length > 0 && <span>Missing: {missing.join(', ')}</span>}
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="button" onClick={handleInsert}>
               Insert

@@ -71,7 +71,10 @@ describe('favourites', () => {
 
 describe('compare', () => {
   it('builds one row per attribute with Yes/No states', () => {
-    const rows = buildCompareRows([model(), model({ id: 'b', downloaded: false, notes: '' })]);
+    const rows = buildCompareRows([
+      model(),
+      model({ id: 'b', downloaded: false, notes: '' }),
+    ]);
     expect(rows.map((r) => r.label)).toContain('Downloaded');
     const downloaded = rows.find((r) => r.label === 'Downloaded');
     expect(downloaded?.values).toEqual(['Yes', 'No']);
@@ -103,7 +106,9 @@ describe('download queue', () => {
     const queue = enqueueDownload([item], { ...item, id: 'second' });
     expect(nextQueuedItem(queue)?.id).toBe(item.id);
     const paused = pauseQueueItem(
-      queue.map((i) => (i.id === item.id ? { ...i, status: 'downloading' as const } : i)),
+      queue.map((i) =>
+        i.id === item.id ? { ...i, status: 'downloading' as const } : i,
+      ),
       item.id,
     );
     expect(paused.find((i) => i.id === item.id)?.status).toBe('paused');
@@ -113,9 +118,17 @@ describe('download queue', () => {
 
   it('decideResume restarts when Range is unsupported, resumes otherwise', () => {
     const base = createQueueItem('a', 'a.gguf', 1000);
-    expect(decideResume({ ...base, downloadedBytes: 100, supportsRange: false }).action).toBe('restart');
-    expect(decideResume({ ...base, downloadedBytes: 100, supportsRange: true }).action).toBe('resume-range');
-    expect(decideResume({ ...base, downloadedBytes: 1000 }).action).toBe('already-complete');
+    expect(
+      decideResume({ ...base, downloadedBytes: 100, supportsRange: false })
+        .action,
+    ).toBe('restart');
+    expect(
+      decideResume({ ...base, downloadedBytes: 100, supportsRange: true })
+        .action,
+    ).toBe('resume-range');
+    expect(decideResume({ ...base, downloadedBytes: 1000 }).action).toBe(
+      'already-complete',
+    );
   });
 });
 
@@ -149,10 +162,22 @@ describe('attachments', () => {
   it('classifies text/image/other and enforces the size cap', () => {
     expect(classifyAttachedFile('a.txt', '')).toBe('text');
     expect(classifyAttachedFile('a.png', 'image/png')).toBe('image');
-    expect(classifyAttachedFile('a.bin', 'application/octet-stream')).toBe('other');
-    expect(validateAttachment({ name: 'big.bin', sizeBytes: 11 * 1024 * 1024, mimeType: '' })).toMatch(/limited/);
-    expect(validateAttachment({ name: 'empty.txt', sizeBytes: 0, mimeType: '' })).toMatch(/empty/);
-    expect(validateAttachment({ name: 'ok.txt', sizeBytes: 10, mimeType: '' })).toBeNull();
+    expect(classifyAttachedFile('a.bin', 'application/octet-stream')).toBe(
+      'other',
+    );
+    expect(
+      validateAttachment({
+        name: 'big.bin',
+        sizeBytes: 11 * 1024 * 1024,
+        mimeType: '',
+      }),
+    ).toMatch(/limited/);
+    expect(
+      validateAttachment({ name: 'empty.txt', sizeBytes: 0, mimeType: '' }),
+    ).toMatch(/empty/);
+    expect(
+      validateAttachment({ name: 'ok.txt', sizeBytes: 10, mimeType: '' }),
+    ).toBeNull();
   });
 
   it('vision gating is honest', () => {
@@ -163,28 +188,71 @@ describe('attachments', () => {
 
 describe('crop + annotations', () => {
   it('clamps crop rects and rejects degenerate annotations', () => {
-    expect(normalizeCropRect({ x: -10, y: -10, width: 50, height: 50 }, 100, 100)).toEqual({
-      x: 0, y: 0, width: 50, height: 50,
+    expect(
+      normalizeCropRect({ x: -10, y: -10, width: 50, height: 50 }, 100, 100),
+    ).toEqual({
+      x: 0,
+      y: 0,
+      width: 50,
+      height: 50,
     });
-    expect(normalizeCropRect({ x: 0, y: 0, width: 0, height: 10 }, 100, 100)).toBeNull();
-    expect(isValidAnnotation({ kind: 'arrow', x1: 0, y1: 0, x2: 0, y2: 0, color: '#f00' })).toBe(false);
-    expect(isValidAnnotation({ kind: 'text', x: 1, y: 1, text: 'hi', color: '#f00' })).toBe(true);
-    expect(isValidAnnotation({ kind: 'text', x: 1, y: 1, text: '  ', color: '#f00' })).toBe(false);
+    expect(
+      normalizeCropRect({ x: 0, y: 0, width: 0, height: 10 }, 100, 100),
+    ).toBeNull();
+    expect(
+      isValidAnnotation({
+        kind: 'arrow',
+        x1: 0,
+        y1: 0,
+        x2: 0,
+        y2: 0,
+        color: '#f00',
+      }),
+    ).toBe(false);
+    expect(
+      isValidAnnotation({
+        kind: 'text',
+        x: 1,
+        y: 1,
+        text: 'hi',
+        color: '#f00',
+      }),
+    ).toBe(true);
+    expect(
+      isValidAnnotation({
+        kind: 'text',
+        x: 1,
+        y: 1,
+        text: '  ',
+        color: '#f00',
+      }),
+    ).toBe(false);
   });
 });
 
 describe('dictation availability', () => {
   it('prefers backend, then Web Speech, then none', () => {
-    expect(dictationAvailability({ hasBackend: true, hasWebSpeech: false }).path).toBe('backend');
-    expect(dictationAvailability({ hasBackend: false, hasWebSpeech: true }).path).toBe('web-speech');
-    expect(dictationAvailability({ hasBackend: false, hasWebSpeech: false }).available).toBe(false);
+    expect(
+      dictationAvailability({ hasBackend: true, hasWebSpeech: false }).path,
+    ).toBe('backend');
+    expect(
+      dictationAvailability({ hasBackend: false, hasWebSpeech: true }).path,
+    ).toBe('web-speech');
+    expect(
+      dictationAvailability({ hasBackend: false, hasWebSpeech: false })
+        .available,
+    ).toBe(false);
   });
 });
 
 describe('TTS', () => {
   it('strips markdown and clamps rate', () => {
-    expect(sanitizeTtsText('Hello `code` and [link](https://example.com)')).not.toContain('`');
-    expect(sanitizeTtsText('```js\nconst x = 1;\n``` done')).toContain('code block omitted');
+    expect(
+      sanitizeTtsText('Hello `code` and [link](https://example.com)'),
+    ).not.toContain('`');
+    expect(sanitizeTtsText('```js\nconst x = 1;\n``` done')).toContain(
+      'code block omitted',
+    );
     expect(clampTtsRate(9)).toBe(2);
     expect(clampTtsRate(0)).toBe(0.5);
   });
@@ -192,13 +260,20 @@ describe('TTS', () => {
 
 describe('code blocks + variants', () => {
   it('extracts fenced blocks and caps variants', () => {
-    const blocks = extractCodeBlocks('a\n```ts\nconst x = 1;\n```\nb\n```\nplain\n```');
+    const blocks = extractCodeBlocks(
+      'a\n```ts\nconst x = 1;\n```\nb\n```\nplain\n```',
+    );
     expect(blocks).toHaveLength(2);
     expect(blocks[0].language).toBe('ts');
     let variants: ReplyVariant[] = [];
     for (let i = 0; i < 12; i++) {
       variants = addVariant(variants, {
-        id: `v${i}`, content: `c${i}`, createdAt: i, promptTokens: 0, completionTokens: 0, elapsedMs: 0,
+        id: `v${i}`,
+        content: `c${i}`,
+        createdAt: i,
+        promptTokens: 0,
+        completionTokens: 0,
+        elapsedMs: 0,
       });
     }
     expect(variants).toHaveLength(10);
@@ -210,14 +285,20 @@ describe('code blocks + variants', () => {
 describe('token stats', () => {
   it('computes ms/token from real engine numbers', () => {
     const stats = computeTokenStats({
-      promptTokens: 10, completionTokens: 20, elapsedMs: 1000,
-      totalPromptTokens: 10, totalCompletionTokens: 20,
+      promptTokens: 10,
+      completionTokens: 20,
+      elapsedMs: 1000,
+      totalPromptTokens: 10,
+      totalCompletionTokens: 20,
     });
     expect(stats.msPerToken).toBe(50);
     expect(formatTokenStats(stats)).toContain('20.0 tok/s');
     const empty = computeTokenStats({
-      promptTokens: 0, completionTokens: 0, elapsedMs: 0,
-      totalPromptTokens: 0, totalCompletionTokens: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      elapsedMs: 0,
+      totalPromptTokens: 0,
+      totalCompletionTokens: 0,
     });
     expect(empty.msPerToken).toBe(0);
   });
@@ -225,7 +306,8 @@ describe('token stats', () => {
 
 describe('citations', () => {
   it('numbers markdown links and footnote-only sources', () => {
-    const text = 'See [Apple](https://apple.com) and [Apple again](https://apple.com).\n\n[1]: https://example.com/source';
+    const text =
+      'See [Apple](https://apple.com) and [Apple again](https://apple.com).\n\n[1]: https://example.com/source';
     const { citations } = parseCitations(text);
     expect(citations).toHaveLength(2);
     expect(citations[0].url).toBe('https://apple.com');

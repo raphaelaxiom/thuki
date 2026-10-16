@@ -246,7 +246,9 @@ pub fn run_startup_guard(app: &tauri::AppHandle, threshold: u32) -> StartupInit 
             clean_init(threshold)
         }
         Err(e) => {
-            eprintln!("veilura: [startup_guard] could not take session lock: {e}. treating as clean");
+            eprintln!(
+                "veilura: [startup_guard] could not take session lock: {e}. treating as clean"
+            );
             clean_init(threshold)
         }
     }

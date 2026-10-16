@@ -130,7 +130,9 @@ function parseJsonImport(text: string): ParsedImport {
     }
     const m = raw as Record<string, unknown>;
     if (typeof m.role !== 'string' || !VALID_ROLES.has(m.role)) {
-      throw new Error('Imported messages must have role "user" or "assistant".');
+      throw new Error(
+        'Imported messages must have role "user" or "assistant".',
+      );
     }
     if (typeof m.content !== 'string') {
       throw new Error('Imported messages must have string content.');
@@ -237,9 +239,10 @@ export function buildPrintHtml(
         `<p>${escapeHtml(m.content).replace(/\n/g, '<br>')}</p></section>`,
     )
     .join('\n');
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(
-    displayTitle(data),
-  )}</title><style>
+  return (
+    `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(
+      displayTitle(data),
+    )}</title><style>
 body{font-family:-apple-system,system-ui,sans-serif;max-width:720px;margin:32px auto;padding:0 24px;color:#111}
 h1{font-size:22px}h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#555;margin:0 0 6px}
 .msg{border-top:1px solid #ddd;padding:14px 0;page-break-inside:avoid}
@@ -249,7 +252,8 @@ h1{font-size:22px}h2{font-size:13px;text-transform:uppercase;letter-spacing:.04e
 </style></head><body><h1>${escapeHtml(displayTitle(data))}</h1>` +
     `<p class="meta">Model: ${escapeHtml(data.model)} · Exported: ${escapeHtml(
       now.toISOString(),
-    )} · Messages: ${data.messages.length}</p>${rows}</body></html>`;
+    )} · Messages: ${data.messages.length}</p>${rows}</body></html>`
+  );
 }
 
 /**

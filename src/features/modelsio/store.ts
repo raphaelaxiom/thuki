@@ -55,7 +55,9 @@ function saveJson(key: string, value: unknown): void {
 
 export function loadFavourites(): string[] {
   const value = loadJson<unknown>('favourites', []);
-  return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
+  return Array.isArray(value)
+    ? value.filter((v): v is string => typeof v === 'string')
+    : [];
 }
 
 export function saveFavourites(favourites: string[]): void {
@@ -86,7 +88,9 @@ export function loadPerModelSettings(): Record<string, PerModelSettings> {
   return value as Record<string, PerModelSettings>;
 }
 
-export function savePerModelSettings(settings: Record<string, PerModelSettings>): void {
+export function savePerModelSettings(
+  settings: Record<string, PerModelSettings>,
+): void {
   saveJson('per-model-settings', settings);
 }
 
@@ -97,7 +101,8 @@ export function loadClipboardHistory(): ClipboardEntry[] {
   if (!Array.isArray(value)) return [];
   return value.filter(
     (v): v is ClipboardEntry =>
-      typeof v === 'object' && v !== null &&
+      typeof v === 'object' &&
+      v !== null &&
       typeof (v as ClipboardEntry).text === 'string',
   );
 }
@@ -113,7 +118,10 @@ export function loadVariants(conversationKey: string): ReplyVariant[] {
   return Array.isArray(value) ? (value as ReplyVariant[]) : [];
 }
 
-export function saveVariants(conversationKey: string, variants: ReplyVariant[]): void {
+export function saveVariants(
+  conversationKey: string,
+  variants: ReplyVariant[],
+): void {
   saveJson(`variants:${conversationKey}`, variants);
 }
 
@@ -134,7 +142,8 @@ export function loadTokenTotals(): TokenTotals {
   }
   const v = value as Partial<TokenTotals>;
   return {
-    totalPromptTokens: typeof v.totalPromptTokens === 'number' ? v.totalPromptTokens : 0,
+    totalPromptTokens:
+      typeof v.totalPromptTokens === 'number' ? v.totalPromptTokens : 0,
     totalCompletionTokens:
       typeof v.totalCompletionTokens === 'number' ? v.totalCompletionTokens : 0,
   };

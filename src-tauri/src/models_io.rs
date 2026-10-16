@@ -619,8 +619,10 @@ pub fn models_io_delete_model(
     let mut freed = 0u64;
     for sha in &blob_sha256s {
         for sub in ["blobs", "tmp"] {
-            for candidate in [root.join(sub).join(sha), root.join(sub).join(format!("{sha}.partial"))]
-            {
+            for candidate in [
+                root.join(sub).join(sha),
+                root.join(sub).join(format!("{sha}.partial")),
+            ] {
                 if candidate.is_file() {
                     freed += std::fs::metadata(&candidate).map(|m| m.len()).unwrap_or(0);
                     std::fs::remove_file(&candidate)
@@ -754,7 +756,8 @@ pub fn models_io_capture_screenshot() -> Result<Option<String>, String> {
     #[cfg(target_os = "macos")]
     {
         use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
-        let path = std::env::temp_dir().join(format!("{}-veilura-modelsio.png", uuid::Uuid::new_v4()));
+        let path =
+            std::env::temp_dir().join(format!("{}-veilura-modelsio.png", uuid::Uuid::new_v4()));
         let status = Command::new("screencapture")
             .args(["-i", "-x"])
             .arg(&path)
@@ -763,8 +766,7 @@ pub fn models_io_capture_screenshot() -> Result<Option<String>, String> {
         if !status.success() || !path.exists() {
             return Ok(None);
         }
-        let bytes =
-            std::fs::read(&path).map_err(|e| format!("read screenshot file: {e}"))?;
+        let bytes = std::fs::read(&path).map_err(|e| format!("read screenshot file: {e}"))?;
         let _ = std::fs::remove_file(&path);
         Ok(Some(BASE64.encode(bytes)))
     }
@@ -982,9 +984,8 @@ mod tests {
         let blocks = extract_code_blocks("a\n```ts\nconst x = 1;\n```\n");
         assert_eq!(blocks.len(), 1);
         assert_eq!(blocks[0].language, "ts");
-        let cites = parse_citations(
-            "See [Apple](https://apple.com).\n\n[1]: https://example.com/source",
-        );
+        let cites =
+            parse_citations("See [Apple](https://apple.com).\n\n[1]: https://example.com/source");
         assert_eq!(cites.len(), 2);
         assert_eq!(cites[0].url, "https://apple.com");
         assert_eq!(cites[1].url, "https://example.com/source");

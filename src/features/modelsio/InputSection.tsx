@@ -26,10 +26,7 @@ import type {
   ClipboardEntry,
   CropRect,
 } from './types';
-import {
-  loadClipboardHistory,
-  saveClipboardHistory,
-} from './store';
+import { loadClipboardHistory, saveClipboardHistory } from './store';
 import {
   captureScreenshotBackend,
   dictateBackend,
@@ -64,8 +61,14 @@ function fileFromBlob(
   };
 }
 
-export function InputSection({ modelVision, onInsertText, onAttachFile }: InputSectionProps) {
-  const [clipboard, setClipboard] = useState<ClipboardEntry[]>(() => loadClipboardHistory());
+export function InputSection({
+  modelVision,
+  onInsertText,
+  onAttachFile,
+}: InputSectionProps) {
+  const [clipboard, setClipboard] = useState<ClipboardEntry[]>(() =>
+    loadClipboardHistory(),
+  );
   const [clipStatus, setClipStatus] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
@@ -107,7 +110,9 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
         }
         rememberClipboard(text);
         onInsertText(text);
-        setClipStatus('Clipboard text inserted into the ask bar (web clipboard).');
+        setClipStatus(
+          'Clipboard text inserted into the ask bar (web clipboard).',
+        );
       } catch {
         setClipStatus(
           'Clipboard access was denied. Grant clipboard permission, or copy the text and paste it manually.',
@@ -119,7 +124,11 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
   const readFile = useCallback(
     async (file: File): Promise<AttachedFile | null> => {
       const kind = classifyAttachedFile(file.name, file.type);
-      const error = validateAttachment({ name: file.name, sizeBytes: file.size, mimeType: file.type });
+      const error = validateAttachment({
+        name: file.name,
+        sizeBytes: file.size,
+        mimeType: file.type,
+      });
       if (error) {
         setAttachStatus(error);
         return null;
@@ -135,7 +144,14 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
           reader.onerror = () => reject(new Error('read failed'));
           reader.readAsDataURL(file);
         });
-        return fileFromBlob(file.name, file.type, file.size, kind, undefined, dataUrl);
+        return fileFromBlob(
+          file.name,
+          file.type,
+          file.size,
+          kind,
+          undefined,
+          dataUrl,
+        );
       }
       return fileFromBlob(file.name, file.type, file.size, kind);
     },
@@ -182,7 +198,9 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
         ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window),
     });
     if (availability.path === 'none') {
-      setDictationStatus('Dictation is unavailable: no speech recogniser on this system.');
+      setDictationStatus(
+        'Dictation is unavailable: no speech recogniser on this system.',
+      );
       return;
     }
     setListening(true);
@@ -197,7 +215,9 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
         (window as unknown as Record<string, unknown>).SpeechRecognition ??
         (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
       if (typeof Ctor !== 'function') {
-        setDictationStatus('Dictation is unavailable: no speech recogniser on this system.');
+        setDictationStatus(
+          'Dictation is unavailable: no speech recogniser on this system.',
+        );
         setListening(false);
         return;
       }
@@ -205,7 +225,9 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
         const recognition = new (Ctor as new () => {
           lang: string;
           interimResults: boolean;
-          onresult: ((e: { results: { transcript: string }[][] }) => void) | null;
+          onresult:
+            | ((e: { results: { transcript: string }[][] }) => void)
+            | null;
           onerror: ((e: unknown) => void) | null;
           onend: (() => void) | null;
           start: () => void;
@@ -224,7 +246,9 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
           setListening(false);
         };
         recognition.onerror = () => {
-          setDictationStatus('Dictation failed — microphone or recogniser error.');
+          setDictationStatus(
+            'Dictation failed — microphone or recogniser error.',
+          );
           setListening(false);
         };
         recognition.onend = () => setListening(false);
@@ -246,7 +270,9 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
           Read clipboard
         </button>{' '}
         {clipStatus && <span role="status">{clipStatus}</span>}
-        <p>Last {MAX_CLIPBOARD_HISTORY} clipboard texts — click one to insert it.</p>
+        <p>
+          Last {MAX_CLIPBOARD_HISTORY} clipboard texts — click one to insert it.
+        </p>
         <ul>
           {clipboard.map((entry) => (
             <li key={entry.id}>
@@ -274,7 +300,11 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
         style={dragOver ? { outline: '2px dashed currentColor' } : undefined}
       >
         <h3>Attach files</h3>
-        <p>{dragOver ? 'Drop files here' : 'Drag files onto this area, or choose files:'}</p>
+        <p>
+          {dragOver
+            ? 'Drop files here'
+            : 'Drag files onto this area, or choose files:'}
+        </p>
         <input
           type="file"
           multiple
@@ -292,7 +322,11 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
                 <> — {file.textContent.length} chars of text included</>
               )}
               {file.kind === 'image' && file.dataUrl && (
-                <img src={file.dataUrl} alt={`Preview of ${file.name}`} width={64} />
+                <img
+                  src={file.dataUrl}
+                  alt={`Preview of ${file.name}`}
+                  width={64}
+                />
               )}
             </li>
           ))}
@@ -304,7 +338,9 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
         {!visionGate.allowed ? (
           <p role="status">{visionGate.reason}</p>
         ) : (
-          <p>Vision model active — attached images are sent as vision context.</p>
+          <p>
+            Vision model active — attached images are sent as vision context.
+          </p>
         )}
         <input
           type="file"
@@ -345,7 +381,11 @@ export function InputSection({ modelVision, onInsertText, onAttachFile }: InputS
 
       <div>
         <h3>Voice dictation</h3>
-        <button type="button" onClick={() => void onDictate()} disabled={listening}>
+        <button
+          type="button"
+          onClick={() => void onDictate()}
+          disabled={listening}
+        >
           {listening ? 'Listening…' : 'Start dictation'}
         </button>{' '}
         {dictationStatus && <span role="status">{dictationStatus}</span>}
@@ -369,11 +409,18 @@ export function ScreenshotCropAnnotate({
   onAttach: (dataUrl: string) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [crop, setCrop] = useState<CropRect>({ x: 0, y: 0, width: 0, height: 0 });
+  const [crop, setCrop] = useState<CropRect>({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
   const [tool, setTool] = useState<'arrow' | 'text'>('arrow');
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [noteText, setNoteText] = useState('Look here');
-  const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null);
+  const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(
+    null,
+  );
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
   const loadImage = useCallback(
@@ -436,7 +483,11 @@ export function ScreenshotCropAnnotate({
 
   const onAttachCropped = useCallback(async () => {
     const canvas = canvasRef.current;
-    const normalized = normalizeCropRect(crop, imageSize.width, imageSize.height);
+    const normalized = normalizeCropRect(
+      crop,
+      imageSize.width,
+      imageSize.height,
+    );
     if (!canvas || !normalized) {
       onAttach(dataUrl);
       return;
@@ -497,12 +548,25 @@ export function ScreenshotCropAnnotate({
           if (tool === 'arrow') {
             setAnnotations((prev) => [
               ...prev,
-              { kind: 'arrow', x1: drawStart.x, y1: drawStart.y, x2: end.x, y2: end.y, color: '#ff0000' },
+              {
+                kind: 'arrow',
+                x1: drawStart.x,
+                y1: drawStart.y,
+                x2: end.x,
+                y2: end.y,
+                color: '#ff0000',
+              },
             ]);
           } else {
             setAnnotations((prev) => [
               ...prev,
-              { kind: 'text', x: drawStart.x, y: drawStart.y, text: noteText, color: '#ff0000' },
+              {
+                kind: 'text',
+                x: drawStart.x,
+                y: drawStart.y,
+                text: noteText,
+                color: '#ff0000',
+              },
             ]);
           }
           setDrawStart(null);
@@ -515,7 +579,9 @@ export function ScreenshotCropAnnotate({
             type="number"
             aria-label="Crop X"
             value={crop.x}
-            onChange={(e) => setCrop((c: CropRect) => ({ ...c, x: Number(e.target.value) }))}
+            onChange={(e) =>
+              setCrop((c: CropRect) => ({ ...c, x: Number(e.target.value) }))
+            }
           />
         </label>{' '}
         <label>
@@ -524,7 +590,9 @@ export function ScreenshotCropAnnotate({
             type="number"
             aria-label="Crop Y"
             value={crop.y}
-            onChange={(e) => setCrop((c: CropRect) => ({ ...c, y: Number(e.target.value) }))}
+            onChange={(e) =>
+              setCrop((c: CropRect) => ({ ...c, y: Number(e.target.value) }))
+            }
           />
         </label>{' '}
         <label>
@@ -533,7 +601,12 @@ export function ScreenshotCropAnnotate({
             type="number"
             aria-label="Crop width"
             value={crop.width}
-            onChange={(e) => setCrop((c: CropRect) => ({ ...c, width: Number(e.target.value) }))}
+            onChange={(e) =>
+              setCrop((c: CropRect) => ({
+                ...c,
+                width: Number(e.target.value),
+              }))
+            }
           />
         </label>{' '}
         <label>
@@ -542,21 +615,32 @@ export function ScreenshotCropAnnotate({
             type="number"
             aria-label="Crop height"
             value={crop.height}
-            onChange={(e) => setCrop((c: CropRect) => ({ ...c, height: Number(e.target.value) }))}
+            onChange={(e) =>
+              setCrop((c: CropRect) => ({
+                ...c,
+                height: Number(e.target.value),
+              }))
+            }
           />
         </label>
       </div>
       <div>
         <label>
           Annotation tool{' '}
-          <select value={tool} onChange={(e) => setTool(e.target.value as 'arrow' | 'text')}>
+          <select
+            value={tool}
+            onChange={(e) => setTool(e.target.value as 'arrow' | 'text')}
+          >
             <option value="arrow">Arrow (drag on image)</option>
             <option value="text">Text (click on image)</option>
           </select>
         </label>{' '}
         <label>
           Annotation text{' '}
-          <input value={noteText} onChange={(e) => setNoteText(e.target.value)} />
+          <input
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+          />
         </label>{' '}
         <span>
           {annotations.length} annotation(s) — draw on the image, then attach.

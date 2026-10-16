@@ -91,8 +91,20 @@ describe('searchConversations', () => {
 
 describe('filters and sort', () => {
   const convs = [
-    meta({ id: 'a', pinned: true, updated_at: 1000, folder_id: 'f1', tags: ['x'] }),
-    meta({ id: 'b', pinned: false, updated_at: 3000, folder_id: null, archived: true }),
+    meta({
+      id: 'a',
+      pinned: true,
+      updated_at: 1000,
+      folder_id: 'f1',
+      tags: ['x'],
+    }),
+    meta({
+      id: 'b',
+      pinned: false,
+      updated_at: 3000,
+      folder_id: null,
+      archived: true,
+    }),
     meta({ id: 'c', pinned: false, updated_at: 2000, folder_id: 'f1' }),
   ];
 

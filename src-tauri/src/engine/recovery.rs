@@ -51,7 +51,11 @@ pub enum RecoveryDecision {
 pub fn backoff_for_attempt(attempt: u32) -> Duration {
     // 2^attempt, saturating: attempts >= 64 would overflow a u64 shift,
     // so they saturate at u64::MAX before the cap below applies.
-    let multiplier = if attempt >= 64 { u64::MAX } else { 1u64 << attempt };
+    let multiplier = if attempt >= 64 {
+        u64::MAX
+    } else {
+        1u64 << attempt
+    };
     let ms = RECOVERY_BASE_BACKOFF_MS
         .saturating_mul(multiplier)
         .min(RECOVERY_MAX_BACKOFF_MS);
@@ -142,9 +146,7 @@ impl CrashRecoveryTracker {
                     restarting_message(attempt, self.max_restarts, reason),
                 )
             }
-            RecoveryDecision::GiveUp { attempts } => {
-                (decision, gave_up_message(attempts, reason))
-            }
+            RecoveryDecision::GiveUp { attempts } => (decision, gave_up_message(attempts, reason)),
         }
     }
 

@@ -120,9 +120,7 @@ pub fn migrate_legacy_app_support_dir(
             let mut dst_name = entry.file_name().to_string_lossy().into_owned();
             if dst_name == crate::database::LEGACY_DB_FILE_NAME {
                 dst_name = crate::database::DB_FILE_NAME.to_string();
-            } else if let Some(rest) =
-                dst_name.strip_prefix(crate::database::LEGACY_DB_FILE_NAME)
-            {
+            } else if let Some(rest) = dst_name.strip_prefix(crate::database::LEGACY_DB_FILE_NAME) {
                 // SQLite sidecar journals: `thuki.db-wal` -> `veilura.db-wal`, etc.
                 if rest == "-wal" || rest == "-shm" || rest == "-journal" {
                     dst_name = format!("{}{}", crate::database::DB_FILE_NAME, rest);
@@ -147,10 +145,8 @@ mod tests {
     use std::fs;
 
     fn tmp_dir(tag: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!(
-            "veilura-migrate-{tag}-{}",
-            uuid::Uuid::new_v4()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("veilura-migrate-{tag}-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&dir).unwrap();
         dir
     }
@@ -176,7 +172,10 @@ mod tests {
         assert_eq!(fs::read(new.join("veilura.db")).unwrap(), b"db-bytes");
         assert_eq!(fs::read(new.join("veilura.db-wal")).unwrap(), b"wal-bytes");
         assert!(!new.join("thuki.db").exists());
-        assert_eq!(fs::read(new.join("models").join("blob.bin")).unwrap(), b"blob");
+        assert_eq!(
+            fs::read(new.join("models").join("blob.bin")).unwrap(),
+            b"blob"
+        );
         assert_eq!(
             fs::read(new.join("traces").join("x.jsonl")).unwrap(),
             b"{}\n"
@@ -201,10 +200,7 @@ mod tests {
         fs::write(new.join("config.toml"), b"new\n").unwrap();
 
         let outcome = migrate_legacy_app_support_dir(&new, &old).unwrap();
-        assert_eq!(
-            outcome,
-            LegacyAppSupportMigration::SkippedNewDirNotEmpty
-        );
+        assert_eq!(outcome, LegacyAppSupportMigration::SkippedNewDirNotEmpty);
         assert_eq!(fs::read(new.join("config.toml")).unwrap(), b"new\n");
 
         fs::remove_dir_all(&tmp).unwrap();

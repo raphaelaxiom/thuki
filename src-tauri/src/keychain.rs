@@ -237,10 +237,7 @@ mod tests {
         let stable = KeyringStore::new("com.veilura.app");
         assert_eq!(stable.service, KEYCHAIN_SERVICE);
         let nightly = KeyringStore::new("com.veilura.app.nightly");
-        assert_eq!(
-            nightly.service,
-            "com.veilura.app.nightly.provider-api-key"
-        );
+        assert_eq!(nightly.service, "com.veilura.app.nightly.provider-api-key");
     }
 
     #[test]

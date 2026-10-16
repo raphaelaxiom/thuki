@@ -39,7 +39,10 @@ export function formatBytes(bytes: number): string {
 /* ─── 1. Favourites ─────────────────────────────────────────────────────── */
 
 /** Toggle a model id in the favourites list (sorted, deduped). */
-export function toggleFavourite(favourites: string[], modelId: string): string[] {
+export function toggleFavourite(
+  favourites: string[],
+  modelId: string,
+): string[] {
   const set = new Set(favourites);
   if (set.has(modelId)) set.delete(modelId);
   else set.add(modelId);
@@ -199,7 +202,10 @@ export function cancelQueueItem(
   id: string,
 ): DownloadQueueItem[] {
   return queue.map((item) =>
-    item.id === id && (item.status === 'queued' || item.status === 'downloading' || item.status === 'paused')
+    item.id === id &&
+    (item.status === 'queued' ||
+      item.status === 'downloading' ||
+      item.status === 'paused')
       ? { ...item, status: 'cancelled' as const }
       : item,
   );
@@ -224,9 +230,10 @@ export type ResumeAction = 'resume-range' | 'restart' | 'already-complete';
  * to a partial that would corrupt the file. A partial that already spans
  * the full file is complete, not a download.
  */
-export function decideResume(
-  item: DownloadQueueItem,
-): { action: ResumeAction; note: string } {
+export function decideResume(item: DownloadQueueItem): {
+  action: ResumeAction;
+  note: string;
+} {
   if (item.downloadedBytes >= item.totalBytes && item.totalBytes > 0) {
     return { action: 'already-complete', note: 'File is already complete.' };
   }
@@ -308,9 +315,31 @@ export function pushClipboardHistory(
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MiB
 export const TEXT_MIME_PREFIX = 'text/';
 const TEXT_EXTENSIONS = new Set([
-  'txt', 'md', 'markdown', 'json', 'csv', 'ts', 'tsx', 'js', 'jsx', 'py', 'rs',
-  'go', 'java', 'c', 'cpp', 'h', 'html', 'css', 'xml', 'yaml', 'yml', 'toml',
-  'log', 'sh', 'sql',
+  'txt',
+  'md',
+  'markdown',
+  'json',
+  'csv',
+  'ts',
+  'tsx',
+  'js',
+  'jsx',
+  'py',
+  'rs',
+  'go',
+  'java',
+  'c',
+  'cpp',
+  'h',
+  'html',
+  'css',
+  'xml',
+  'yaml',
+  'yml',
+  'toml',
+  'log',
+  'sh',
+  'sql',
 ]);
 
 export function classifyAttachedFile(
@@ -336,9 +365,10 @@ export function validateAttachment(
 
 /* ─── 9. Image attach + vision gating ──────────────────────────────────── */
 
-export function canAttachImage(
-  modelVision: boolean,
-): { allowed: boolean; reason: string } {
+export function canAttachImage(modelVision: boolean): {
+  allowed: boolean;
+  reason: string;
+} {
   if (modelVision) {
     return { allowed: true, reason: '' };
   }
@@ -371,8 +401,10 @@ export function normalizeCropRect(
 export function isValidAnnotation(a: Annotation): boolean {
   if (a.kind === 'arrow') {
     return (
-      Number.isFinite(a.x1) && Number.isFinite(a.y1) &&
-      Number.isFinite(a.x2) && Number.isFinite(a.y2) &&
+      Number.isFinite(a.x1) &&
+      Number.isFinite(a.y1) &&
+      Number.isFinite(a.x2) &&
+      Number.isFinite(a.y2) &&
       (a.x1 !== a.x2 || a.y1 !== a.y2)
     );
   }
@@ -451,7 +483,10 @@ export function addVariant(
 }
 
 /** Index of the variant to show; clamps out-of-range selections. */
-export function clampVariantIndex(variants: ReplyVariant[], index: number): number {
+export function clampVariantIndex(
+  variants: ReplyVariant[],
+  index: number,
+): number {
   if (variants.length === 0) return 0;
   return Math.min(variants.length - 1, Math.max(0, index));
 }
@@ -522,7 +557,9 @@ export function parseCitations(text: string): {
     citations.push({ index: citations.length + 1, title: lm[1], url });
   }
   // Footnote-only sources (no inline link) join the list after links.
-  for (const [num, url] of [...footnoteUrls.entries()].sort((a, b) => a[0] - b[0])) {
+  for (const [num, url] of [...footnoteUrls.entries()].sort(
+    (a, b) => a[0] - b[0],
+  )) {
     void num;
     if (seen.has(url)) continue;
     seen.add(url);

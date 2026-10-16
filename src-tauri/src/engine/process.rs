@@ -52,9 +52,7 @@ pub fn validate_engine_bind_addr(addr: SocketAddr) -> Result<(), String> {
     if addr.ip().is_loopback() {
         Ok(())
     } else {
-        Err(format!(
-            "engine bind address must be loopback, got: {addr}"
-        ))
+        Err(format!("engine bind address must be loopback, got: {addr}"))
     }
 }
 
@@ -384,8 +382,8 @@ impl EngineProcess for TokioEngineProcess {
 
     #[cfg_attr(coverage_nightly, coverage(off))]
     fn free_port(&self) -> Result<u16, String> {
-        let listener =
-            std::net::TcpListener::bind(format!("{ENGINE_BIND_HOST}:0")).map_err(|e| e.to_string())?;
+        let listener = std::net::TcpListener::bind(format!("{ENGINE_BIND_HOST}:0"))
+            .map_err(|e| e.to_string())?;
         let addr = listener.local_addr().map_err(|e| e.to_string())?;
         // Defence in depth: the OS should hand back a loopback address for
         // a loopback bind, but verify rather than assume.
@@ -586,13 +584,14 @@ mod tests {
     #[test]
     fn validate_engine_bind_addr_accepts_loopback_only() {
         use std::str::FromStr;
-        assert!(
-            validate_engine_bind_addr(SocketAddr::from_str("127.0.0.1:4242").unwrap()).is_ok()
-        );
-        assert!(
-            validate_engine_bind_addr(SocketAddr::from_str("[::1]:4242").unwrap()).is_ok()
-        );
-        for s in ["0.0.0.0:4242", "192.168.1.1:4242", "10.0.0.1:4242", "[::]:4242"] {
+        assert!(validate_engine_bind_addr(SocketAddr::from_str("127.0.0.1:4242").unwrap()).is_ok());
+        assert!(validate_engine_bind_addr(SocketAddr::from_str("[::1]:4242").unwrap()).is_ok());
+        for s in [
+            "0.0.0.0:4242",
+            "192.168.1.1:4242",
+            "10.0.0.1:4242",
+            "[::]:4242",
+        ] {
             assert!(
                 validate_engine_bind_addr(SocketAddr::from_str(s).unwrap()).is_err(),
                 "{s} must be refused"

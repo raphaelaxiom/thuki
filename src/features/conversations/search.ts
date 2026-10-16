@@ -110,11 +110,11 @@ export function searchConversations(
     );
     return { conversation, score, snippets };
   });
-  const filtered =
-    tokens.length === 0 ? hits : hits.filter((h) => h.score > 0);
+  const filtered = tokens.length === 0 ? hits : hits.filter((h) => h.score > 0);
   filtered.sort(
     (a, b) =>
-      b.score - a.score || b.conversation.updated_at - a.conversation.updated_at,
+      b.score - a.score ||
+      b.conversation.updated_at - a.conversation.updated_at,
   );
   return filtered;
 }

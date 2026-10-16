@@ -679,8 +679,7 @@ pub const BOUNDS_UPDATER_CHECK_INTERVAL_HOURS: (u64, u64) = (1, 168);
 /// checks fail closed (see the updater poller) until a real manifest +
 /// a fresh signing keypair are published. Do NOT treat this URL as a
 /// working endpoint. See REBRAND.md.
-pub const DEFAULT_UPDATER_MANIFEST_URL: &str =
-    "https://veilura.online/updates/latest.json";
+pub const DEFAULT_UPDATER_MANIFEST_URL: &str = "https://veilura.online/updates/latest.json";
 
 /// Filename of the JSON sidecar that persists snooze deadlines across restarts.
 /// Lives next to `config.toml` in `app_config_dir`. Single source of truth so

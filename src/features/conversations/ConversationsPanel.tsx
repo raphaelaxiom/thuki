@@ -17,10 +17,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type {
-  ChatMessageLike,
-  ConversationMeta,
-} from './types';
+import type { ChatMessageLike, ConversationMeta } from './types';
 import {
   addFolder,
   addTag,
@@ -57,7 +54,9 @@ export interface ConversationsPanelProps {
   /** Initial conversation list. The panel owns the list after mount. */
   readonly conversations: readonly ConversationMeta[];
   /** Loads messages for one conversation (search / export / duplicate). */
-  readonly loadMessages?: (conversationId: string) => Promise<ChatMessageLike[]>;
+  readonly loadMessages?: (
+    conversationId: string,
+  ) => Promise<ChatMessageLike[]>;
   readonly onOpenConversation?: (conversationId: string) => void;
   readonly onConversationsChanged?: (next: ConversationMeta[]) => void;
   /** Fired for imported / duplicated conversations with their messages. */
@@ -94,23 +93,37 @@ function formatDate(ms: number): string {
 }
 
 export function ConversationsPanel(props: ConversationsPanelProps) {
-  const { loadMessages, onOpenConversation, onConversationsChanged, onImportConversation } =
-    props;
-  const [list, setList] = useState<ConversationMeta[]>([...props.conversations]);
+  const {
+    loadMessages,
+    onOpenConversation,
+    onConversationsChanged,
+    onImportConversation,
+  } = props;
+  const [list, setList] = useState<ConversationMeta[]>([
+    ...props.conversations,
+  ]);
   const [ext, setExt] = useState<ExtState>(() => loadExtState());
   const [searchQuery, setSearchQuery] = useState('');
-  const [folderFilter, setFolderFilter] = useState<string | 'all' | 'unfiled'>('all');
+  const [folderFilter, setFolderFilter] = useState<string | 'all' | 'unfiled'>(
+    'all',
+  );
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(
+    new Set(),
+  );
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const [folderRenamingId, setFolderRenamingId] = useState<string | null>(null);
   const [folderRenameDraft, setFolderRenameDraft] = useState('');
-  const [folderDeleteArmedId, setFolderDeleteArmedId] = useState<string | null>(null);
+  const [folderDeleteArmedId, setFolderDeleteArmedId] = useState<string | null>(
+    null,
+  );
   const [newFolderName, setNewFolderName] = useState('');
-  const [tagDrafts, setTagDrafts] = useState<Readonly<Record<string, string>>>({});
+  const [tagDrafts, setTagDrafts] = useState<Readonly<Record<string, string>>>(
+    {},
+  );
   const [messagesCache, setMessagesCache] = useState<
     Readonly<Record<string, readonly ChatMessageLike[]>>
   >({});
@@ -179,7 +192,14 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
       meta,
       snippet: undefined as string | undefined,
     }));
-  }, [merged, showArchived, folderFilter, tagFilter, searchQuery, messagesCache]);
+  }, [
+    merged,
+    showArchived,
+    folderFilter,
+    tagFilter,
+    searchQuery,
+    messagesCache,
+  ]);
 
   const tags = useMemo(() => allTags(ext), [ext]);
   const selected = useMemo(
@@ -200,7 +220,9 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
     id: string,
   ): Promise<ChatMessageLike[] | null> => {
     if (!loadMessages) {
-      setStatus('Message loading is not available, so this needs the parent to pass loadMessages.');
+      setStatus(
+        'Message loading is not available, so this needs the parent to pass loadMessages.',
+      );
       return null;
     }
     try {
@@ -215,9 +237,7 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
     const title = renameDraft.trim();
     setRenamingId(null);
     if (!title || title === (meta.title ?? '')) return;
-    commitList(
-      list.map((c) => (c.id === meta.id ? { ...c, title } : c)),
-    );
+    commitList(list.map((c) => (c.id === meta.id ? { ...c, title } : c)));
     setStatus(`Renamed conversation to “${title}”.`);
   };
 
@@ -280,7 +300,9 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
     }
   };
 
-  const handleBulk = async (action: 'delete' | 'archive' | 'unarchive' | 'md' | 'json') => {
+  const handleBulk = async (
+    action: 'delete' | 'archive' | 'unarchive' | 'md' | 'json',
+  ) => {
     if (selected.length === 0) return;
     if (action === 'delete') {
       commitList(list.filter((c) => !selectedIds.has(c.id)));
@@ -317,7 +339,13 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
         const parts: string[] = [];
         for (const meta of selected) {
           const messages = await loadMessages(meta.id);
-          parts.push(conversationToMarkdown({ title: meta.title, model: meta.model, messages }));
+          parts.push(
+            conversationToMarkdown({
+              title: meta.title,
+              model: meta.model,
+              messages,
+            }),
+          );
         }
         downloadTextFile(
           `veilura-chats-${selected.length}.md`,
@@ -328,7 +356,15 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
         const payload = [];
         for (const meta of selected) {
           const messages = await loadMessages(meta.id);
-          payload.push(JSON.parse(conversationToJson({ title: meta.title, model: meta.model, messages })) as unknown);
+          payload.push(
+            JSON.parse(
+              conversationToJson({
+                title: meta.title,
+                model: meta.model,
+                messages,
+              }),
+            ) as unknown,
+          );
         }
         downloadTextFile(
           `veilura-chats-${selected.length}.json`,
@@ -381,14 +417,33 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
         placeholder="Search titles and messages…"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(128,128,128,0.4)' }}
+        style={{
+          padding: '8px 10px',
+          borderRadius: 8,
+          border: '1px solid rgba(128,128,128,0.4)',
+        }}
       />
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button type="button" onClick={() => setShowArchived(false)} aria-pressed={!showArchived}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          flexWrap: 'wrap',
+          alignItems: 'center',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setShowArchived(false)}
+          aria-pressed={!showArchived}
+        >
           Active
         </button>
-        <button type="button" onClick={() => setShowArchived(true)} aria-pressed={showArchived}>
+        <button
+          type="button"
+          onClick={() => setShowArchived(true)}
+          aria-pressed={showArchived}
+        >
           Archived
         </button>
         <button type="button" onClick={() => fileInputRef.current?.click()}>
@@ -412,11 +467,26 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
         {/* Folders */}
         <aside style={{ minWidth: 150 }} aria-label="Folders">
           <strong>Folders</strong>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
-            <button type="button" onClick={() => setFolderFilter('all')} aria-pressed={folderFilter === 'all'}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              marginTop: 6,
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setFolderFilter('all')}
+              aria-pressed={folderFilter === 'all'}
+            >
               All
             </button>
-            <button type="button" onClick={() => setFolderFilter('unfiled')} aria-pressed={folderFilter === 'unfiled'}>
+            <button
+              type="button"
+              onClick={() => setFolderFilter('unfiled')}
+              aria-pressed={folderFilter === 'unfiled'}
+            >
               Unfiled
             </button>
             {ext.folders.map((folder) =>
@@ -429,7 +499,9 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
                     onChange={(e) => setFolderRenameDraft(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        updateExt(renameFolder(ext, folder.id, folderRenameDraft));
+                        updateExt(
+                          renameFolder(ext, folder.id, folderRenameDraft),
+                        );
                         setFolderRenamingId(null);
                       }
                       if (e.key === 'Escape') setFolderRenamingId(null);
@@ -438,7 +510,9 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      updateExt(renameFolder(ext, folder.id, folderRenameDraft));
+                      updateExt(
+                        renameFolder(ext, folder.id, folderRenameDraft),
+                      );
                       setFolderRenamingId(null);
                     }}
                   >
@@ -446,7 +520,10 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
                   </button>
                 </span>
               ) : (
-                <span key={folder.id} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <span
+                  key={folder.id}
+                  style={{ display: 'flex', gap: 4, alignItems: 'center' }}
+                >
                   <button
                     type="button"
                     onClick={() => setFolderFilter(folder.id)}
@@ -515,11 +592,20 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
         </aside>
 
         {/* List */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}
+        >
           {tags.length > 0 && (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} aria-label="Filter by tag">
+            <div
+              style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}
+              aria-label="Filter by tag"
+            >
               <span>Tags:</span>
-              <button type="button" onClick={() => setTagFilter(null)} aria-pressed={tagFilter === null}>
+              <button
+                type="button"
+                onClick={() => setTagFilter(null)}
+                aria-pressed={tagFilter === null}
+              >
                 All
               </button>
               {tags.map((tag) => (
@@ -537,20 +623,48 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
 
           {selectedIds.size > 0 && (
             <div
-              style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 8, border: '1px solid rgba(128,128,128,0.4)', borderRadius: 8 }}
+              style={{
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                padding: 8,
+                border: '1px solid rgba(128,128,128,0.4)',
+                borderRadius: 8,
+              }}
               aria-label="Bulk actions"
             >
               <span>{selectedIds.size} selected</span>
-              <button type="button" onClick={() => void handleBulk('archive')}>Archive</button>
-              <button type="button" onClick={() => void handleBulk('unarchive')}>Unarchive</button>
-              <button type="button" onClick={() => void handleBulk('delete')}>Delete</button>
-              <button type="button" disabled={needsMessages} title={messagesHint} onClick={() => void handleBulk('md')}>
+              <button type="button" onClick={() => void handleBulk('archive')}>
+                Archive
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleBulk('unarchive')}
+              >
+                Unarchive
+              </button>
+              <button type="button" onClick={() => void handleBulk('delete')}>
+                Delete
+              </button>
+              <button
+                type="button"
+                disabled={needsMessages}
+                title={messagesHint}
+                onClick={() => void handleBulk('md')}
+              >
                 Export Markdown
               </button>
-              <button type="button" disabled={needsMessages} title={messagesHint} onClick={() => void handleBulk('json')}>
+              <button
+                type="button"
+                disabled={needsMessages}
+                title={messagesHint}
+                onClick={() => void handleBulk('json')}
+              >
                 Export JSON
               </button>
-              <button type="button" onClick={() => setSelectedIds(new Set())}>Clear</button>
+              <button type="button" onClick={() => setSelectedIds(new Set())}>
+                Clear
+              </button>
             </div>
           )}
 
@@ -590,33 +704,64 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
                     <button
                       type="button"
                       onClick={() => onOpenConversation?.(meta.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: meta.pinned ? 700 : 400, textAlign: 'left', padding: 0 }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: meta.pinned ? 700 : 400,
+                        textAlign: 'left',
+                        padding: 0,
+                      }}
                       title={formatDate(meta.updated_at)}
                     >
                       {displayTitle(meta)}
                     </button>
                   )}
                   <div style={{ fontSize: 12, opacity: 0.7 }}>
-                    {meta.message_count} message(s) · {formatDate(meta.updated_at)}
-                    {meta.tags && meta.tags.length > 0 && <> · {meta.tags.map((t) => `#${t}`).join(' ')}</>}
+                    {meta.message_count} message(s) ·{' '}
+                    {formatDate(meta.updated_at)}
+                    {meta.tags && meta.tags.length > 0 && (
+                      <> · {meta.tags.map((t) => `#${t}`).join(' ')}</>
+                    )}
                   </div>
                   {snippet && (
-                    <div style={{ fontSize: 12, opacity: 0.8, fontStyle: 'italic' }}>{snippet}</div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        opacity: 0.8,
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      {snippet}
+                    </div>
                   )}
                   {expanded && (
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 6,
+                        flexWrap: 'wrap',
+                        marginTop: 6,
+                      }}
+                    >
                       <select
                         aria-label={`Move ${displayTitle(meta)} to folder`}
                         value={meta.folder_id ?? ''}
                         onChange={(e) =>
                           updateExt(
-                            moveConversationToFolder(ext, meta.id, e.target.value || null),
+                            moveConversationToFolder(
+                              ext,
+                              meta.id,
+                              e.target.value || null,
+                            ),
                           )
                         }
                       >
                         <option value="">Unfiled</option>
                         {ext.folders.map((f) => (
-                          <option key={f.id} value={f.id}>{f.name}</option>
+                          <option key={f.id} value={f.id}>
+                            {f.name}
+                          </option>
                         ))}
                       </select>
                       <input
@@ -624,12 +769,23 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
                         placeholder="Add tag…"
                         value={tagDrafts[meta.id] ?? ''}
                         onChange={(e) =>
-                          setTagDrafts((prev) => ({ ...prev, [meta.id]: e.target.value }))
+                          setTagDrafts((prev) => ({
+                            ...prev,
+                            [meta.id]: e.target.value,
+                          }))
                         }
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' && (tagDrafts[meta.id] ?? '').trim()) {
-                            updateExt(addTag(ext, meta.id, tagDrafts[meta.id] ?? ''));
-                            setTagDrafts((prev) => ({ ...prev, [meta.id]: '' }));
+                          if (
+                            e.key === 'Enter' &&
+                            (tagDrafts[meta.id] ?? '').trim()
+                          ) {
+                            updateExt(
+                              addTag(ext, meta.id, tagDrafts[meta.id] ?? ''),
+                            );
+                            setTagDrafts((prev) => ({
+                              ...prev,
+                              [meta.id]: '',
+                            }));
                           }
                         }}
                       />
@@ -638,7 +794,9 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
                           key={tag}
                           type="button"
                           aria-label={`Remove tag ${tag} from ${displayTitle(meta)}`}
-                          onClick={() => updateExt(removeTag(ext, meta.id, tag))}
+                          onClick={() =>
+                            updateExt(removeTag(ext, meta.id, tag))
+                          }
                         >
                           #{tag} ×
                         </button>
@@ -648,16 +806,24 @@ export function ConversationsPanel(props: ConversationsPanelProps) {
                 </div>
                 <button
                   type="button"
-                  aria-label={meta.pinned ? `Unpin ${displayTitle(meta)}` : `Pin ${displayTitle(meta)}`}
+                  aria-label={
+                    meta.pinned
+                      ? `Unpin ${displayTitle(meta)}`
+                      : `Pin ${displayTitle(meta)}`
+                  }
                   title={meta.pinned ? 'Unpin' : 'Pin'}
-                  onClick={() => updateExt(setPinned(ext, meta.id, !meta.pinned))}
+                  onClick={() =>
+                    updateExt(setPinned(ext, meta.id, !meta.pinned))
+                  }
                 >
                   {meta.pinned ? '★' : '☆'}
                 </button>
                 <button
                   type="button"
                   aria-label={`${meta.archived ? 'Unarchive' : 'Archive'} ${displayTitle(meta)}`}
-                  onClick={() => updateExt(setArchived(ext, meta.id, !meta.archived))}
+                  onClick={() =>
+                    updateExt(setArchived(ext, meta.id, !meta.archived))
+                  }
                 >
                   {meta.archived ? 'Unarchive' : 'Archive'}
                 </button>

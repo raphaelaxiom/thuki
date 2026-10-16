@@ -14,7 +14,9 @@ describe('ModelsSection', () => {
   it('stars a model, filters to favourites, and compares two models', async () => {
     render(<ModelsSection initialModels={DEMO_MODELS} />);
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Favourite Qwen 3.5 9B' }));
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Favourite Qwen 3.5 9B' }),
+      );
     });
     await act(async () => {
       fireEvent.click(screen.getByLabelText('Favourites only'));
@@ -32,7 +34,9 @@ describe('ModelsSection', () => {
       fireEvent.click(checkboxes[0]);
       fireEvent.click(checkboxes[1]);
     });
-    expect(screen.getByRole('heading', { name: 'Compare' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Compare' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('Quantisation')).toBeInTheDocument();
   });
 
@@ -43,7 +47,9 @@ describe('ModelsSection', () => {
     });
     expect(screen.getByText(/queued locally/)).toBeInTheDocument();
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Start next queued download' }));
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Start next queued download' }),
+      );
     });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
@@ -97,17 +103,26 @@ describe('OutputSection', () => {
       <OutputSection
         replyText={reply}
         conversationKey="test-conv"
-        engineUsage={{ promptTokens: 10, completionTokens: 20, elapsedMs: 1000 }}
+        engineUsage={{
+          promptTokens: 10,
+          completionTokens: 20,
+          elapsedMs: 1000,
+        }}
         onRegenerate={onRegenerate}
         onStop={onStop}
       />,
     );
     expect(screen.getByText(/20\.0 tok\/s/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Source/ })).toHaveAttribute('href', 'https://example.com/x');
+    expect(screen.getByRole('link', { name: /Source/ })).toHaveAttribute(
+      'href',
+      'https://example.com/x',
+    );
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Copy code' }));
     });
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('const a = 1;\n');
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      'const a = 1;\n',
+    );
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Regenerate reply' }));
     });

@@ -71,8 +71,11 @@ pub mod writer;
 /// Identifies Veilura with version + homepage so operators can contact us. Not used
 /// on SERP scrapers: DuckDuckGo/Mojeek block non-browser UAs on `/html` instantly
 /// (browser UA stays deliberate there; see `engine::BROWSER_USER_AGENT`).
-pub(crate) const VEILURA_USER_AGENT: &str =
-    concat!("Veilura/", env!("CARGO_PKG_VERSION"), " (+https://veilura.online)");
+pub(crate) const VEILURA_USER_AGENT: &str = concat!(
+    "Veilura/",
+    env!("CARGO_PKG_VERSION"),
+    " (+https://veilura.online)"
+);
 
 /// Attribution required by Open-Meteo's CC BY 4.0 licence. Markdown link so the
 /// "Weather data by Open-Meteo.com" hyperlink is present. Single source of

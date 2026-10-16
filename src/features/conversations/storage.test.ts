@@ -148,6 +148,8 @@ describe('custom prompts in storage', () => {
     const builtin = makePrompt({ id: 'builtin-x', builtin: true });
     const state = setPromptFavourite(defaultExtState(), builtin, true);
     expect(state.favouriteBuiltinIds).toEqual(['builtin-x']);
-    expect(setPromptFavourite(state, builtin, false).favouriteBuiltinIds).toEqual([]);
+    expect(
+      setPromptFavourite(state, builtin, false).favouriteBuiltinIds,
+    ).toEqual([]);
   });
 });

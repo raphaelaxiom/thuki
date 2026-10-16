@@ -112,7 +112,8 @@ export function validatePrompt(title: string, body: string): string | null {
   if (!title.trim()) return 'Give the prompt a title.';
   if (title.trim().length > 120) return 'Title is too long (max 120 chars).';
   if (!body.trim()) return 'Prompt body cannot be empty.';
-  if (body.length > 20_000) return 'Prompt body is too long (max 20,000 chars).';
+  if (body.length > 20_000)
+    return 'Prompt body is too long (max 20,000 chars).';
   return null;
 }
 

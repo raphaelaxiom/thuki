@@ -13,11 +13,7 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
-import type {
-  DownloadQueueItem,
-  PerModelSettings,
-  TokenStats,
-} from './types';
+import type { DownloadQueueItem, PerModelSettings, TokenStats } from './types';
 
 export const MODELS_IO_NOT_WIRED = 'models_io command not wired yet';
 
@@ -30,7 +26,10 @@ export function isTauri(): boolean {
   }
 }
 
-async function call<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+async function call<T>(
+  command: string,
+  args?: Record<string, unknown>,
+): Promise<T> {
   if (!isTauri()) throw new Error(MODELS_IO_NOT_WIRED);
   return invoke<T>(command, args);
 }
@@ -86,7 +85,9 @@ export function pauseDownloadBackend(id: string): Promise<void> {
  * Resume a paused download. The backend answers with whether the server
  * honoured Range; the UI reports a restart honestly when it did not.
  */
-export function resumeDownloadBackend(id: string): Promise<{ resumed: boolean; note: string }> {
+export function resumeDownloadBackend(
+  id: string,
+): Promise<{ resumed: boolean; note: string }> {
   return call('models_io_resume_download', { id });
 }
 
@@ -117,7 +118,11 @@ export function dictateBackend(): Promise<string> {
 /* ─── Output ────────────────────────────────────────────────────────────── */
 
 /** Speak text via macOS `say` (backend). `stop` cancels any in-flight speech. */
-export function speakBackend(text: string, voice: string, rate: number): Promise<void> {
+export function speakBackend(
+  text: string,
+  voice: string,
+  rate: number,
+): Promise<void> {
   return call('models_io_speak', { text, voice, rate });
 }
 

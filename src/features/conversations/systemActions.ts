@@ -15,10 +15,7 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
-import type {
-  SystemActionRequest,
-  SystemActionResult,
-} from './types';
+import type { SystemActionRequest, SystemActionResult } from './types';
 
 export type InvokeFn = (
   cmd: string,
@@ -71,7 +68,9 @@ function normalizeUrl(value: string): string {
  * Returns null when the text is not a recognised system-action request —
  * callers must then treat it as ordinary chat, not an action.
  */
-export function parseSystemActionText(rawText: string): SystemActionRequest | null {
+export function parseSystemActionText(
+  rawText: string,
+): SystemActionRequest | null {
   const text = rawText.trim().replace(/\s+/g, ' ');
   if (!text) return null;
   const lower = text.toLowerCase();

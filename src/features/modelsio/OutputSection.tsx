@@ -42,7 +42,11 @@ interface OutputSectionProps {
   /** Stable key for this conversation (variants persist per conversation). */
   conversationKey: string;
   /** Engine-reported usage for the current reply, when available. */
-  engineUsage: { promptTokens: number; completionTokens: number; elapsedMs: number } | null;
+  engineUsage: {
+    promptTokens: number;
+    completionTokens: number;
+    elapsedMs: number;
+  } | null;
   /** Issue a fresh inference turn for the same prompt; resolves to the new reply. */
   onRegenerate: () => Promise<string>;
   /** Called when the user stops generation (parent aborts its request too). */
@@ -58,7 +62,9 @@ export function OutputSection({
   onRegenerate,
   onStop,
 }: OutputSectionProps) {
-  const [variants, setVariants] = useState<ReplyVariant[]>(() => loadVariants(conversationKey));
+  const [variants, setVariants] = useState<ReplyVariant[]>(() =>
+    loadVariants(conversationKey),
+  );
   const [variantIndex, setVariantIndex] = useState(0);
   const [regenerating, setRegenerating] = useState(false);
   const [regenStatus, setRegenStatus] = useState<string | null>(null);
@@ -71,7 +77,10 @@ export function OutputSection({
   const [stopped, setStopped] = useState(false);
   const localAbortRef = useRef<AbortController | null>(null);
 
-  const displayed = variants.length > 0 ? variants[clampVariantIndex(variants, variantIndex)].content : replyText;
+  const displayed =
+    variants.length > 0
+      ? variants[clampVariantIndex(variants, variantIndex)].content
+      : replyText;
 
   useEffect(() => {
     saveVariants(conversationKey, variants);
@@ -87,11 +96,16 @@ export function OutputSection({
 
   // Refresh token stats whenever a new reply / usage arrives.
   useEffect(() => {
-    const apply = (usage: { promptTokens: number; completionTokens: number; elapsedMs: number }) => {
+    const apply = (usage: {
+      promptTokens: number;
+      completionTokens: number;
+      elapsedMs: number;
+    }) => {
       setTokenTotals((prev) => {
         const next = {
           totalPromptTokens: prev.totalPromptTokens + usage.promptTokens,
-          totalCompletionTokens: prev.totalCompletionTokens + usage.completionTokens,
+          totalCompletionTokens:
+            prev.totalCompletionTokens + usage.completionTokens,
         };
         setStats(
           computeTokenStats({
@@ -249,10 +263,19 @@ export function OutputSection({
             max={2}
             step={0.1}
             value={tts.rate}
-            onChange={(e) => setTts((p) => ({ ...p, rate: clampTtsRate(Number(e.target.value)) }))}
+            onChange={(e) =>
+              setTts((p) => ({
+                ...p,
+                rate: clampTtsRate(Number(e.target.value)),
+              }))
+            }
           />
         </label>{' '}
-        <button type="button" onClick={() => void onSpeak()} disabled={speaking}>
+        <button
+          type="button"
+          onClick={() => void onSpeak()}
+          disabled={speaking}
+        >
           Speak reply
         </button>{' '}
         <button type="button" onClick={() => void onStopSpeaking()}>
@@ -293,7 +316,11 @@ export function OutputSection({
 
       <div>
         <h3>Regenerate</h3>
-        <button type="button" onClick={() => void onRegenerateClick()} disabled={regenerating}>
+        <button
+          type="button"
+          onClick={() => void onRegenerateClick()}
+          disabled={regenerating}
+        >
           {regenerating ? 'Regenerating…' : 'Regenerate reply'}
         </button>{' '}
         {regenStatus && <span role="status">{regenStatus}</span>}
@@ -308,13 +335,15 @@ export function OutputSection({
               >
                 {variants.map((v, i) => (
                   <option key={v.id} value={i}>
-                    Variant {i + 1} ({new Date(v.createdAt).toLocaleTimeString()})
+                    Variant {i + 1} (
+                    {new Date(v.createdAt).toLocaleTimeString()})
                   </option>
                 ))}
               </select>
             </label>{' '}
             <span>
-              Showing variant {clampVariantIndex(variants, variantIndex) + 1} of {variants.length}
+              Showing variant {clampVariantIndex(variants, variantIndex) + 1} of{' '}
+              {variants.length}
             </span>
           </div>
         )}
@@ -325,7 +354,10 @@ export function OutputSection({
         {stats ? (
           <p>{formatTokenStats(stats)}</p>
         ) : (
-          <p>The engine reported no usage numbers for this reply — nothing is shown rather than invented figures.</p>
+          <p>
+            The engine reported no usage numbers for this reply — nothing is
+            shown rather than invented figures.
+          </p>
         )}
       </div>
 

@@ -167,17 +167,12 @@ export function addFolder(
 ): ExtState {
   const clean = name.trim().slice(0, MAX_FOLDER_NAME);
   if (!clean) return state;
-  if (
-    state.folders.some((f) => f.name.toLowerCase() === clean.toLowerCase())
-  ) {
+  if (state.folders.some((f) => f.name.toLowerCase() === clean.toLowerCase())) {
     return state;
   }
   return {
     ...state,
-    folders: [
-      ...state.folders,
-      { id: newId(), name: clean, created_at: now },
-    ],
+    folders: [...state.folders, { id: newId(), name: clean, created_at: now }],
   };
 }
 
@@ -190,8 +185,7 @@ export function renameFolder(
   if (!clean) return state;
   if (
     state.folders.some(
-      (f) =>
-        f.id !== folderId && f.name.toLowerCase() === clean.toLowerCase(),
+      (f) => f.id !== folderId && f.name.toLowerCase() === clean.toLowerCase(),
     )
   ) {
     return state;
@@ -327,7 +321,10 @@ export function upsertCustomPrompt(
   };
 }
 
-export function deleteCustomPrompt(state: ExtState, promptId: string): ExtState {
+export function deleteCustomPrompt(
+  state: ExtState,
+  promptId: string,
+): ExtState {
   return {
     ...state,
     customPrompts: state.customPrompts.filter((p) => p.id !== promptId),

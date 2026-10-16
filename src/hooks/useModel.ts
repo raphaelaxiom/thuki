@@ -788,7 +788,8 @@ export function useModel(
           : null;
       const contextLength =
         inferenceParams !== null &&
-        inferenceParams.contextLength !== DEFAULT_PER_MODEL_SETTINGS.contextLength
+        inferenceParams.contextLength !==
+          DEFAULT_PER_MODEL_SETTINGS.contextLength
           ? inferenceParams.contextLength
           : null;
       const systemPromptOverride =
