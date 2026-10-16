@@ -421,6 +421,79 @@ pub(crate) fn deterministic_sufficiency(
     None
 }
 
+/// The Ollama-backed [`SufficiencyJudge`]: the same judge prompt, schema,
+/// and degrade-to-sufficient semantics as [`BuiltinSufficiencyJudge`], but
+/// calling the Ollama server's OpenAI-compatible `/v1` endpoint with
+/// [`V1Flavor::Ollama`] (`response_format: json_object`, no llama.cpp
+/// template kwargs). Excluded from the coverage gate like the builtin twin:
+/// thin glue over [`crate::openai::request_openai_json`] and the tested
+/// pure helpers.
+pub struct OllamaSufficiencyJudge {
+    client: reqwest::Client,
+    /// Ollama base URL, e.g. `http://127.0.0.1:11434` (no trailing slash).
+    base_url: String,
+    /// Active Ollama model slug, e.g. `llama3.2`.
+    model: String,
+    /// Per-call wall-clock timeout (seconds).
+    timeout_secs: u64,
+}
+
+#[cfg_attr(coverage_nightly, coverage(off))]
+impl OllamaSufficiencyJudge {
+    /// Builds a sufficiency judge bound to an Ollama `/v1` endpoint
+    /// (`base_url`), the active Ollama `model`, and a per-call wall-clock
+    /// `timeout_secs`.
+    pub fn new(
+        client: reqwest::Client,
+        base_url: impl Into<String>,
+        model: impl Into<String>,
+        timeout_secs: u64,
+    ) -> Self {
+        Self {
+            client,
+            base_url: base_url.into(),
+            model: model.into(),
+            timeout_secs,
+        }
+    }
+}
+
+#[cfg_attr(coverage_nightly, coverage(off))]
+#[async_trait]
+impl SufficiencyJudge for OllamaSufficiencyJudge {
+    async fn judge(
+        &self,
+        standalone_question: &str,
+        sources: &[SourceBlock],
+        cancel: &CancellationToken,
+    ) -> Result<SufficiencyVerdict, InferenceError> {
+        // A fresh per-turn nonce fences the untrusted source region (spotlighting
+        // parity with the writer); minting is non-deterministic, hence this whole
+        // method stays coverage-excluded while the pure builder is tested.
+        let nonce = mint_nonce();
+        let messages = build_judge_messages(standalone_question, sources, &nonce);
+        let raw = crate::openai::request_openai_json(
+            &self.base_url,
+            &self.model,
+            &self.client,
+            messages,
+            judge_schema(),
+            None,
+            self.timeout_secs,
+            crate::config::defaults::SUFFICIENCY_JUDGE_MAX_TOKENS,
+            crate::openai::V1Flavor::Ollama,
+            cancel,
+        )
+        .await;
+        match raw {
+            // A 2xx response with unparseable JSON degrades to "sufficient".
+            Ok(content) => Ok(judge_or_commit(parse_judge(&content))),
+            Err(crate::openai::OpenAiError::Cancelled) => Err(InferenceError::Cancelled),
+            Err(other) => Err(InferenceError::Request(format!("{other:?}"))),
+        }
+    }
+}
+
 /// The production [`SufficiencyJudge`], backed by the bundled `llama-server`
 /// engine over its OpenAI-compatible `/v1` endpoint. Excluded from the coverage
 /// gate: it is thin glue over [`crate::openai::request_openai_json`] and the
@@ -539,6 +612,38 @@ mod tests {
             title: title.into(),
             text: text.into(),
         }
+    }
+
+    /// Ollama judge posts to Ollama's OpenAI-compatible `/v1` endpoint with
+    /// `response_format: json_object` (never strict `json_schema`) and
+    /// parses the verdict exactly like the builtin judge.
+    #[tokio::test]
+    async fn ollama_judge_posts_json_object_and_parses_verdict() {
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "choices": [{"message": {"content": "{\"sufficient\": true, \"missing\": \"\", \"reason\": \"missing\", \"queries\": []}"}}],
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let judge =
+            OllamaSufficiencyJudge::new(reqwest::Client::new(), server.uri(), "llama3.2", 10);
+        let verdict = judge
+            .judge("q", &[block(1, "T", "text")], &CancellationToken::new())
+            .await
+            .expect("ollama judge succeeds");
+        assert!(verdict.sufficient);
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests.len(), 1);
+        let body: serde_json::Value = serde_json::from_slice(&requests[0].body).unwrap();
+        assert_eq!(body["response_format"]["type"], "json_object");
+        assert!(body["response_format"].get("json_schema").is_none());
     }
 
     #[test]

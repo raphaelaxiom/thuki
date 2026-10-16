@@ -658,8 +658,9 @@ pub(crate) async fn stream_builtin_chat(
     }
 }
 
-/// Outcome of the built-in search pre-pass + pipeline for one turn.
-enum BuiltinSearchResult {
+/// Outcome of the search pre-pass + pipeline for one turn, on any provider
+/// that runs the pipeline (built-in engine or Ollama).
+enum SearchResult {
     /// Search grounded the answer: stream these writer messages (which already
     /// embed the delimited sources) instead of the plain chat messages.
     /// `sources` carries the resolved citation blocks so the streamed answer can
@@ -868,7 +869,7 @@ async fn resolve_clock_place_time(message: &str) -> Option<String> {
 }
 
 /// Maps a resolved [`crate::websearch::orchestrator::SearchOutcome`] to a short
-/// stable label for the J6 diagnostic stderr line in [`run_builtin_search`].
+/// stable label for the J6 diagnostic stderr line in [`run_search_pipeline`].
 /// This is a diagnostic hook for an unreproduced bug (first-turn submissions
 /// completing instantly with zero tokens): the auto-search pre-pass shares the
 /// engine port and cancel token with the writer, so naming which search path
@@ -876,9 +877,7 @@ async fn resolve_clock_place_time(message: &str) -> Option<String> {
 /// that ran. A cache reuse resolves into `AnswerReused` inside the fully-tested
 /// `run_search`. Pure so it stays unit-tested while its coverage-excluded call
 /// site does not.
-fn builtin_search_outcome_label(
-    outcome: &crate::websearch::orchestrator::SearchOutcome,
-) -> &'static str {
+fn search_outcome_label(outcome: &crate::websearch::orchestrator::SearchOutcome) -> &'static str {
     use crate::websearch::orchestrator::SearchOutcome;
     match outcome {
         SearchOutcome::Answer { .. } => "Answer",
@@ -907,39 +906,40 @@ fn slash_skips_auto_search(slash_command: Option<&str>) -> bool {
     )
 }
 
-/// Decision for whether a built-in turn enters `run_builtin_search`.
+/// Decision for whether a turn enters the search pipeline.
 #[derive(Debug, PartialEq, Eq)]
-enum BuiltinSearchGate {
+enum SearchGate {
     /// Stay on the plain chat path (no classifier, no engines).
     Plain,
     /// Enter the search pipeline; `force` is the `/search` engines-only flag.
     Run { force: bool },
 }
 
-/// Pure gate for built-in web search before any pipeline work.
+/// Pure gate for web search before any pipeline work. Provider-agnostic:
+/// the same gate runs for the built-in engine and Ollama.
 ///
 /// Order: non-vision image turns stay plain (capability strip path); `/search`
 /// always runs forced; transform slash commands always plain; otherwise Auto
 /// search Settings decide. Vision + images may enter the pipeline so the
 /// classifier and writer can see the photo.
-fn builtin_search_gate(
+fn search_gate(
     turn_has_images: bool,
     model_is_vision: bool,
     force_search: bool,
     skip_search: bool,
     auto_search: bool,
-) -> BuiltinSearchGate {
+) -> SearchGate {
     // Non-vision models cannot use image-aware search; keep today's strip path.
     if turn_has_images && !model_is_vision {
-        BuiltinSearchGate::Plain
+        SearchGate::Plain
     } else if force_search {
-        BuiltinSearchGate::Run { force: true }
+        SearchGate::Run { force: true }
     } else if skip_search {
-        BuiltinSearchGate::Plain
+        SearchGate::Plain
     } else if auto_search {
-        BuiltinSearchGate::Run { force: false }
+        SearchGate::Run { force: false }
     } else {
-        BuiltinSearchGate::Plain
+        SearchGate::Plain
     }
 }
 
@@ -1048,16 +1048,88 @@ impl crate::websearch::orchestrator::Synthesizer for BuiltinSynthesizer<'_> {
     }
 }
 
-/// Coverage-excluded: glue that wires the real engine port, HTTP transport, and
-/// BM25 scorer into the fully-tested [`crate::websearch::orchestrator::run_search`]
-/// and maps its outcome to a wire result. Every decision lives in `run_search`.
+/// Ollama-backed [`crate::websearch::orchestrator::Synthesizer`]: the same
+/// buffered-synthesis contract as [`BuiltinSynthesizer`] (swallowing sink,
+/// cancel/error surfaced out of band), but streaming through Ollama's native
+/// `/api/chat` endpoint with the same sampling settings the downstream
+/// Ollama writer stream uses. Used only by the cache-reuse gate; the
+/// synthesizer's generation IS the reused answer, so its tokens are
+/// recorded as engine usage by `stream_ollama_chat` exactly like a writer
+/// stream's are.
+struct OllamaSynthesizer<'a> {
+    /// Full `<base>/api/chat` endpoint.
+    endpoint: String,
+    /// Active Ollama model slug.
+    model: String,
+    think: bool,
+    keep_alive: Option<String>,
+    num_ctx: u32,
+    temperature: f64,
+    top_p: f64,
+    client: &'a reqwest::Client,
+}
+
+#[cfg_attr(coverage_nightly, coverage(off))]
+#[async_trait::async_trait]
+impl crate::websearch::orchestrator::Synthesizer for OllamaSynthesizer<'_> {
+    async fn synthesize(
+        &self,
+        messages: &[ChatMessage],
+        cancel: &CancellationToken,
+    ) -> Result<String, crate::websearch::prepass::InferenceError> {
+        use crate::websearch::prepass::InferenceError;
+        use std::sync::atomic::{AtomicBool, Ordering};
+        // The stream reports cancel/error only through `on_chunk`; capture them
+        // so the buffered content can be distinguished from a failed generation.
+        let cancelled = AtomicBool::new(false);
+        let errored = AtomicBool::new(false);
+        let content = stream_ollama_chat(
+            OllamaChatParams {
+                endpoint: self.endpoint.clone(),
+                model: self.model.clone(),
+                messages: messages.to_vec(),
+                think: self.think,
+                keep_alive: self.keep_alive.clone(),
+                num_ctx: self.num_ctx,
+                temperature: self.temperature,
+                top_p: self.top_p,
+            },
+            self.client,
+            cancel.clone(),
+            |chunk| match chunk {
+                StreamChunk::Cancelled => cancelled.store(true, Ordering::Relaxed),
+                StreamChunk::Error(_) => errored.store(true, Ordering::Relaxed),
+                // Swallow tokens: buffered synthesis never streams to the user.
+                _ => {}
+            },
+        )
+        .await;
+        if cancelled.load(Ordering::Relaxed) {
+            return Err(InferenceError::Cancelled);
+        }
+        if errored.load(Ordering::Relaxed) {
+            return Err(InferenceError::Request(
+                "cache-reuse synthesis stream error".to_string(),
+            ));
+        }
+        Ok(content)
+    }
+}
+
+/// Provider-agnostic core of the search pipeline: given the three
+/// provider-bound LLM edges (pre-pass, judge, synthesizer), wires the HTTP
+/// transport and BM25 scorer into the fully-tested
+/// [`crate::websearch::orchestrator::run_search`] and maps its outcome to a
+/// wire result. Every decision lives in `run_search`. The built-in engine and
+/// Ollama share this body; only the trio differs (see [`run_builtin_search`]
+/// / [`run_ollama_search`]). Coverage-excluded: glue over the tested
+/// orchestrator.
 #[cfg_attr(coverage_nightly, coverage(off))]
 #[allow(clippy::too_many_arguments)]
-async fn run_builtin_search(
-    engine: &crate::engine::runner::EngineHandle,
-    target: &crate::engine::state::Target,
-    model_id: &str,
-    client: &reqwest::Client,
+async fn run_search_pipeline(
+    prepass: &dyn crate::websearch::prepass::PrePass,
+    judge: &dyn crate::websearch::judge::SufficiencyJudge,
+    synthesizer: &dyn crate::websearch::orchestrator::Synthesizer,
     num_ctx: u32,
     system_prompt: &str,
     history: &[ChatMessage],
@@ -1068,50 +1140,21 @@ async fn run_builtin_search(
     cancel: &CancellationToken,
     recorder: &std::sync::Arc<crate::trace::BoundRecorder>,
     on_chunk: &(impl Fn(StreamChunk) + Send + Sync),
-    // Reasoning toggle and warm-state, threaded through only so the cache-reuse
-    // synthesizer generates with the same settings the downstream writer stream
-    // would (see `BuiltinSynthesizer`).
-    think: bool,
-    warm_state: &crate::warmup::BuiltinWarmState,
     cache_scope: u64,
     force_search: bool,
     // False when the ask bar was submitted empty and `latest_user` carries only
     // the host-app selection, so the pre-filter withholds its deterministic
     // force-search shortcut and the classifier decides instead (issue #363).
     has_user_request: bool,
-) -> BuiltinSearchResult {
-    // The engine is already warm (the caller holds an activity guard); this
-    // re-ensure just reads back the live port for the pre-pass and writer.
-    let Ok(port) = engine.ensure_loaded(target.clone()).await else {
-        // Gate said Run but the engine is not loadable: still mark the skip so
-        // traces do not look like the turn never considered search.
-        recorder.record(crate::trace::RecorderEvent::SearchSkipped {
-            reason: "engine_unavailable".to_string(),
-        });
-        return BuiltinSearchResult::Plain;
-    };
+    // Trace reason recorded when the HTTP transport cannot even be built.
+    unavailable_reason: &'static str,
+) -> SearchResult {
     let Ok(transport) = crate::net::transport::ReqwestTransport::new() else {
         recorder.record(crate::trace::RecorderEvent::SearchSkipped {
-            reason: "engine_unavailable".to_string(),
+            reason: unavailable_reason.to_string(),
         });
-        return BuiltinSearchResult::Plain;
+        return SearchResult::Plain;
     };
-    let prepass = crate::websearch::prepass::BuiltinPrePass::new(
-        client.clone(),
-        format!("http://127.0.0.1:{port}"),
-        model_id.to_string(),
-        crate::config::defaults::PREPASS_TIMEOUT_S,
-    );
-    // The sufficiency judge shares the warm engine: it decides whether a
-    // vertical's answer actually contains what the question asked before the
-    // pipeline commits to it, escalating an insufficient block to the scraped
-    // engines instead of dead-ending (see `websearch::judge`).
-    let judge = crate::websearch::judge::BuiltinSufficiencyJudge::new(
-        client.clone(),
-        format!("http://127.0.0.1:{port}"),
-        model_id.to_string(),
-        crate::config::defaults::SUFFICIENCY_JUDGE_TIMEOUT_S,
-    );
     let scorer = crate::websearch::rank::Bm25Scorer;
     // Offline fast-fail signal, raced against the engine tier's live requests
     // (never a pre-flight gate; see `net::reachability`).
@@ -1123,21 +1166,12 @@ async fn run_builtin_search(
     // One timing bag per search turn: orchestrator records stage ms and flushes
     // SearchTimings; writer_ttft is appended on the first answer token below.
     let timing_bag = crate::websearch::stage_timing::TimingBag::new();
-    // Buffered answer synthesis for the cache-reuse gate: same engine, model,
-    // and reasoning toggle as the downstream writer stream, but with a
-    // swallowing sink so nothing reaches the user before the sentinel check.
-    let synthesizer = BuiltinSynthesizer {
-        engine,
-        target: target.clone(),
-        model_id: model_id.to_string(),
-        think,
-        client,
-        warm_state,
-    };
     let deps = crate::websearch::orchestrator::SearchDeps {
-        prepass: &prepass,
-        judge: &judge,
-        synthesizer: &synthesizer,
+        // The trio already arrives as `&dyn` trait objects: pass them
+        // through, do not re-borrow (a `&&dyn` does not implement the trait).
+        prepass,
+        judge,
+        synthesizer,
         transport: &transport,
         reachability: &reachability,
         scorer: &scorer,
@@ -1195,14 +1229,14 @@ async fn run_builtin_search(
     // path that ran. One stderr line per search-turn (not gated to turn 1);
     // never surfaced to the frontend.
     eprintln!(
-        "search: run_builtin_search resolved outcome={}",
-        builtin_search_outcome_label(&outcome)
+        "search: pipeline resolved outcome={}",
+        search_outcome_label(&outcome)
     );
     let search_submit = timing_bag.submit_instant();
     match outcome {
         crate::websearch::orchestrator::SearchOutcome::Answer { messages, sources } => {
             on_chunk(StreamChunk::SearchSources(source_metas(&sources)));
-            BuiltinSearchResult::Grounded {
+            SearchResult::Grounded {
                 messages,
                 sources,
                 search_submit,
@@ -1217,7 +1251,7 @@ async fn run_builtin_search(
             sources,
         } => {
             on_chunk(StreamChunk::SearchSources(source_metas(&sources)));
-            BuiltinSearchResult::Reused {
+            SearchResult::Reused {
                 content,
                 messages,
                 sources,
@@ -1230,15 +1264,191 @@ async fn run_builtin_search(
         // to attach) so the answer also names its unverified freshness.
         crate::websearch::orchestrator::SearchOutcome::Unreachable { messages, reason } => {
             on_chunk(StreamChunk::SearchFailed { reason });
-            BuiltinSearchResult::Grounded {
+            SearchResult::Grounded {
                 messages,
                 sources: Vec::new(),
                 search_submit,
             }
         }
-        crate::websearch::orchestrator::SearchOutcome::NoSearch => BuiltinSearchResult::Plain,
-        crate::websearch::orchestrator::SearchOutcome::Cancelled => BuiltinSearchResult::Cancelled,
+        crate::websearch::orchestrator::SearchOutcome::NoSearch => SearchResult::Plain,
+        crate::websearch::orchestrator::SearchOutcome::Cancelled => SearchResult::Cancelled,
     }
+}
+
+/// Built-in entry point into the shared search pipeline: re-ensures the warm
+/// engine (the caller holds an activity guard) to read back the live port,
+/// builds the built-in pre-pass / judge / synthesizer trio against that port,
+/// and delegates to [`run_search_pipeline`]. The prompt inputs MUST be the
+/// same strings the plain chat path streams (system prompt, filtered history,
+/// quote-wrapped user turn) so the pre-pass and writer reuse llama-server's
+/// warm KV prefix. Coverage-excluded: glue over the tested orchestrator.
+#[cfg_attr(coverage_nightly, coverage(off))]
+#[allow(clippy::too_many_arguments)]
+async fn run_builtin_search(
+    engine: &crate::engine::runner::EngineHandle,
+    target: &crate::engine::state::Target,
+    model_id: &str,
+    client: &reqwest::Client,
+    num_ctx: u32,
+    system_prompt: &str,
+    history: &[ChatMessage],
+    latest_user: &str,
+    // Base64 images for the latest turn when the model is vision-capable.
+    // Forwarded to prepass + writer only; never to search engines.
+    latest_images: Option<&[String]>,
+    cancel: &CancellationToken,
+    recorder: &std::sync::Arc<crate::trace::BoundRecorder>,
+    on_chunk: &(impl Fn(StreamChunk) + Send + Sync),
+    // Reasoning toggle and warm-state, threaded through only so the cache-reuse
+    // synthesizer generates with the same settings the downstream writer stream
+    // would (see `BuiltinSynthesizer`).
+    think: bool,
+    warm_state: &crate::warmup::BuiltinWarmState,
+    cache_scope: u64,
+    force_search: bool,
+    // False when the ask bar was submitted empty and `latest_user` carries only
+    // the host-app selection, so the pre-filter withholds its deterministic
+    // force-search shortcut and the classifier decides instead (issue #363).
+    has_user_request: bool,
+) -> SearchResult {
+    // The engine is already warm (the caller holds an activity guard); this
+    // re-ensure just reads back the live port for the pre-pass and writer.
+    let Ok(port) = engine.ensure_loaded(target.clone()).await else {
+        // Gate said Run but the engine is not loadable: still mark the skip so
+        // traces do not look like the turn never considered search.
+        recorder.record(crate::trace::RecorderEvent::SearchSkipped {
+            reason: "engine_unavailable".to_string(),
+        });
+        return SearchResult::Plain;
+    };
+    let prepass = crate::websearch::prepass::BuiltinPrePass::new(
+        client.clone(),
+        format!("http://127.0.0.1:{port}"),
+        model_id.to_string(),
+        crate::config::defaults::PREPASS_TIMEOUT_S,
+    );
+    // The sufficiency judge shares the warm engine: it decides whether a
+    // vertical's answer actually contains what the question asked before the
+    // pipeline commits to it, escalating an insufficient block to the scraped
+    // engines instead of dead-ending (see `websearch::judge`).
+    let judge = crate::websearch::judge::BuiltinSufficiencyJudge::new(
+        client.clone(),
+        format!("http://127.0.0.1:{port}"),
+        model_id.to_string(),
+        crate::config::defaults::SUFFICIENCY_JUDGE_TIMEOUT_S,
+    );
+    // Buffered answer synthesis for the cache-reuse gate: same engine, model,
+    // and reasoning toggle as the downstream writer stream, but with a
+    // swallowing sink so nothing reaches the user before the sentinel check.
+    let synthesizer = BuiltinSynthesizer {
+        engine,
+        target: target.clone(),
+        model_id: model_id.to_string(),
+        think,
+        client,
+        warm_state,
+    };
+    run_search_pipeline(
+        &prepass,
+        &judge,
+        &synthesizer,
+        num_ctx,
+        system_prompt,
+        history,
+        latest_user,
+        latest_images,
+        cancel,
+        recorder,
+        on_chunk,
+        cache_scope,
+        force_search,
+        has_user_request,
+        "engine_unavailable",
+    )
+    .await
+}
+
+/// Ollama entry point into the shared search pipeline: builds the Ollama
+/// pre-pass / judge / synthesizer trio (Ollama `/v1` for the structured
+/// classifier + judge, native `/api/chat` for buffered synthesis) and
+/// delegates to [`run_search_pipeline`]. No engine warm-up: Ollama is an
+/// external daemon, and its unreachability surfaces through the pipeline's own
+/// request errors as the `Unreachable` outcome (a grounded disclosure-bearing
+/// answer), not as a provider error. Coverage-excluded: glue over the tested
+/// orchestrator.
+#[cfg_attr(coverage_nightly, coverage(off))]
+#[allow(clippy::too_many_arguments)]
+async fn run_ollama_search(
+    ollama_base_url: &str,
+    ollama_model: &str,
+    endpoint: &str,
+    think: bool,
+    keep_alive: Option<String>,
+    client: &reqwest::Client,
+    num_ctx: u32,
+    system_prompt: &str,
+    history: &[ChatMessage],
+    latest_user: &str,
+    // Base64 images for the latest turn when the model is vision-capable.
+    // Forwarded to prepass + writer only; never to search engines.
+    latest_images: Option<&[String]>,
+    cancel: &CancellationToken,
+    recorder: &std::sync::Arc<crate::trace::BoundRecorder>,
+    on_chunk: &(impl Fn(StreamChunk) + Send + Sync),
+    cache_scope: u64,
+    force_search: bool,
+    // False when the ask bar was submitted empty and `latest_user` carries only
+    // the host-app selection, so the pre-filter withholds its deterministic
+    // force-search shortcut and the classifier decides instead (issue #363).
+    has_user_request: bool,
+    temperature: f64,
+    top_p: f64,
+) -> SearchResult {
+    let prepass = crate::websearch::prepass::OllamaPrePass::new(
+        client.clone(),
+        ollama_base_url.to_string(),
+        ollama_model.to_string(),
+        crate::config::defaults::PREPASS_TIMEOUT_S,
+    );
+    // The sufficiency judge shares the Ollama server: same judge prompt and
+    // degrade-to-sufficient semantics as the built-in judge.
+    let judge = crate::websearch::judge::OllamaSufficiencyJudge::new(
+        client.clone(),
+        ollama_base_url.to_string(),
+        ollama_model.to_string(),
+        crate::config::defaults::SUFFICIENCY_JUDGE_TIMEOUT_S,
+    );
+    // Buffered answer synthesis for the cache-reuse gate: same model and
+    // sampling settings as the downstream Ollama writer stream, but with a
+    // swallowing sink so nothing reaches the user before the sentinel check.
+    let synthesizer = OllamaSynthesizer {
+        endpoint: endpoint.to_string(),
+        model: ollama_model.to_string(),
+        think,
+        keep_alive,
+        num_ctx,
+        temperature,
+        top_p,
+        client,
+    };
+    run_search_pipeline(
+        &prepass,
+        &judge,
+        &synthesizer,
+        num_ctx,
+        system_prompt,
+        history,
+        latest_user,
+        latest_images,
+        cancel,
+        recorder,
+        on_chunk,
+        cache_scope,
+        force_search,
+        has_user_request,
+        "transport_unavailable",
+    )
+    .await
 }
 
 /// Records writer TTFT (submit → first answer token) to stderr and the trace.
@@ -1438,9 +1648,106 @@ async fn refine_grounded_answer(
     }
 }
 
+/// Ollama twin of [`refine_grounded_answer`]: the same audit → repair (up to
+/// [`CITE_REPAIR_MAX_ATTEMPTS`]) → strip-leftover-bad-citations loop, but
+/// repair rounds re-stream through Ollama's native `/api/chat` endpoint with
+/// the same sampling settings as the Ollama writer stream. Coverage-off:
+/// orchestration glue around pure `cite_check` and `stream_ollama_chat`.
+#[cfg_attr(coverage_nightly, coverage(off))]
+#[allow(clippy::too_many_arguments)]
+async fn refine_grounded_answer_ollama(
+    mut content: String,
+    sources: &[crate::websearch::assemble::SourceBlock],
+    writer_messages: Vec<ChatMessage>,
+    endpoint: String,
+    model: String,
+    think: bool,
+    keep_alive: Option<String>,
+    num_ctx: u32,
+    temperature: f64,
+    top_p: f64,
+    client: &reqwest::Client,
+    cancel_token: CancellationToken,
+    recorder: &std::sync::Arc<crate::trace::BoundRecorder>,
+    on_terminal: &impl Fn(StreamChunk),
+) -> String {
+    if sources.is_empty() || content.is_empty() {
+        return content;
+    }
+    if content.len() > crate::config::defaults::CITE_AUDIT_MAX_ANSWER_BYTES {
+        return content;
+    }
+
+    for attempt in 0..crate::config::defaults::CITE_REPAIR_MAX_ATTEMPTS {
+        if cancel_token.is_cancelled() {
+            break;
+        }
+        let Some(audit) = record_citation_audit(&content, sources, recorder) else {
+            return content;
+        };
+        // Success only when every present [n] is ok AND the answer cited
+        // something. cited==0 with sources present is a silent failure mode
+        // (gpt-oss often names Bloomberg/Forbes in prose without [n]).
+        if !crate::websearch::cite_check::needs_citation_repair(&audit, true) {
+            return content;
+        }
+        eprintln!(
+            "[search] citation repair: attempt {}/{} cited={} unsupported={:?}",
+            attempt + 1,
+            crate::config::defaults::CITE_REPAIR_MAX_ATTEMPTS,
+            audit.cited,
+            audit.unsupported_indices
+        );
+        let repair_messages = build_repair_messages(writer_messages.clone(), &content, &audit);
+        // Mute answer tokens on repair rounds: only the final cleaned answer
+        // is shown. Forward cancel/error so the UI still leaves streaming.
+        let repaired = stream_ollama_chat(
+            OllamaChatParams {
+                endpoint: endpoint.clone(),
+                model: model.clone(),
+                messages: repair_messages,
+                think,
+                keep_alive: keep_alive.clone(),
+                num_ctx,
+                temperature,
+                top_p,
+            },
+            client,
+            cancel_token.clone(),
+            |chunk| match chunk {
+                StreamChunk::Cancelled | StreamChunk::Error(_) => on_terminal(chunk),
+                StreamChunk::Done
+                | StreamChunk::Token(_)
+                | StreamChunk::ThinkingToken(_)
+                | StreamChunk::TurnAccepted
+                | StreamChunk::SearchStatus { .. }
+                | StreamChunk::SearchSources(_)
+                // Never emitted on a repair round (a chat stream, not the search
+                // pipeline), but the match must stay exhaustive.
+                | StreamChunk::SearchFailed { .. }
+                | StreamChunk::SetContent(_) => {}
+            },
+        )
+        .await;
+        if cancel_token.is_cancelled() {
+            break;
+        }
+        if repaired.is_empty() {
+            break;
+        }
+        content = repaired;
+    }
+
+    // Final audit after repairs (or after exhausting attempts).
+    match record_citation_audit(&content, sources, recorder) {
+        Some(audit) => crate::websearch::cite_check::finalize_answer_after_audit(&content, &audit),
+        None => content,
+    }
+}
+
 /// Decides the final persisted answer content and the terminal chunk(s) to
-/// emit once a built-in turn's token stream (and optional citation refine)
-/// has finished.
+/// emit once a turn's token stream (and optional citation refine) has
+/// finished. Shared by the built-in and Ollama grounded flows.
 ///
 /// `done_pending` is `false` when the stream ended by cancellation or error
 /// instead of `Done`; nothing more is emitted (the frontend already left
@@ -1449,7 +1756,7 @@ async fn refine_grounded_answer(
 /// When citation audit/repair changes the body, emit one
 /// [`StreamChunk::SetContent`] so the bubble snaps to the cleaned text before
 /// `Done`. When the body is unchanged, only `Done` is emitted.
-fn finalize_builtin_stream(
+fn finalize_stream(
     content: String,
     streamed: &str,
     done_pending: bool,
@@ -2374,8 +2681,9 @@ pub async fn ask_model(
     // and what existing frontend invokes that omit the field deserialize to)
     // leaves the gate active.
     allow_oversized: Option<bool>,
-    // When true, force built-in engines-only web search (`/search` alias).
-    // Non-builtin providers receive a capability error below.
+    // When true, force web search (`/search` alias). Provider-agnostic: the
+    // built-in engine and Ollama both run the search pipeline; the V1 route
+    // ignores it (see `ask_model`'s route dispatch).
     force_search: bool,
     // Per-model inference overrides (Phase 2C). The frontend resolves them
     // via `getInferenceParamsForModel(activeModelId)` and sends `null` for
@@ -2436,11 +2744,15 @@ pub async fn ask_model(
         }
     };
 
-    // `/search` force-search is built-in only (same residency premise as auto-search).
-    if force_search && !matches!(route, ChatRoute::Builtin { .. }) {
+    // `/search` on a generic OpenAI-compatible (`V1`) provider is still
+    // unsupported: remote servers vary in structured-output support, so the
+    // search pipeline's classifier/judge cannot run against them yet. Fail
+    // loudly rather than silently answering without searching. Built-in and
+    // Ollama both run the pipeline (see their route arms below).
+    if force_search && matches!(route, ChatRoute::V1 { .. }) {
         let _ = on_event.send(StreamChunk::Error(EngineError {
             kind: EngineErrorKind::Other,
-            message: "Web search needs the built-in engine\nSwitch to Built-in in Settings to use /search."
+            message: "Web search is not supported on generic OpenAI-compatible providers yet\nSwitch to Built-in or Ollama in Settings to use /search."
                 .to_string(),
         }));
         return Ok(());
@@ -2529,9 +2841,9 @@ pub async fn ask_model(
     // the classifier and writer. Capture before `image_paths` moves.
     let turn_has_images = image_paths.as_ref().is_some_and(|paths| !paths.is_empty());
 
-    // The `/search` slash command forces a web search this turn (see
-    // `run_builtin_search`'s `force_search`), turning the invisible auto-search
-    // into an always-on, cache-bypassing search with the same "look it up again"
+    // The `/search` slash command forces a web search this turn (see the search
+    // pipeline's `force_search`), turning the invisible auto-search into an
+    // always-on, cache-bypassing search with the same "look it up again"
     // semantics. Transform utilities (`slash_skips_auto_search`) never enter the
     // pipeline. `/explain` and `/think` still honor Auto search Settings.
     let force_search = slash_command.as_deref() == Some("/search");
@@ -2596,6 +2908,12 @@ pub async fn ask_model(
         .lock()
         .ok()
         .and_then(|guard| guard.get(&(provider_id, model_name.clone())).cloned());
+    // Vision capability for the Ollama search gate (below): the capability
+    // cache is keyed by (provider, model) and already covers Ollama models
+    // via `/api/show`. Fail closed: an unknown model keeps the non-vision
+    // strip path rather than shipping images to a text-only classifier.
+    // Captured before `cache_hit` moves into the filter below.
+    let cached_vision = cache_hit.as_ref().map(|caps| caps.vision).unwrap_or(false);
     if let Some(caps) = cache_hit {
         let stats = apply_capability_filter(&mut messages, &caps);
         if stats.stripped_images > 0 {
@@ -2642,22 +2960,202 @@ pub async fn ask_model(
     // identical for all three routes.
     let accumulated = match route {
         ChatRoute::OllamaNative { endpoint } => {
-            stream_ollama_chat(
-                OllamaChatParams {
-                    endpoint,
-                    model: model_name,
-                    messages,
-                    think,
-                    keep_alive,
-                    num_ctx: effective_num_ctx,
-                    temperature: effective_temperature.unwrap_or(1.0),
-                    top_p: effective_top_p.unwrap_or(0.95),
-                },
-                &client,
-                cancel_token.clone(),
-                pump,
-            )
-            .await
+            // Ollama web search: the same gate + pipeline + citation-audit
+            // flow as the built-in arm. Non-vision image turns stay plain
+            // (strip path). Vision + images enter the pipeline so the
+            // classifier and writer see the photo. Transform slash commands
+            // skip entirely. On-demand mode (`behavior.auto_search = false`)
+            // skips on plain turns; only `force_search` (`/search`) still
+            // runs. Prompt inputs mirror the plain path. Do NOT let
+            // source-augmented writer messages reach history below.
+            let model_is_vision = if turn_has_images {
+                // The capability cache already covers Ollama models via
+                // `/api/show`; fail closed on a cache miss (see `cached_vision`).
+                cached_vision
+            } else {
+                // No images: vision flag is irrelevant to the gate.
+                true
+            };
+            let search_images = if turn_has_images && model_is_vision {
+                user_msg.images.as_deref()
+            } else {
+                None
+            };
+            let search = match search_gate(
+                turn_has_images,
+                model_is_vision,
+                force_search,
+                skip_search,
+                config.behavior.auto_search,
+            ) {
+                SearchGate::Plain => {
+                    bound_recorder.record(crate::trace::RecorderEvent::SearchSkipped {
+                        reason: search_skip_reason_for_plain_gate(
+                            turn_has_images,
+                            model_is_vision,
+                            skip_search,
+                        )
+                        .to_string(),
+                    });
+                    SearchResult::Plain
+                }
+                SearchGate::Run { force } => {
+                    let history = &messages[1..messages.len().saturating_sub(1)];
+                    run_ollama_search(
+                        config
+                            .inference
+                            .active_provider_base_url()
+                            .trim_end_matches('/'),
+                        &model_name,
+                        &endpoint,
+                        think,
+                        keep_alive.clone(),
+                        &client,
+                        effective_num_ctx,
+                        &messages[0].content,
+                        history,
+                        &user_msg.content,
+                        search_images,
+                        &cancel_token,
+                        &bound_recorder,
+                        &pump,
+                        epoch_at_start,
+                        force,
+                        has_user_request,
+                        effective_temperature.unwrap_or(1.0),
+                        effective_top_p.unwrap_or(0.95),
+                    )
+                    .await
+                }
+            };
+
+            match search {
+                SearchResult::Cancelled => {
+                    pump(StreamChunk::Cancelled);
+                    String::new()
+                }
+                grounded_or_plain => {
+                    // Keep the resolved sources (empty on a plain or
+                    // unreachable turn) so the streamed answer can be
+                    // citation-audited after the stream completes.
+                    // `pregenerated` is `Some` only for a cache reuse: the
+                    // answer was already synthesized (buffered) by the
+                    // orchestrator, so it is emitted at once instead of
+                    // streamed from the engine below.
+                    let (stream_messages, audit_sources, search_submit, pregenerated) =
+                        match grounded_or_plain {
+                            SearchResult::Grounded {
+                                messages,
+                                sources,
+                                search_submit,
+                            } => (messages, sources, Some(search_submit), None),
+                            SearchResult::Reused {
+                                content,
+                                messages,
+                                sources,
+                                search_submit,
+                            } => (messages, sources, Some(search_submit), Some(content)),
+                            _ => (messages, Vec::new(), None, None),
+                        };
+                    // Stream answer tokens live for the first writer pass.
+                    // Withhold `Done` so citation audit + optional repair can
+                    // finish; if the cleaned body differs, emit SetContent
+                    // then Done (see finalize_stream).
+                    let done_pending =
+                        std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+                    let done_pending_for_pump = std::sync::Arc::clone(&done_pending);
+                    let writer_ttft_recorded =
+                        std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+                    let writer_ttft_flag = std::sync::Arc::clone(&writer_ttft_recorded);
+                    let recorder_for_ttft = std::sync::Arc::clone(&bound_recorder);
+                    let ollama_pump = move |chunk: StreamChunk| {
+                        // First answer token after a search: record writer TTFT.
+                        if let Some(submit) = search_submit {
+                            if matches!(chunk, StreamChunk::Token(_))
+                                && !writer_ttft_flag
+                                    .swap(true, std::sync::atomic::Ordering::Relaxed)
+                            {
+                                record_writer_ttft(submit, &recorder_for_ttft);
+                            }
+                        }
+                        if matches!(chunk, StreamChunk::Done) {
+                            done_pending_for_pump.store(true, std::sync::atomic::Ordering::Relaxed);
+                            return;
+                        }
+                        pump(chunk);
+                    };
+                    let writer_messages_for_repair = stream_messages.clone();
+                    let streamed_content = if let Some(content) = pregenerated {
+                        // Cache reuse: emit the buffered answer at once
+                        // through the same pump (records writer TTFT and
+                        // marks the withheld Done), then fall into the
+                        // shared citation-audit + finalize path below so
+                        // the UI renders identically to a streamed answer.
+                        ollama_pump(StreamChunk::Token(content.clone()));
+                        ollama_pump(StreamChunk::Done);
+                        content
+                    } else {
+                        stream_ollama_chat(
+                            OllamaChatParams {
+                                endpoint: endpoint.clone(),
+                                model: model_name.clone(),
+                                messages: stream_messages,
+                                think,
+                                keep_alive: keep_alive.clone(),
+                                num_ctx: effective_num_ctx,
+                                temperature: effective_temperature.unwrap_or(1.0),
+                                top_p: effective_top_p.unwrap_or(0.95),
+                            },
+                            &client,
+                            cancel_token.clone(),
+                            ollama_pump,
+                        )
+                        .await
+                    };
+                    // Audit → up to CITE_REPAIR_MAX_ATTEMPTS rewrites →
+                    // strip leftover bad [n] (honest note only on total fail).
+                    // Repair rewrites stay muted (see
+                    // refine_grounded_answer_ollama). Emit Verifying so the
+                    // FE sources pill shows work is still in flight after the
+                    // last answer token.
+                    let content = if !audit_sources.is_empty()
+                        && !cancel_token.is_cancelled()
+                        && done_pending.load(std::sync::atomic::Ordering::Relaxed)
+                    {
+                        pump(StreamChunk::SearchStatus {
+                            phase: crate::websearch::orchestrator::SearchPhase::Verifying,
+                        });
+                        refine_grounded_answer_ollama(
+                            streamed_content.clone(),
+                            &audit_sources,
+                            writer_messages_for_repair,
+                            endpoint.clone(),
+                            model_name.clone(),
+                            think,
+                            keep_alive.clone(),
+                            effective_num_ctx,
+                            effective_temperature.unwrap_or(1.0),
+                            effective_top_p.unwrap_or(0.95),
+                            &client,
+                            cancel_token.clone(),
+                            &bound_recorder,
+                            &pump,
+                        )
+                        .await
+                    } else {
+                        streamed_content.clone()
+                    };
+                    let (content, terminal_chunks) = finalize_stream(
+                        content,
+                        &streamed_content,
+                        done_pending.load(std::sync::atomic::Ordering::Relaxed),
+                    );
+                    for chunk in terminal_chunks {
+                        pump(chunk);
+                    }
+                    content
+                }
+            }
         }
         ChatRoute::Builtin { model_id } => {
             // Resolve the manifest row to blob-store paths and run the pre-load
@@ -2730,14 +3228,14 @@ pub async fn ask_model(
                     } else {
                         None
                     };
-                    let search = match builtin_search_gate(
+                    let search = match search_gate(
                         turn_has_images,
                         model_is_vision,
                         force_search,
                         skip_search,
                         config.behavior.auto_search,
                     ) {
-                        BuiltinSearchGate::Plain => {
+                        SearchGate::Plain => {
                             bound_recorder.record(crate::trace::RecorderEvent::SearchSkipped {
                                 reason: search_skip_reason_for_plain_gate(
                                     turn_has_images,
@@ -2746,9 +3244,9 @@ pub async fn ask_model(
                                 )
                                 .to_string(),
                             });
-                            BuiltinSearchResult::Plain
+                            SearchResult::Plain
                         }
-                        BuiltinSearchGate::Run { force } => {
+                        SearchGate::Run { force } => {
                             let history = &messages[1..messages.len().saturating_sub(1)];
                             run_builtin_search(
                                 &engine,
@@ -2774,7 +3272,7 @@ pub async fn ask_model(
                     };
 
                     match search {
-                        BuiltinSearchResult::Cancelled => {
+                        SearchResult::Cancelled => {
                             pump(StreamChunk::Cancelled);
                             String::new()
                         }
@@ -2788,12 +3286,12 @@ pub async fn ask_model(
                             // streamed from the engine below.
                             let (stream_messages, audit_sources, search_submit, pregenerated) =
                                 match grounded_or_plain {
-                                    BuiltinSearchResult::Grounded {
+                                    SearchResult::Grounded {
                                         messages,
                                         sources,
                                         search_submit,
                                     } => (messages, sources, Some(search_submit), None),
-                                    BuiltinSearchResult::Reused {
+                                    SearchResult::Reused {
                                         content,
                                         messages,
                                         sources,
@@ -2812,7 +3310,7 @@ pub async fn ask_model(
                             // Stream answer tokens live for the first writer
                             // pass. Withhold `Done` so citation audit + optional
                             // repair can finish; if the cleaned body differs,
-                            // emit SetContent then Done (see finalize_builtin_stream).
+                            // emit SetContent then Done (see finalize_stream).
                             let done_pending =
                                 std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
                             let done_pending_for_pump = std::sync::Arc::clone(&done_pending);
@@ -2903,7 +3401,7 @@ pub async fn ask_model(
                             } else {
                                 streamed_content.clone()
                             };
-                            let (content, terminal_chunks) = finalize_builtin_stream(
+                            let (content, terminal_chunks) = finalize_stream(
                                 content,
                                 &streamed_content,
                                 done_pending.load(std::sync::atomic::Ordering::Relaxed),
@@ -3095,25 +3593,19 @@ mod tests {
     }
 
     #[test]
-    fn builtin_search_outcome_label_covers_all_variants() {
+    fn search_outcome_label_covers_all_variants() {
         use crate::websearch::orchestrator::SearchOutcome;
+        assert_eq!(search_outcome_label(&SearchOutcome::NoSearch), "NoSearch");
+        assert_eq!(search_outcome_label(&SearchOutcome::Cancelled), "Cancelled");
         assert_eq!(
-            builtin_search_outcome_label(&SearchOutcome::NoSearch),
-            "NoSearch"
-        );
-        assert_eq!(
-            builtin_search_outcome_label(&SearchOutcome::Cancelled),
-            "Cancelled"
-        );
-        assert_eq!(
-            builtin_search_outcome_label(&SearchOutcome::Answer {
+            search_outcome_label(&SearchOutcome::Answer {
                 messages: vec![],
                 sources: vec![],
             }),
             "Answer"
         );
         assert_eq!(
-            builtin_search_outcome_label(&SearchOutcome::AnswerReused {
+            search_outcome_label(&SearchOutcome::AnswerReused {
                 content: String::new(),
                 messages: vec![],
                 sources: vec![],
@@ -3121,7 +3613,7 @@ mod tests {
             "AnswerReused"
         );
         assert_eq!(
-            builtin_search_outcome_label(&SearchOutcome::Unreachable {
+            search_outcome_label(&SearchOutcome::Unreachable {
                 messages: vec![],
                 reason: crate::websearch::orchestrator::SearchFailReason::NoResults,
             }),
@@ -3156,46 +3648,46 @@ mod tests {
     }
 
     #[test]
-    fn builtin_search_gate_orders_images_force_skip_and_auto() {
+    fn search_gate_orders_images_force_skip_and_auto() {
         // Non-vision + images: always plain, even under force or auto.
         assert_eq!(
-            builtin_search_gate(true, false, true, false, true),
-            BuiltinSearchGate::Plain
+            search_gate(true, false, true, false, true),
+            SearchGate::Plain
         );
         // Vision + images + auto: enter auto pipeline.
         assert_eq!(
-            builtin_search_gate(true, true, false, false, true),
-            BuiltinSearchGate::Run { force: false }
+            search_gate(true, true, false, false, true),
+            SearchGate::Run { force: false }
         );
         // Vision + images + force: engines-only path.
         assert_eq!(
-            builtin_search_gate(true, true, true, false, false),
-            BuiltinSearchGate::Run { force: true }
+            search_gate(true, true, true, false, false),
+            SearchGate::Run { force: true }
         );
         // `/search` forces the pipeline even when Auto search is off.
         assert_eq!(
-            builtin_search_gate(false, true, true, false, false),
-            BuiltinSearchGate::Run { force: true }
+            search_gate(false, true, true, false, false),
+            SearchGate::Run { force: true }
         );
         // Transform slash: plain even when Auto search is on (no classifier).
         assert_eq!(
-            builtin_search_gate(false, true, false, true, true),
-            BuiltinSearchGate::Plain
+            search_gate(false, true, false, true, true),
+            SearchGate::Plain
         );
         // Force wins over skip if both were ever set (defensive).
         assert_eq!(
-            builtin_search_gate(false, true, true, true, true),
-            BuiltinSearchGate::Run { force: true }
+            search_gate(false, true, true, true, true),
+            SearchGate::Run { force: true }
         );
         // Plain chat with Auto search on → auto pipeline.
         assert_eq!(
-            builtin_search_gate(false, true, false, false, true),
-            BuiltinSearchGate::Run { force: false }
+            search_gate(false, true, false, false, true),
+            SearchGate::Run { force: false }
         );
         // Plain chat with Auto search off → plain.
         assert_eq!(
-            builtin_search_gate(false, true, false, false, false),
-            BuiltinSearchGate::Plain
+            search_gate(false, true, false, false, false),
+            SearchGate::Plain
         );
     }
 
@@ -5310,31 +5802,31 @@ mod tests {
     }
 
     #[test]
-    fn finalize_builtin_stream_no_done_pending_never_emits() {
+    fn finalize_stream_no_done_pending_never_emits() {
         // Cancelled/error paths: the frontend already left streaming, so
         // nothing more is emitted and content is returned unmodified.
         let (content, chunks) =
-            finalize_builtin_stream("partial answer".to_string(), "partial answer", false);
+            finalize_stream("partial answer".to_string(), "partial answer", false);
         assert_eq!(content, "partial answer");
         assert!(chunks.is_empty());
     }
 
     #[test]
-    fn finalize_builtin_stream_unchanged_body_only_done() {
+    fn finalize_stream_unchanged_body_only_done() {
         // Live-streamed answer matches post-audit body: only Done.
         let body = "The answer [1].";
-        let (content, chunks) = finalize_builtin_stream(body.to_string(), body, true);
+        let (content, chunks) = finalize_stream(body.to_string(), body, true);
         assert_eq!(content, body);
         assert_eq!(chunks.len(), 1);
         assert!(matches!(chunks[0], StreamChunk::Done));
     }
 
     #[test]
-    fn finalize_builtin_stream_changed_body_sets_content_then_done() {
+    fn finalize_stream_changed_body_sets_content_then_done() {
         // Repair/strip changed the live draft: replace bubble then Done.
         let streamed = "Bad cite [9] here.";
         let cleaned = "Clean answer [1].";
-        let (content, chunks) = finalize_builtin_stream(cleaned.to_string(), streamed, true);
+        let (content, chunks) = finalize_stream(cleaned.to_string(), streamed, true);
         assert_eq!(content, cleaned);
         assert_eq!(chunks.len(), 2);
         assert!(matches!(&chunks[0], StreamChunk::SetContent(t) if t == cleaned));
@@ -5403,7 +5895,7 @@ mod tests {
         assert!(!cleaned.contains("[1]"));
 
         // Live draft differed after audit cleanup: SetContent then Done.
-        let (content, chunks) = finalize_builtin_stream(cleaned.clone(), answer, true);
+        let (content, chunks) = finalize_stream(cleaned.clone(), answer, true);
         assert_eq!(content, cleaned);
         assert_eq!(chunks.len(), 2);
         assert!(matches!(&chunks[0], StreamChunk::SetContent(t) if t == &cleaned));

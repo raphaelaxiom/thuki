@@ -25,6 +25,12 @@ pub enum V1Flavor {
     Builtin,
     /// Any other OpenAI-compatible server (an `openai`-kind provider).
     Remote,
+    /// An Ollama server's OpenAI-compatible `/v1` endpoint. Ollama accepts
+    /// `response_format: {"type": "json_object"}` but does not reliably
+    /// support the strict `json_schema` mode the bundled engine uses, so
+    /// structured-output calls use the `json_object` shape for this flavor.
+    /// No llama.cpp template kwargs are ever sent to Ollama.
+    Ollama,
 }
 
 /// Groups the per-request parameters for [`stream_openai_chat`], mirroring
@@ -185,6 +191,9 @@ pub(crate) fn v1_unreachable_error(detail: &str, flavor: V1Flavor) -> EngineErro
             V1Flavor::Builtin => {
                 "Veilura's engine isn't running\nSend your message again to restart it.".to_string()
             }
+            V1Flavor::Ollama => {
+                format!("Ollama could not be reached.\n{detail}")
+            }
             V1Flavor::Remote => format!("The inference server could not be reached.\n{detail}"),
         },
     }
@@ -206,6 +215,11 @@ pub(crate) fn classify_v1_http_error(
             message: match flavor {
                 V1Flavor::Builtin => {
                     "Model not found\nPick or download a model in Settings.".to_string()
+                }
+                V1Flavor::Ollama => {
+                    format!(
+                        "Model not found\nOllama has no model named '{model_name}'. Try `ollama pull {model_name}`."
+                    )
                 }
                 V1Flavor::Remote => {
                     format!("Model not found\nThe server has no model named '{model_name}'.")
@@ -266,7 +280,7 @@ fn reasoning_template_kwargs(flavor: V1Flavor, enable_thinking: bool) -> Option<
             "thinking": enable_thinking,
             "thinking_budget": if enable_thinking { -1 } else { 0 },
         })),
-        V1Flavor::Remote => None,
+        V1Flavor::Ollama | V1Flavor::Remote => None,
     }
 }
 
@@ -287,7 +301,7 @@ fn structured_reasoning_kwargs(flavor: V1Flavor) -> Option<serde_json::Value> {
             kwargs["reasoning_effort"] = serde_json::json!("low");
             Some(kwargs)
         }
-        V1Flavor::Remote => None,
+        V1Flavor::Ollama | V1Flavor::Remote => None,
     }
 }
 
@@ -549,16 +563,25 @@ pub(crate) fn json_request_body(
     max_tokens: i32,
     flavor: V1Flavor,
 ) -> serde_json::Value {
+    // Ollama's OpenAI-compatible endpoint accepts `json_object` but does not
+    // reliably support strict `json_schema` mode, so Ollama calls carry the
+    // `json_object` shape and rely on the prompt's "output ONLY a JSON object"
+    // instruction plus the caller's parser. The bundled engine and generic
+    // remote servers keep the strict schema form.
+    let response_format = match flavor {
+        V1Flavor::Ollama => serde_json::json!({ "type": "json_object" }),
+        V1Flavor::Builtin | V1Flavor::Remote => serde_json::json!({
+            "type": "json_schema",
+            "json_schema": {"name": "out", "strict": true, "schema": schema},
+        }),
+    };
     let mut body = serde_json::json!({
         "model": model,
         "messages": messages.iter().map(to_openai_message).collect::<Vec<_>>(),
         "stream": false,
         "temperature": 0,
         "max_tokens": max_tokens,
-        "response_format": {
-            "type": "json_schema",
-            "json_schema": {"name": "out", "strict": true, "schema": schema},
-        },
+        "response_format": response_format,
     });
     // Structured output must never reason on the built-in engine: a thinking
     // pass would consume the `max_tokens` budget before any JSON is emitted,
@@ -1620,6 +1643,61 @@ mod tests {
             V1Flavor::Remote,
         );
         assert!(body.get("chat_template_kwargs").is_none());
+    }
+
+    /// Ollama structured-output bodies use `response_format: json_object`:
+    /// Ollama's OpenAI-compatible endpoint does not reliably support the
+    /// strict `json_schema` mode, and the llama.cpp template kwargs must
+    /// never be sent to Ollama. The search pipeline's classifier/judge
+    /// prompts already say "output ONLY a JSON object", and their parsers
+    /// accept plain JSON content, so `json_object` is the whole contract.
+    #[test]
+    fn ollama_structured_body_uses_json_object_and_no_kwargs() {
+        let body = json_request_body(
+            "m",
+            &[user_message("q")],
+            serde_json::json!({"type": "object"}),
+            64,
+            V1Flavor::Ollama,
+        );
+        assert_eq!(
+            body["response_format"],
+            serde_json::json!({ "type": "json_object" })
+        );
+        assert!(body.get("chat_template_kwargs").is_none());
+    }
+
+    /// Ollama structured-output bodies keep the strict schema OUT: a
+    /// `json_schema` key in the request is exactly what older Ollama
+    /// servers reject, so its absence is asserted, not just the
+    /// `json_object` presence above.
+    #[test]
+    fn ollama_structured_body_has_no_json_schema() {
+        let body = json_request_body(
+            "m",
+            &[user_message("q")],
+            serde_json::json!({"type": "object"}),
+            64,
+            V1Flavor::Ollama,
+        );
+        assert!(body["response_format"].get("json_schema").is_none());
+    }
+
+    /// Ollama unreachable copy names Ollama (not the generic "inference
+    /// server"), so a search-turn failure on the Ollama path tells the user
+    /// which daemon to start.
+    #[test]
+    fn ollama_unreachable_error_names_ollama() {
+        let err = v1_unreachable_error("connection refused", V1Flavor::Ollama);
+        assert!(err.message.contains("Ollama"));
+    }
+
+    /// Ollama 404 copy names the missing model and the `ollama pull` fix,
+    /// mirroring the native path's picker hint.
+    #[test]
+    fn ollama_404_error_names_pull_command() {
+        let err = classify_v1_http_error(404, "llama3.2", V1Flavor::Ollama);
+        assert!(err.message.contains("ollama pull llama3.2"));
     }
 
     /// End to end: a built-in streaming chat actually sends the reasoning
