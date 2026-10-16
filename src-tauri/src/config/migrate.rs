@@ -132,11 +132,9 @@ pub fn migrate_legacy_app_support_dir(
             if ft.is_dir() {
                 std::fs::create_dir_all(&dst)?;
                 stack.push((src, dst));
-            } else if ft.is_file() {
-                if !dst.exists() {
-                    std::fs::copy(&src, &dst)?;
-                    copied += 1;
-                }
+            } else if ft.is_file() && !dst.exists() {
+                std::fs::copy(&src, &dst)?;
+                copied += 1;
             }
         }
     }

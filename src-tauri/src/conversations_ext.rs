@@ -296,6 +296,19 @@ fn conversation_exists(conn: &Connection, conversation_id: &str) -> rusqlite::Re
 
 // ─── Search ─────────────────────────────────────────────────────────────────
 
+/// One row from the conversation search query:
+/// (id, title, model, updated_at, message_count, pinned, archived, folder_id).
+type ConvSearchRow = (
+    String,
+    Option<String>,
+    String,
+    i64,
+    i64,
+    i64,
+    i64,
+    Option<String>,
+);
+
 /// Full-text search across conversation titles AND message bodies
 /// (SQL `LIKE`, case-insensitive for ASCII via SQLite's default LIKE).
 /// Pinned conversations sort first, then most recently updated.
@@ -347,16 +360,7 @@ pub fn conv_ext_search(
             },
         )
         .map_err(|e| e.to_string())?;
-    let bare: Vec<(
-        String,
-        Option<String>,
-        String,
-        i64,
-        i64,
-        i64,
-        i64,
-        Option<String>,
-    )> = rows
+    let bare: Vec<ConvSearchRow> = rows
         .collect::<rusqlite::Result<_>>()
         .map_err(|e| e.to_string())?;
     drop(stmt);

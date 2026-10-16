@@ -592,7 +592,7 @@ pub fn models_io_disk_usage(app: tauri::AppHandle) -> Result<Vec<DiskRow>, Strin
             });
         }
     }
-    rows.sort_by(|a, b| b.bytes.cmp(&a.bytes));
+    rows.sort_by_key(|a| std::cmp::Reverse(a.bytes));
     Ok(rows)
 }
 
@@ -739,7 +739,7 @@ pub fn models_io_read_clipboard() -> Result<String, String> {
                 String::from_utf8_lossy(&out.stderr)
             ));
         }
-        return String::from_utf8(out.stdout).map_err(|e| format!("clipboard is not UTF-8: {e}"));
+        String::from_utf8(out.stdout).map_err(|e| format!("clipboard is not UTF-8: {e}"))
     }
     #[cfg(not(target_os = "macos"))]
     {
@@ -766,7 +766,7 @@ pub fn models_io_capture_screenshot() -> Result<Option<String>, String> {
         let bytes =
             std::fs::read(&path).map_err(|e| format!("read screenshot file: {e}"))?;
         let _ = std::fs::remove_file(&path);
-        return Ok(Some(BASE64.encode(bytes)));
+        Ok(Some(BASE64.encode(bytes)))
     }
     #[cfg(not(target_os = "macos"))]
     {
@@ -821,7 +821,7 @@ pub fn models_io_speak(text: String, voice: String, rate: f64) -> Result<(), Str
         if let Ok(mut slot) = speech_child().lock() {
             *slot = Some(child);
         }
-        return Ok(());
+        Ok(())
     }
     #[cfg(not(target_os = "macos"))]
     {
