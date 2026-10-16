@@ -930,6 +930,9 @@ async fn live_answer_for(
         api_key: None,
         flavor: V1Flavor::Builtin,
         enable_thinking: false,
+        // Eval answers use server defaults, never per-model sampling overrides.
+        temperature: None,
+        top_p: None,
     };
     let answer = stream_openai_chat(params, client, cancel.clone(), |_| {}).await;
     if answer.trim().is_empty() {
