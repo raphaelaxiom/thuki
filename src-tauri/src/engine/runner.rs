@@ -114,7 +114,15 @@ impl EngineHandle {
             waiters: Vec::new(),
             status_tx,
             recovery: CrashRecoveryTracker::new(),
-            retry_tx: cmd_tx.clone(),
+            // Weak sender on purpose: a strong clone here would keep the
+            // command channel open for the actor's whole lifetime, so
+            // `cmd_rx.recv()` could never return `None` and dropping the
+            // last handle would never tear the actor down (the
+            // `Wake::Cmd(None)` teardown would be unreachable). The
+            // delayed crash-retry task upgrades it for its bounded
+            // lifetime; if the upgrade fails, all handles are gone and
+            // no restart is scheduled.
+            retry_tx: cmd_tx.downgrade(),
         };
         let in_flight = Arc::new(AtomicUsize::new(0));
         tokio::spawn(run_actor(
@@ -257,8 +265,11 @@ struct Core {
     status_tx: watch::Sender<EngineStatus>,
     /// Consecutive-crash budget / backoff policy (Phase 2D).
     recovery: CrashRecoveryTracker,
-    /// Clone of the actor channel, for the delayed `CrashRetry` send.
-    retry_tx: mpsc::Sender<Command>,
+    /// Weak handle to the actor channel, for the delayed `CrashRetry`
+    /// send. Must stay weak: a strong sender held by the actor would
+    /// keep the channel open forever and make handle-drop teardown
+    /// (`Wake::Cmd(None)`) unreachable.
+    retry_tx: mpsc::WeakSender<Command>,
 }
 
 impl Core {
@@ -510,10 +521,21 @@ async fn run_actor(
                                     port: None,
                                     error: Some(message),
                                 });
+                                // The retry task holds only a weak
+                                // sender: if all handles are dropped
+                                // while it sleeps, the actor tears down
+                                // promptly via `Cmd(None)`, and the
+                                // task's post-sleep upgrade fails so no
+                                // restart is scheduled. A strong sender
+                                // here would both keep the channel open
+                                // and let a stale retry resurrect the
+                                // engine after the last handle dropped.
                                 let retry_tx = core.retry_tx.clone();
                                 tokio::spawn(async move {
                                     tokio::time::sleep(delay).await;
-                                    let _ = retry_tx.send(Command::CrashRetry { target }).await;
+                                    if let Some(tx) = retry_tx.upgrade() {
+                                        let _ = tx.send(Command::CrashRetry { target }).await;
+                                    }
                                 });
                             }
                             RecoveryDecision::GiveUp { .. } => {
@@ -735,16 +757,36 @@ mod tests {
     }
 
     /// Lets paused time tick forward until the fake reports the condition.
+    /// Bounded: a condition that never becomes true fails fast with a
+    /// clear message instead of hanging the whole CI job forever.
     async fn wait_until(process: &Arc<FakeProcess>, predicate: impl Fn(&FakeInner) -> bool) {
-        while !process.snapshot(&predicate) {
+        // 30_000 x 1 ms = 30 s of virtual time; every iteration yields so
+        // the actor makes progress.
+        for _ in 0..30_000 {
+            if process.snapshot(&predicate) {
+                return;
+            }
             tokio::time::sleep(Duration::from_millis(1)).await;
         }
+        panic!("timed out waiting for fake-process condition");
     }
 
+    /// Waits until the status watch reports `want`. Bounded: a state that
+    /// never arrives fails fast with a clear message instead of hanging
+    /// the whole CI job forever.
     async fn wait_for_state(rx: &mut watch::Receiver<EngineStatus>, want: &str) {
-        while rx.borrow_and_update().state != want {
-            rx.changed().await.expect("status channel open");
-        }
+        let result = tokio::time::timeout(Duration::from_secs(120), async {
+            while rx.borrow_and_update().state != want {
+                rx.changed().await.expect("status channel open");
+            }
+        })
+        .await;
+        result.unwrap_or_else(|_| {
+            panic!(
+                "timed out waiting for engine state '{want}' (still '{}')",
+                rx.borrow().state
+            )
+        });
     }
 
     /// Yields enough times for the actor to drain its ready work.
