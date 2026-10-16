@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: Renamed the `[model]` section in `config.toml` to `[inference]` and reshaped it from a single `ollama_url` string into the providers schema described above. There is no backward-compatibility shim for the section name: if you had a custom `[model]` section, rename it to `[inference]` after upgrading; a flat `ollama_url` inside `[inference]` is migrated automatically.
 - Active model selection is now strictly Option-typed end to end: when nothing is installed and nothing is persisted, Thuki refuses to dispatch requests and surfaces a "Pick a model" prompt instead of falling back to a hardcoded slug. The previous `DEFAULT_MODEL_NAME` constant has been removed.
 
+## [0.16.4](https://github.com/raphaelaxiom/thuki/compare/v0.16.3...v0.16.4) (2026-10-16)
+
+
+### Bug Fixes
+
+* allow clippy::double_must_use on async_trait trait defs ([aca3783](https://github.com/raphaelaxiom/thuki/commit/aca378392a65097224f7653a791183ab4aab1d59))
+* resolve 2 more clippy 1.99 lints blocking Nightly DMG ([1951dbf](https://github.com/raphaelaxiom/thuki/commit/1951dbfbbc85a2ad433c78b6194f4230311eb5a6))
+
 ## [0.16.3](https://github.com/quiet-node/thuki/compare/v0.16.2...v0.16.3) (2026-08-11)
 
 
