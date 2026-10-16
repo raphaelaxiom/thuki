@@ -16,10 +16,14 @@
 //! The policy owns no process, no clock, and no Tauri state: the runner
 //! actor (see `INTEGRATION-productivity.md`) feeds it `ChildCrashed`
 //! observations via [`CrashRecoveryTracker`] and executes the returned
-//! decision. A successful health check resets the counter through
-//! [`CrashRecoveryTracker::record_healthy`], so three crashes spread
-//! across a week do not exhaust the budget — only three *consecutive*
-//! crashes give up.
+//! decision. The counter resets through
+//! [`CrashRecoveryTracker::record_healthy`] only when the runner observes
+//! a crash after the engine served healthily for at least
+//! [`RECOVERY_STABLE_HEALTH_SECS`], so three crashes spread across a
+//! week do not exhaust the budget — only three crashes within one
+//! episode (no sustained healthy operation between them) give up.
+//! Resetting on the first health check instead would clear the budget
+//! after every successful restart and make giving up unreachable.
 
 use std::time::Duration;
 
@@ -33,6 +37,12 @@ pub const RECOVERY_BASE_BACKOFF_MS: u64 = 500;
 
 /// Backoff ceiling: no restart waits longer than this.
 pub const RECOVERY_MAX_BACKOFF_MS: u64 = 8_000;
+
+/// Minimum continuous healthy time before a crash counts as a fresh
+/// episode. The runner resets the consecutive-crash counter only when a
+/// crash arrives after the engine served healthily for at least this
+/// long (see `record_healthy`).
+pub const RECOVERY_STABLE_HEALTH_SECS: u64 = 60;
 
 /// What the runner should do after an unexpected engine exit.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -150,8 +160,11 @@ impl CrashRecoveryTracker {
         }
     }
 
-    /// Records a healthy load: the engine is serving again, so the
-    /// consecutive-crash counter resets to zero.
+    /// Resets the consecutive-crash counter to zero. The runner calls
+    /// this only when a crash arrives after sustained healthy operation
+    /// (at least [`RECOVERY_STABLE_HEALTH_SECS`]), not on every healthy
+    /// load — a crash shortly after a restart still counts as
+    /// consecutive.
     pub fn record_healthy(&mut self) {
         self.consecutive_crashes = 0;
     }

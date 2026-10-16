@@ -20,7 +20,7 @@ use std::time::Duration;
 use tokio::sync::{mpsc, oneshot, watch};
 
 use super::process::{poll_until_healthy, EngineChild, EngineProcess, SpawnArgs};
-use super::recovery::{CrashRecoveryTracker, RecoveryDecision};
+use super::recovery::{CrashRecoveryTracker, RecoveryDecision, RECOVERY_STABLE_HEALTH_SECS};
 use super::state::{step, Effect, EngineState, Event, Target};
 use crate::config::defaults::{
     ENGINE_COMMAND_QUEUE_CAPACITY, ENGINE_CRASH_FALLBACK_MESSAGE, ENGINE_HEALTH_DEADLINE_SECS,
@@ -397,6 +397,11 @@ async fn run_actor(
     idle_check_interval: Duration,
 ) {
     let mut last_activity = tokio::time::Instant::now();
+    // When the engine last became healthy. The consecutive-crash budget
+    // resets only after sustained healthy operation (see
+    // RECOVERY_STABLE_HEALTH_SECS), never on the first health check: a
+    // crash shortly after a restart still counts as consecutive.
+    let mut healthy_since: Option<tokio::time::Instant> = None;
     let mut ticker = tokio::time::interval(idle_check_interval);
     loop {
         let health_armed = core.health.is_some();
@@ -466,9 +471,13 @@ async fn run_actor(
             }
             Wake::Health(Ok(())) => {
                 core.health = None;
-                // A healthy load resets the consecutive-crash budget, so
-                // three crashes spread across a week never exhaust it.
-                core.recovery.record_healthy();
+                // Record when the engine became healthy; the
+                // consecutive-crash budget resets only if it stays
+                // healthy for RECOVERY_STABLE_HEALTH_SECS (checked at
+                // crash time). Resetting here, on the first health
+                // check, would clear the budget after every successful
+                // restart and make GiveUp unreachable.
+                healthy_since = Some(tokio::time::Instant::now());
                 let port = core.pending_port;
                 // Reset the idle clock so a slow model load cannot be
                 // idle-killed immediately: the idle window starts from the
@@ -507,6 +516,16 @@ async fn run_actor(
                 core.health = None;
                 match crash_target {
                     Some(target) => {
+                        // A crash after sustained healthy operation
+                        // starts a fresh episode: reset the
+                        // consecutive-crash budget before counting
+                        // this crash. A crash shortly after a restart
+                        // still counts as consecutive.
+                        if healthy_since.is_some_and(|since| {
+                            since.elapsed() >= Duration::from_secs(RECOVERY_STABLE_HEALTH_SECS)
+                        }) {
+                            core.recovery.record_healthy();
+                        }
                         let (decision, message) = core.recovery.record_crash(&reason);
                         match decision {
                             RecoveryDecision::Restart { delay, .. } => {
@@ -1266,6 +1285,48 @@ mod tests {
                 "Engine stopped after 3 restart attempts (engine process exited unexpectedly). Start it again from Settings or send a new message to retry."
             )
         );
+    }
+
+    /// A crash after sustained healthy operation starts a fresh episode:
+    /// the consecutive-crash budget resets, so the next crash reports
+    /// attempt 1 again instead of continuing the old episode.
+    #[tokio::test(start_paused = true)]
+    async fn crash_after_sustained_health_resets_budget() {
+        let process = FakeProcess::new();
+        let handle = spawn_handle(&process, 0);
+
+        load(&handle, &process, "a").await;
+
+        // First crash: attempt 1, then a successful restart.
+        process.crash_current();
+        let mut rx = handle.status();
+        wait_for_state(&mut rx, "restarting").await;
+        assert!(rx
+            .borrow()
+            .error
+            .as_deref()
+            .unwrap()
+            .contains("restarting (attempt 1 of 3)"));
+        tokio::time::advance(Duration::from_millis(600)).await;
+        drain_actor().await;
+        process.push_health(Ok(200));
+        let mut rx = handle.status();
+        wait_for_state(&mut rx, "loaded").await;
+
+        // The engine now serves healthily for longer than the
+        // sustained-health threshold, so the next crash is a fresh
+        // episode, not attempt 2 of the old one.
+        tokio::time::advance(Duration::from_secs(RECOVERY_STABLE_HEALTH_SECS + 1)).await;
+        drain_actor().await;
+        process.crash_current();
+        let mut rx = handle.status();
+        wait_for_state(&mut rx, "restarting").await;
+        assert!(rx
+            .borrow()
+            .error
+            .as_deref()
+            .unwrap()
+            .contains("restarting (attempt 1 of 3)"));
     }
 
     // ── Runner: idle unload ────────────────────────────────────────────
