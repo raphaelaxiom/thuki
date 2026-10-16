@@ -21,6 +21,16 @@ describe('generated command artifacts', () => {
     expect(renderSlashCommandPromptAppendix()).toContain('/search:');
   });
 
+  it('never gates /search on the built-in engine (Ollama parity)', () => {
+    // Regression guard: the search policy the model reads must not claim
+    // search needs the built-in engine. Search is a tool, not inference,
+    // and runs on the built-in engine and Ollama alike.
+    const appendix = renderSlashCommandPromptAppendix();
+    expect(appendix).not.toMatch(/needs the built-in engine/i);
+    expect(appendix).not.toMatch(/switch to built-in/i);
+    expect(renderCommandsMarkdown()).not.toMatch(/needs the built-in engine/i);
+  });
+
   it('explicitly teaches the model how to answer slash-command questions', () => {
     const appendix = renderSlashCommandPromptAppendix();
 

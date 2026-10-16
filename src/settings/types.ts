@@ -50,7 +50,7 @@ export interface RawAppConfig {
   behavior: {
     auto_replace: boolean;
     auto_close: boolean;
-    /** When true, built-in auto-search may open the web on plain turns. */
+    /** When true, auto-search may open the web on plain turns (built-in engine or Ollama). */
     auto_search: boolean;
     /** When true, first-use web-search notice has been dismissed forever. */
     search_notice_acknowledged: boolean;

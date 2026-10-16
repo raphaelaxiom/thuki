@@ -111,7 +111,7 @@ export function searchProgressHeaderLabel(
 }
 
 /**
- * Progressive-disclosure search chrome for built-in auto-search (Option D).
+ * Progressive-disclosure search chrome for auto-search (Option D).
  *
  * Single expandable block during pure search. Phase header while live,
  * optional source list in the body (user can collapse for a clean view).

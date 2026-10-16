@@ -1,6 +1,6 @@
 # Built-in web search (design handbook)
 
-Design handbook for Veilura’s built-in web search: how a turn decides to search, what runs in order, why each step exists, and how answers stay grounded and safe. Search runs inside the app on the **builtin** provider: public sources over HTTP, grounded answers with citations, progressive status in chat.
+Design handbook for Veilura’s built-in web search: how a turn decides to search, what runs in order, why each step exists, and how answers stay grounded and safe. Search runs inside the app on the **builtin** and **Ollama** providers: public sources over HTTP, grounded answers with citations, progressive status in chat. The pipeline is provider-agnostic — the built-in engine and Ollama share one pipeline (`run_search_pipeline`) and differ only in the three provider-bound LLM edges (classifier, sufficiency judge, cache-reuse synthesizer), which call each provider's OpenAI-compatible `/v1` endpoint (Ollama with `response_format: json_object`, since it does not reliably support strict `json_schema`). Generic OpenAI-compatible (`openai`-kind) providers do not run the pipeline. See [OLLAMA-PARITY.md](../OLLAMA-PARITY.md) for the per-feature parity inventory.
 
 **Related docs (do not duplicate here)**
 

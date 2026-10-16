@@ -17,6 +17,7 @@ A deep dive into how Veilura runs AI on your Mac: the built-in engine, what powe
 - [How the engine binary is packaged](#how-the-engine-binary-is-packaged)
 - [Settings → Models](#settings--models)
 - [Providers: built-in vs Ollama](#providers-built-in-vs-ollama)
+  - [Search and tools work on both providers](#search-and-tools-work-on-both-providers)
 
 ## The big picture
 
@@ -417,3 +418,20 @@ Day to day, you manage all of this from **Settings → Models** (open Settings f
 | Lifecycle         | Veilura starts/stops/kills the sidecar  | Ollama manages its own server         |
 
 Both are local and private; both are llama.cpp underneath. The built-in engine exists so Veilura works the moment you install it, with nothing to set up. If you already run Ollama and prefer it, switch to it in **Settings → Models → Providers**; switching frees the model the other provider was holding, so only one is resident at a time.
+
+### Search and tools work on both providers
+
+Web search and every chat tool work the same on the built-in engine and on Ollama. Search is a **tool**, not inference: the same search pipeline (classifier → retrieval → judge → grounded writer → citation audit) runs on both providers, and answers cite their sources the same way. There is no "switch to Built-in to use /search" gate anymore.
+
+- **`/search`** forces a live look-up on either provider, bypassing the cache.
+- **Auto search** (on by default) triggers automatically on either provider whenever the model cannot answer confidently from its own knowledge — fresh facts, prices, news, dates, unknown entities, or anything it would otherwise answer with "I don't know". If search ran, the answer says so and cites sources; if it didn't run, nothing claims it did.
+- **Slash commands** (`/explain`, `/think`, `/screen`, `/rewrite`, `/translate`, …), **clipboard/screen context**, **quick actions**, **citations**, **per-model settings**, **stop generation**, **regenerate**, and **model compare** all work on Ollama exactly as on the built-in engine.
+- **Token stats** come from real engine numbers on both providers: Ollama reports `prompt_eval_count` / `eval_count` on every turn, and Veilura records those.
+- **Screenshot / vision** works on Ollama when the selected Ollama model supports images (a vision model such as `llama3.2-vision`); Veilura reads that capability from Ollama's `/api/show`. If the selected Ollama model cannot do vision, Veilura says so honestly and offers to switch models — it never fakes a vision answer.
+
+Two genuine provider differences remain (see [OLLAMA-PARITY.md](../OLLAMA-PARITY.md) for the full inventory):
+
+- **Model management is per-format.** Settings → Models → Library / Discover manage GGUF models for the built-in engine; they do not apply to Ollama. Ollama models are browsed and pulled from the model picker (`ollama pull <model>`), and Veilura auto-detects newly pulled models.
+- **Generic OpenAI-compatible providers** (the `openai` provider kind) do **not** run the search pipeline: remote servers vary in structured-output support, so the classifier/judge cannot run against them reliably. On those providers `/search` fails loudly with a message saying so, instead of silently answering without searching. Auto search simply does not trigger there.
+
+Implementation note: the pipeline's LLM edges (classifier, sufficiency judge, cache-reuse synthesizer) call the provider's OpenAI-compatible `/v1` endpoint. Ollama's `/v1` accepts `response_format: {"type": "json_object"}` but does not reliably support the strict `json_schema` mode the bundled engine uses, so Ollama calls use the `json_object` shape and rely on the prompts' "output ONLY a JSON object" instruction plus the parsers. See [built-in-web-search.md](./built-in-web-search.md) for the pipeline design.

@@ -110,8 +110,9 @@ export interface AppConfig {
     /** Dismiss the overlay after a `/rewrite` or `/refine` result is replaced. */
     autoClose: boolean;
     /**
-     * When true, the built-in engine may search the web on plain turns.
-     * When false, only `/search` forces a live look-up.
+     * When true, the active local provider (built-in engine or Ollama)
+     * may search the web on plain turns. When false, only `/search`
+     * forces a live look-up.
      */
     autoSearch: boolean;
     /** When true, first-use web-search notice has been dismissed forever. */

@@ -415,9 +415,10 @@ export function useModel(
    * @param allowOversized Bypasses the pre-load memory gate (issue #296).
    * @param target How to establish the message pair: append a fresh pair or
    *   reuse a failed turn's ids and reset its assistant message in place.
-   * @param forceSearch When true, force built-in engines-only web search
-   *   (`/search` alias). Stamps the turn as a search turn for Variant B
-   *   progress chrome.
+   * @param forceSearch When true, force web search (`/search` alias) on
+   *   any provider that runs the search pipeline (built-in engine or
+   *   Ollama). Stamps the turn as a search turn for Variant B progress
+   *   chrome.
    * @param slashCommand Explicit slash trigger for this turn (utility
    *   commands). `/search` wins when `forceSearch` is set; otherwise this
    *   value is sent as `slashCommand` (transform utilities use it to skip

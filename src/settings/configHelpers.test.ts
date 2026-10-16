@@ -41,4 +41,14 @@ describe('configHelp', () => {
       expect(value.length).toBeGreaterThan(20);
     }
   });
+
+  it('describes auto-search as provider-neutral (Ollama parity)', () => {
+    // Regression guard: the auto-search helper must never re-introduce a
+    // "built-in engine only" gate. Search runs on the built-in engine AND
+    // Ollama, so the copy must not name the built-in engine as a requirement.
+    const copy = configHelp('behavior', 'auto_search');
+    expect(copy).not.toMatch(/built-in engine/i);
+    expect(copy).not.toMatch(/switch to built-in/i);
+    expect(copy).toMatch(/search the web/i);
+  });
 });
