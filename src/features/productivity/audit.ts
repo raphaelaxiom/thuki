@@ -51,7 +51,7 @@ export function appendAuditEntry(kind: AuditKind, detail: string): AuditEntry {
 
 /** Logs an outbound network request (URL host only, never bodies/keys). */
 export function logOutboundRequest(url: string, status?: number): AuditEntry {
-  let host = url;
+  let host: string;
   try {
     host = new URL(url).host;
   } catch {

@@ -82,7 +82,7 @@ export function FocusTimer() {
     setStatus(
       `${focusLabel(phase)} complete. Next: ${focusLabel(nextPhaseValue)}.`,
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [remaining, running]);
 
   const startPause = () => {
