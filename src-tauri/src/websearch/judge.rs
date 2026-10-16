@@ -114,6 +114,7 @@ impl SufficiencyVerdict {
 /// builtin engine backing lives in the coverage-excluded
 /// [`BuiltinSufficiencyJudge`].
 #[async_trait]
+#[allow(clippy::double_must_use)]
 pub trait SufficiencyJudge: Send + Sync {
     /// Judges whether `sources` contain what `standalone_question` asks for.
     /// Never returns a bad-JSON error: an unparseable model response degrades
